@@ -34,11 +34,11 @@ pub enum PluginScope {
 pub enum PluginOrigin {
     /// CLI `--plugin-dir`.
     CliOverride,
-    /// Project `.grok/plugins/`.
+    /// Project `.cgrok/plugins/`.
     ProjectGrok,
     /// Project `.claude/plugins/`.
     ProjectClaude,
-    /// `$GROK_HOME/plugins/`.
+    /// `$CGROK_HOME/plugins/`.
     UserGrok,
     /// `~/.claude/plugins/`.
     UserClaude,
@@ -235,7 +235,7 @@ pub struct HookInfo {
     pub timeout_ms: u64,
     /// Source directory of the hook definition file.
     pub source_dir: String,
-    /// Whether dispatch skips this hook: `enabled = false`, listed in ~/.grok/disabled-hooks, or kept off by `allow_managed_hooks_only`.
+    /// Whether dispatch skips this hook: `enabled = false`, listed in ~/.cgrok/disabled-hooks, or kept off by `allow_managed_hooks_only`.
     #[serde(default)]
     pub disabled: bool,
     /// Enforced by root-owned managed policy: disable actions are refused
@@ -714,7 +714,7 @@ mod tests {
             command: Some("check.sh".into()),
             url: None,
             timeout_ms: 5000,
-            source_dir: "/home/user/.grok/hooks".into(),
+            source_dir: "/home/user/.cgrok/hooks".into(),
             disabled: false,
             pinned: false,
             removable: true,
@@ -733,7 +733,7 @@ mod tests {
         let plugin = PluginInfo {
             name: "test-plugin".into(),
             id: "user/abc12345/test-plugin".into(),
-            root: "/home/user/.grok/plugins/test-plugin".into(),
+            root: "/home/user/.cgrok/plugins/test-plugin".into(),
             scope: PluginScope::User,
             trusted: true,
             enabled: true,

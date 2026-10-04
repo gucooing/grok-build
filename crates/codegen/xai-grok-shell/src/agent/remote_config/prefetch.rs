@@ -62,9 +62,9 @@ pub(crate) type ResolvedModels = Option<IndexMap<String, ModelEntry>>;
 ///
 /// Never syncs managed config: the refresh supervisor owns that, so a live
 /// server cannot heal a tampered policy ahead of the fail-closed gate.
-/// `grok_com_config` scopes the disk-auth read; the default config sees only env.
+/// `cgrok_com_config` scopes the disk-auth read; the default config sees only env.
 fn models_prefetch_inputs(
-    grok_com_config: Option<GrokComConfig>,
+    cgrok_com_config: Option<GrokComConfig>,
     warmed_auth: Option<GrokAuth>,
 ) -> Option<ModelsPrefetchPlan> {
     if xai_grok_cloud_config::managed_config::policy_repair_pending() {
@@ -72,7 +72,7 @@ fn models_prefetch_inputs(
     }
     // Prefer the live in-memory session so a just-refreshed or just-logged-in
     // credential drives the catalog fetch, not a stale or absent disk token.
-    let auth = warmed_auth.or_else(|| resolve_disk_auth(grok_com_config.clone()));
+    let auth = warmed_auth.or_else(|| resolve_disk_auth(cgrok_com_config.clone()));
     let endpoints = resolve_startup_endpoints();
     let remote = models_fetch_enabled(&endpoints, auth.as_ref());
     let env = resolve_prefetch_inputs_from_parts(auth.clone(), endpoints, remote)?;
@@ -80,7 +80,7 @@ fn models_prefetch_inputs(
     Some(ModelsPrefetchPlan {
         env,
         expected,
-        commit_config: grok_com_config,
+        commit_config: cgrok_com_config,
     })
 }
 
@@ -122,10 +122,10 @@ fn run_models_prefetch(
 
 pub(crate) fn start_initial_models_load(
     cancel: tokio_util::sync::CancellationToken,
-    grok_com_config: Option<GrokComConfig>,
+    cgrok_com_config: Option<GrokComConfig>,
     warmed_auth: Option<GrokAuth>,
 ) -> Option<InitialModelsLoad<ModelEntry>> {
-    let plan = models_prefetch_inputs(grok_com_config, warmed_auth)?;
+    let plan = models_prefetch_inputs(cgrok_com_config, warmed_auth)?;
     start_catalog_load("grok-models-prefetch", cancel, move |cancel| {
         run_models_prefetch(plan, cancel)
     })
@@ -138,10 +138,10 @@ const MODELS_WAIT_POLL_INTERVAL: std::time::Duration = std::time::Duration::from
 /// A cancel or the fetch timeout ends the wait; the thread still lands its monotonic commit.
 pub(crate) fn fetch_initial_models_blocking(
     cancel: &tokio_util::sync::CancellationToken,
-    grok_com_config: Option<GrokComConfig>,
+    cgrok_com_config: Option<GrokComConfig>,
     warmed_auth: Option<GrokAuth>,
 ) -> Option<IndexMap<String, ModelEntry>> {
-    let plan = models_prefetch_inputs(grok_com_config, warmed_auth)?;
+    let plan = models_prefetch_inputs(cgrok_com_config, warmed_auth)?;
     fetch_catalog_blocking(
         "grok-models-prefetch-sync",
         cancel,

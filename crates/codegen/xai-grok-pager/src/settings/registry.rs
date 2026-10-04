@@ -645,7 +645,7 @@ pub fn current_value_for(
         "collapsed_edit_blocks" => Some(SettingValue::Bool(
             crate::appearance::cache::load_collapsed_edit_blocks(),
         )),
-        // Live cache; `GROK_PROMPT_SUGGESTIONS` env overrides at the gate.
+        // Live cache; `CGROK_PROMPT_SUGGESTIONS` env overrides at the gate.
         "prompt_suggestions" => Some(SettingValue::Bool(
             crate::appearance::cache::load_prompt_suggestions(),
         )),

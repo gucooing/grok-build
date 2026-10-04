@@ -4452,7 +4452,7 @@ async fn roster_merge_round_trips_namespaced_ids_and_broadcasts_changes() {
     let cursor_row = RosterEntry {
         session_id: "cursor-worker:bc-1".to_owned(),
         title: Some("External agent bc-1".to_owned()),
-        cwd: "/home/u/.grok/worktrees/proj/cursor-bc-1".to_owned(),
+        cwd: "/home/u/.cgrok/worktrees/proj/cursor-bc-1".to_owned(),
         is_worktree: true,
         session_kind: Some("cursor-worker".to_owned()),
         model_id: None,

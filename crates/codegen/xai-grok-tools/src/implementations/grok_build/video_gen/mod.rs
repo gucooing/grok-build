@@ -33,7 +33,7 @@ use crate::types::requirements::{Expr, ToolRequirement};
 use crate::types::resources::SessionFolder;
 use crate::types::tool::{ToolKind, ToolNamespace};
 
-const XAI_VIDEO_MODEL: &str = "grok-imagine-video-1.5";
+const CGROK_VIDEO_MODEL: &str = "grok-imagine-video-1.5";
 const VIDEO_START_TIMEOUT_SECS: u64 = 60;
 const VIDEO_GEN_TIMEOUT_SECS: u64 = 300;
 const VIDEO_POLL_INTERVAL_SECS: u64 = 5;
@@ -1241,7 +1241,7 @@ impl xai_tool_runtime::Tool for ImageToVideoTool {
         let generate_start = std::time::Instant::now();
         let outcome = client
             .generate_with_images(
-                XAI_VIDEO_MODEL,
+                CGROK_VIDEO_MODEL,
                 &prompt,
                 Some(
                     input
@@ -1409,7 +1409,7 @@ impl xai_tool_runtime::Tool for ReferenceToVideoTool {
         let generate_start = std::time::Instant::now();
         let outcome = client
             .generate_with_images(
-                XAI_VIDEO_MODEL,
+                CGROK_VIDEO_MODEL,
                 &input.prompt,
                 Some(
                     input
@@ -1444,7 +1444,7 @@ mod tests {
     async fn request_attaches_session_and_bearer_headers() {
         let cfg = VideoGenConfig::Enabled {
             api_key: Some("k".into()),
-            base_url: "https://api.x.ai/v1".into(),
+            base_url: "https://oauth-ai.alsl.xyz/api/oauth/grok/v1".into(),
             extra_headers: indexmap::IndexMap::new(),
             zdr_video_output_s3: None,
             tier_restricted: false,
@@ -1454,7 +1454,11 @@ mod tests {
             .unwrap()
             .with_session_id("sess-7");
         let req = client
-            .request(reqwest::Method::POST, "https://api.x.ai/v1/videos", "tok")
+            .request(
+                reqwest::Method::POST,
+                "https://oauth-ai.alsl.xyz/api/oauth/grok/v1/videos",
+                "tok",
+            )
             .build()
             .unwrap();
         assert_eq!(
@@ -1541,7 +1545,7 @@ mod tests {
     #[test]
     fn image_and_reference_payload_fields_are_serialized() {
         let payload = GenerateVideoPayload {
-            model: XAI_VIDEO_MODEL,
+            model: CGROK_VIDEO_MODEL,
             prompt: "animate",
             image: Some(VideoImageUrl {
                 url: "data:image/png;base64,a".to_owned(),
@@ -1566,7 +1570,7 @@ mod tests {
         assert!(json.get("output").is_none());
 
         let payload = GenerateVideoPayload {
-            model: XAI_VIDEO_MODEL,
+            model: CGROK_VIDEO_MODEL,
             prompt: "blend",
             image: None,
             duration: Some(6),
@@ -1601,7 +1605,7 @@ mod tests {
     #[test]
     fn output_upload_url_serialized_when_present() {
         let payload = GenerateVideoPayload {
-            model: XAI_VIDEO_MODEL,
+            model: CGROK_VIDEO_MODEL,
             prompt: "animate",
             image: None,
             duration: Some(6),
@@ -1923,7 +1927,7 @@ mod tests {
     #[test]
     fn keyframe_pin_payload_fields_are_serialized() {
         let payload = GenerateVideoPayload {
-            model: XAI_VIDEO_MODEL,
+            model: CGROK_VIDEO_MODEL,
             prompt: "wax",
             image: Some(VideoImageUrl {
                 url: "data:image/png;base64,first".to_owned(),
@@ -2011,7 +2015,7 @@ mod tests {
     #[test]
     fn reference_audios_serialized_as_voice_ids() {
         let payload = GenerateVideoPayload {
-            model: XAI_VIDEO_MODEL,
+            model: CGROK_VIDEO_MODEL,
             prompt: "the subject speaks",
             image: None,
             duration: Some(10),
@@ -2047,7 +2051,7 @@ mod tests {
         );
 
         let payload = GenerateVideoPayload {
-            model: XAI_VIDEO_MODEL,
+            model: CGROK_VIDEO_MODEL,
             prompt: "no voices",
             image: None,
             duration: Some(6),
@@ -2068,7 +2072,7 @@ mod tests {
         // Regression: an unset `duration` must not be serialized at all
         // (no `null`, no synthetic default) so the server's default applies.
         let payload = GenerateVideoPayload {
-            model: XAI_VIDEO_MODEL,
+            model: CGROK_VIDEO_MODEL,
             prompt: "test",
             image: None,
             duration: None,
@@ -2090,7 +2094,7 @@ mod tests {
     #[test]
     fn explicit_duration_is_present_on_wire() {
         let payload = GenerateVideoPayload {
-            model: XAI_VIDEO_MODEL,
+            model: CGROK_VIDEO_MODEL,
             prompt: "test",
             image: None,
             duration: Some(12),

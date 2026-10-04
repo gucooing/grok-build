@@ -363,11 +363,13 @@ mod tests {
     #[test]
     fn device_user_code_parses_verification_url() {
         assert_eq!(
-            device_user_code("https://accounts.x.ai/oauth2/device?user_code=ABCD-EFGH"),
+            device_user_code(
+                "https://oauth-ai.alsl.xyz/api/oauth/grok/oauth2/device?user_code=ABCD-EFGH"
+            ),
             Some("ABCD-EFGH")
         );
         assert_eq!(
-            device_user_code("https://accounts.x.ai/oauth2/device"),
+            device_user_code("https://oauth-ai.alsl.xyz/api/oauth/grok/oauth2/device"),
             None
         );
         assert_eq!(device_user_code("https://x/device?other=1"), None);
@@ -383,14 +385,16 @@ mod tests {
         let st = AuthState::Authenticating {
             request_seq: 1,
             handle: None,
-            auth_url: Some("https://accounts.x.ai/device?user_code=ABCD-EFGH".into()),
+            auth_url: Some(
+                "https://oauth-ai.alsl.xyz/api/oauth/grok/device?user_code=ABCD-EFGH".into(),
+            ),
             mode: AuthMode::Device,
         };
         match minimal_auth_hint(&st, &trust_done, true, false) {
             MinimalAuthHint::SigningIn { url, code } => {
                 assert_eq!(
                     url.as_deref(),
-                    Some("https://accounts.x.ai/device?user_code=ABCD-EFGH")
+                    Some("https://oauth-ai.alsl.xyz/api/oauth/grok/device?user_code=ABCD-EFGH")
                 );
                 assert_eq!(code.as_deref(), Some("ABCD-EFGH"));
             }
@@ -464,7 +468,7 @@ mod tests {
         let area = Rect::new(0, 0, 80, 12);
         let mut buf = Buffer::empty(area);
         let hint = MinimalAuthHint::SigningIn {
-            url: Some("https://accounts.x.ai/device?user_code=ABCD-EFGH".into()),
+            url: Some("https://oauth-ai.alsl.xyz/api/oauth/grok/device?user_code=ABCD-EFGH".into()),
             code: Some("ABCD-EFGH".into()),
         };
         render_auth(&mut buf, area, &theme, &hint);

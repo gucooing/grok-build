@@ -5295,7 +5295,7 @@ fn suggestions_landing_after_bash_exit_are_dropped() {
     assert!(agent.prompt.suggestions.dropdown.items.is_empty());
 }
 
-/// The always-on pipeline end to end, with the `GROK_SUGGESTIONS` env flag OFF.
+/// The always-on pipeline end to end, with the `CGROK_SUGGESTIONS` env flag OFF.
 /// Tab fires a deterministic fetch, and the response that lands behaves like Tab in a terminal.
 /// A single file candidate splices in place immediately and the drill-down refetch rides out with the dispatch.
 #[test]

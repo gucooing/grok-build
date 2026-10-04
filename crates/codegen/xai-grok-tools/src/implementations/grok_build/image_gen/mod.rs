@@ -30,7 +30,7 @@ use crate::types::tool::{ToolKind, ToolNamespace};
 
 /// Default Imagine model for `image_gen`. Used unless an explicit
 /// `model_override` is supplied via `ImageGenConfig::Enabled`.
-const XAI_IMAGINE_MODEL: &str = "grok-imagine-image-quality";
+const CGROK_IMAGINE_MODEL: &str = "grok-imagine-image-quality";
 // Some Imagine models (e.g. `grok-imagine-image`, selectable via `model_override`) expand the prompt then generate,
 // and the proxy buffers the whole image before sending any bytes — so the client may receive nothing for well over a
 // minute. Keep these generous so a slow-but-progressing generation isn't cut off.
@@ -53,7 +53,7 @@ pub struct ImageGenClient {
     http: reqwest::Client,
     base_url: String,
     /// Imagine model slug used by `generate()`. Selected at construction from
-    /// `ImageGenConfig::model_override` (falling back to [`XAI_IMAGINE_MODEL`]). `image_edit` uses
+    /// `ImageGenConfig::model_override` (falling back to [`CGROK_IMAGINE_MODEL`]). `image_edit` uses
     /// its own model and is unaffected.
     model: String,
     edit_model: String,
@@ -95,11 +95,11 @@ impl ImageGenClient {
         let model = model_override
             .clone()
             .filter(|m| !m.trim().is_empty())
-            .unwrap_or_else(|| XAI_IMAGINE_MODEL.to_owned());
+            .unwrap_or_else(|| CGROK_IMAGINE_MODEL.to_owned());
         let edit_model = edit_model_override
             .clone()
             .filter(|m| !m.trim().is_empty())
-            .unwrap_or_else(|| super::image_edit::XAI_IMAGINE_EDIT_MODEL.to_owned());
+            .unwrap_or_else(|| super::image_edit::CGROK_IMAGINE_EDIT_MODEL.to_owned());
 
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
@@ -309,7 +309,7 @@ pub enum ImageGenConfig {
         image_gen_enabled: bool,
         image_edit_enabled: bool,
         /// Optional Imagine model override for `image_gen`. When `Some(non-empty)`, `image_gen`
-        /// calls that model instead of the default quality model ([`XAI_IMAGINE_MODEL`]). Driven by
+        /// calls that model instead of the default quality model ([`CGROK_IMAGINE_MODEL`]). Driven by
         /// the remote `image_gen_model_override` config flag. `image_edit` is unaffected.
         model_override: Option<String>,
         edit_model_override: Option<String>,
@@ -351,7 +351,7 @@ impl ImageGenConfig {
     }
 
     /// The configured `image_gen` model override, if any. `None` means the
-    /// default quality model ([`XAI_IMAGINE_MODEL`]) is used.
+    /// default quality model ([`CGROK_IMAGINE_MODEL`]) is used.
     pub fn model_override(&self) -> Option<&str> {
         match self {
             Self::Enabled { model_override, .. } => {
@@ -518,7 +518,7 @@ mod tests {
     fn per_tool_gates_are_independent() {
         let cfg = ImageGenConfig::Enabled {
             api_key: Some("k".into()),
-            base_url: "https://api.x.ai/v1".into(),
+            base_url: "https://oauth-ai.alsl.xyz/api/oauth/grok/v1".into(),
             extra_headers: indexmap::IndexMap::new(),
             image_gen_enabled: false,
             image_edit_enabled: true,
@@ -540,7 +540,7 @@ mod tests {
         preset.insert(SESSION_ID_HEADER.to_string(), "caller-set".to_string());
         let cfg = ImageGenConfig::Enabled {
             api_key: Some("k".into()),
-            base_url: "https://api.x.ai/v1".into(),
+            base_url: "https://oauth-ai.alsl.xyz/api/oauth/grok/v1".into(),
             extra_headers: preset,
             image_gen_enabled: true,
             image_edit_enabled: true,
@@ -555,7 +555,7 @@ mod tests {
 
         let cfg_plain = ImageGenConfig::Enabled {
             api_key: Some("k".into()),
-            base_url: "https://api.x.ai/v1".into(),
+            base_url: "https://oauth-ai.alsl.xyz/api/oauth/grok/v1".into(),
             extra_headers: indexmap::IndexMap::new(),
             image_gen_enabled: true,
             image_edit_enabled: true,
@@ -578,7 +578,7 @@ mod tests {
     async fn post_json_attaches_session_and_bearer_headers() {
         let cfg = ImageGenConfig::Enabled {
             api_key: Some("k".into()),
-            base_url: "https://api.x.ai/v1".into(),
+            base_url: "https://oauth-ai.alsl.xyz/api/oauth/grok/v1".into(),
             extra_headers: indexmap::IndexMap::new(),
             image_gen_enabled: true,
             image_edit_enabled: true,
@@ -590,7 +590,11 @@ mod tests {
             .unwrap()
             .with_session_id("sess-42");
         let req = client
-            .post_json("https://api.x.ai/v1/images", &serde_json::json!({}), "tok")
+            .post_json(
+                "https://oauth-ai.alsl.xyz/api/oauth/grok/v1/images",
+                &serde_json::json!({}),
+                "tok",
+            )
             .build()
             .unwrap();
         assert_eq!(
@@ -611,7 +615,7 @@ mod tests {
     fn client_selects_model_from_override() {
         let mk = |model_override: Option<&str>| ImageGenConfig::Enabled {
             api_key: Some("k".into()),
-            base_url: "https://api.x.ai/v1".into(),
+            base_url: "https://oauth-ai.alsl.xyz/api/oauth/grok/v1".into(),
             extra_headers: indexmap::IndexMap::new(),
             image_gen_enabled: true,
             image_edit_enabled: true,
@@ -622,12 +626,12 @@ mod tests {
         // No override → default quality model.
         assert_eq!(
             ImageGenClient::new(&mk(None), None).unwrap().model,
-            XAI_IMAGINE_MODEL
+            CGROK_IMAGINE_MODEL
         );
         // Empty override → treated as no override.
         assert_eq!(
             ImageGenClient::new(&mk(Some("")), None).unwrap().model,
-            XAI_IMAGINE_MODEL
+            CGROK_IMAGINE_MODEL
         );
         // Override → that exact model slug.
         assert_eq!(
@@ -642,7 +646,7 @@ mod tests {
     fn client_selects_edit_model_from_override() {
         let mk = |edit_model_override: Option<&str>| ImageGenConfig::Enabled {
             api_key: Some("k".into()),
-            base_url: "https://api.x.ai/v1".into(),
+            base_url: "https://oauth-ai.alsl.xyz/api/oauth/grok/v1".into(),
             extra_headers: indexmap::IndexMap::new(),
             image_gen_enabled: true,
             image_edit_enabled: true,
@@ -652,17 +656,17 @@ mod tests {
         };
         assert_eq!(
             ImageGenClient::new(&mk(None), None).unwrap().edit_model(),
-            super::super::image_edit::XAI_IMAGINE_EDIT_MODEL
+            super::super::image_edit::CGROK_IMAGINE_EDIT_MODEL
         );
         assert_eq!(
             ImageGenClient::new(&mk(Some("  ")), None)
                 .unwrap()
                 .edit_model(),
-            super::super::image_edit::XAI_IMAGINE_EDIT_MODEL
+            super::super::image_edit::CGROK_IMAGINE_EDIT_MODEL
         );
         let client = ImageGenClient::new(&mk(Some("grok-imagine-image-v2")), None).unwrap();
         assert_eq!(client.edit_model(), "grok-imagine-image-v2");
-        assert_eq!(client.model, XAI_IMAGINE_MODEL);
+        assert_eq!(client.model, CGROK_IMAGINE_MODEL);
     }
 
     #[tokio::test]
@@ -694,7 +698,7 @@ mod tests {
         // the short-circuit returns before any other resource (e.g. SessionFolder) is required.
         let cfg = ImageGenConfig::Enabled {
             api_key: Some("k".into()),
-            base_url: "https://api.x.ai/v1".into(),
+            base_url: "https://oauth-ai.alsl.xyz/api/oauth/grok/v1".into(),
             extra_headers: indexmap::IndexMap::new(),
             image_gen_enabled: true,
             image_edit_enabled: true,

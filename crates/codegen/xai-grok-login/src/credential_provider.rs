@@ -481,13 +481,13 @@ pub fn install_bootstrap_otel_provider(
     proxy_base_url: String,
     deployment_id_resolver: DeploymentIdResolver,
 ) -> (Arc<dyn AuthCredentialProvider>, String) {
-    let grok_com_config = crate::GrokComConfig::default();
-    let token_header_value = grok_com_config.token_header.clone();
+    let cgrok_com_config = crate::GrokComConfig::default();
+    let token_header_value = cgrok_com_config.token_header.clone();
 
     let grok_home = xai_grok_shell_base::util::grok_home::grok_home();
     let bootstrap = Arc::new(AuthManager::new_with_proxy_base_url(
         &grok_home,
-        grok_com_config,
+        cgrok_com_config,
         proxy_base_url,
     ));
     let provider = Arc::new(OtelAuthCredentialProvider::with_deployment_id_resolver(
@@ -512,10 +512,10 @@ mod tests {
     use std::sync::Mutex;
     use xai_grok_auth::AuthCredentialProvider;
 
-    /// Serializes tests that pin `GROK_AUTH_EARLY_INVALIDATION_SECS`, since env vars are process-global and parallel tests would race.
+    /// Serializes tests that pin `CGROK_AUTH_EARLY_INVALIDATION_SECS`, since env vars are process-global and parallel tests would race.
     static EARLY_INVALIDATION_LOCK: Mutex<()> = Mutex::new(());
 
-    /// RAII guard: pins `GROK_AUTH_EARLY_INVALIDATION_SECS` to the production default (300s) while held, restoring the previous value on drop.
+    /// RAII guard: pins `CGROK_AUTH_EARLY_INVALIDATION_SECS` to the production default (300s) while held, restoring the previous value on drop.
     /// Acquires `EARLY_INVALIDATION_LOCK` so concurrent test runners can't observe a half-mutated env.
     struct EarlyInvalidationGuard {
         _lock: std::sync::MutexGuard<'static, ()>,
@@ -527,11 +527,11 @@ mod tests {
             let lock = EARLY_INVALIDATION_LOCK
                 .lock()
                 .unwrap_or_else(|e| e.into_inner());
-            let previous = std::env::var("GROK_AUTH_EARLY_INVALIDATION_SECS").ok();
+            let previous = std::env::var("CGROK_AUTH_EARLY_INVALIDATION_SECS").ok();
             // SAFETY: env var mutation is `unsafe` in edition 2024; the lock
             // above ensures no other test in this module reads/writes the
             // same key concurrently.
-            unsafe { std::env::set_var("GROK_AUTH_EARLY_INVALIDATION_SECS", "300") };
+            unsafe { std::env::set_var("CGROK_AUTH_EARLY_INVALIDATION_SECS", "300") };
             Self {
                 _lock: lock,
                 previous,
@@ -544,8 +544,8 @@ mod tests {
             // SAFETY: see `pin_to_default`; lock is still held until self is dropped.
             unsafe {
                 match self.previous.take() {
-                    Some(prev) => std::env::set_var("GROK_AUTH_EARLY_INVALIDATION_SECS", prev),
-                    None => std::env::remove_var("GROK_AUTH_EARLY_INVALIDATION_SECS"),
+                    Some(prev) => std::env::set_var("CGROK_AUTH_EARLY_INVALIDATION_SECS", prev),
+                    None => std::env::remove_var("CGROK_AUTH_EARLY_INVALIDATION_SECS"),
                 }
             }
         }
@@ -900,7 +900,7 @@ mod tests {
         }
 
         let resolved = embedding_session_credentials(
-            "https://api.x.ai/v1",
+            "https://oauth-ai.alsl.xyz/api/oauth/grok/v1",
             Some(&mgr),
             Some(api_key_provider),
         );

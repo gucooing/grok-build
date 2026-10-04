@@ -385,7 +385,7 @@ pub async fn run_login_flow_with_config(
         .map_err(|e| anyhow::Error::new(OidcError::BindLoopback(e.to_string())))?;
     let port = listener.local_addr()?.port();
     let redirect_uri = format!("http://127.0.0.1:{}/callback", port);
-    let oauth2 = auth_manager.grok_com_config().oauth2.as_ref();
+    let oauth2 = auth_manager.cgrok_com_config().oauth2.as_ref();
     let auth_url = build_authorize_url(
         oidc,
         oauth2,
@@ -475,7 +475,7 @@ pub async fn run_login_flow_with_config(
 
     // The authorize URL only pre-selects; verify the token's principal here.
     // Match the principal id even if `principal_type` is absent.
-    let principal_policy = login_principal_policy(auth_manager.grok_com_config());
+    let principal_policy = login_principal_policy(auth_manager.cgrok_com_config());
     enforce_login_principal(
         principal_policy.as_ref(),
         peek_access_token_principal_id(&tokens.access_token).as_deref(),

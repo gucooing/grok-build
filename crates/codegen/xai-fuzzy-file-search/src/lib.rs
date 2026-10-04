@@ -832,7 +832,7 @@ mod tests {
 mod thread_exhaustion_tests {
     use super::*;
 
-    const CHILD_ENV: &str = "XAI_FUZZY_THREAD_EXHAUSTION_CHILD";
+    const CHILD_ENV: &str = "CGROK_TEST_FUZZY_THREAD_EXHAUSTION_CHILD";
     const PASS_MARK: &str = "fuzzy-contained:";
     const SKIP_MARK: &str = "skip-child:";
 

@@ -26,8 +26,8 @@ fn fail_closed_flag(requirements: &toml::Value) -> bool {
 }
 
 /// Env override for [`FAIL_CLOSED_KEY`]; only applies to `requirements.toml`.
-/// The name shares the `GROK_MANAGED_CONFIG_URL` prefix.
-pub(crate) const FAIL_CLOSED_ENV: &str = "GROK_MANAGED_CONFIG_FAIL_CLOSED";
+/// The name shares the `CGROK_MANAGED_CONFIG_URL` prefix.
+pub(crate) const FAIL_CLOSED_ENV: &str = "CGROK_MANAGED_CONFIG_FAIL_CLOSED";
 
 /// Where a requirements layer came from: a file on disk, or the macOS MDM managed-preferences layer (admin-forced, no file).
 /// The typed split keeps a caller from calling `exists()` on or reading a layer that has no path.
@@ -38,7 +38,7 @@ pub enum RequirementsSource {
 }
 
 impl RequirementsSource {
-    /// The display and provenance label: a file path string, or the synthetic MDM source id (`ai.x.grok:…`).
+    /// The display and provenance label: a file path string, or the synthetic MDM source id (`io.github.gucooing.cgrok:…`).
     /// For diagnostics and matching only; the MDM layer has no file, so this is a label (`Cow<str>`), never a `Path` to open.
     pub fn label(&self) -> std::borrow::Cow<'_, str> {
         match self {
@@ -54,7 +54,7 @@ pub struct RequirementsLayer {
     pub value: toml::Value,
     pub source: RequirementsSource,
     /// `true` means the root-owned system layer.
-    /// Security decisions must trust this flag, not re-derive it from the source, which is `GROK_HOME`-influenced and could carry `..`.
+    /// Security decisions must trust this flag, not re-derive it from the source, which is `CGROK_HOME`-influenced and could carry `..`.
     pub is_system: bool,
 }
 
@@ -109,7 +109,7 @@ pub(crate) fn load_requirements() -> Option<toml::Value> {
     load_user_requirements(user_grok_home().as_deref())
 }
 
-/// User requirements layer from `<home>/requirements.toml`, or `None` with no resolvable user home (rather than reading a cwd-relative `.grok`).
+/// User requirements layer from `<home>/requirements.toml`, or `None` with no resolvable user home (rather than reading a cwd-relative `.cgrok`).
 fn load_user_requirements(home: Option<&Path>) -> Option<toml::Value> {
     load_requirements_layer(&home?.join("requirements.toml"))
 }
@@ -219,7 +219,7 @@ pub fn validate_requirements() -> Result<(), RequirementsError> {
     Ok(())
 }
 
-/// Validate the user requirements layer if a user home resolves; otherwise a no-op (no cwd-relative `.grok/requirements.toml` is read or enforced).
+/// Validate the user requirements layer if a user home resolves; otherwise a no-op (no cwd-relative `.cgrok/requirements.toml` is read or enforced).
 fn validate_user_requirements(home: Option<&Path>) -> Result<(), RequirementsError> {
     match home {
         Some(g) => validate_requirements_layer(&g.join("requirements.toml")),

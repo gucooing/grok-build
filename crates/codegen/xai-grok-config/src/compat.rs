@@ -105,109 +105,109 @@ pub const COMPAT_CELLS: [CompatCell; 18] = [
     CompatCell::new(
         CompatVendor::Cursor,
         CompatSurface::Skills,
-        "GROK_CURSOR_SKILLS_ENABLED",
+        "CGROK_CURSOR_SKILLS_ENABLED",
         Some(CompatRemoteKey::CursorSkills),
     ),
     CompatCell::new(
         CompatVendor::Cursor,
         CompatSurface::Rules,
-        "GROK_CURSOR_RULES_ENABLED",
+        "CGROK_CURSOR_RULES_ENABLED",
         Some(CompatRemoteKey::CursorRules),
     ),
     CompatCell::new(
         CompatVendor::Cursor,
         CompatSurface::Agents,
-        "GROK_CURSOR_AGENTS_ENABLED",
+        "CGROK_CURSOR_AGENTS_ENABLED",
         Some(CompatRemoteKey::CursorAgents),
     ),
     CompatCell::new(
         CompatVendor::Cursor,
         CompatSurface::Mcps,
-        "GROK_CURSOR_MCPS_ENABLED",
+        "CGROK_CURSOR_MCPS_ENABLED",
         Some(CompatRemoteKey::CursorMcps),
     ),
     CompatCell::new(
         CompatVendor::Cursor,
         CompatSurface::Hooks,
-        "GROK_CURSOR_HOOKS_ENABLED",
+        "CGROK_CURSOR_HOOKS_ENABLED",
         Some(CompatRemoteKey::CursorHooks),
     ),
     CompatCell::new(
         CompatVendor::Cursor,
         CompatSurface::Sessions,
-        "GROK_CURSOR_SESSIONS_ENABLED",
+        "CGROK_CURSOR_SESSIONS_ENABLED",
         Some(CompatRemoteKey::CursorSessions),
     ),
     CompatCell::new(
         CompatVendor::Claude,
         CompatSurface::Skills,
-        "GROK_CLAUDE_SKILLS_ENABLED",
+        "CGROK_CLAUDE_SKILLS_ENABLED",
         Some(CompatRemoteKey::ClaudeSkills),
     ),
     CompatCell::new(
         CompatVendor::Claude,
         CompatSurface::Rules,
-        "GROK_CLAUDE_RULES_ENABLED",
+        "CGROK_CLAUDE_RULES_ENABLED",
         Some(CompatRemoteKey::ClaudeRules),
     ),
     CompatCell::new(
         CompatVendor::Claude,
         CompatSurface::Agents,
-        "GROK_CLAUDE_AGENTS_ENABLED",
+        "CGROK_CLAUDE_AGENTS_ENABLED",
         Some(CompatRemoteKey::ClaudeAgents),
     ),
     CompatCell::new(
         CompatVendor::Claude,
         CompatSurface::Mcps,
-        "GROK_CLAUDE_MCPS_ENABLED",
+        "CGROK_CLAUDE_MCPS_ENABLED",
         Some(CompatRemoteKey::ClaudeMcps),
     ),
     CompatCell::new(
         CompatVendor::Claude,
         CompatSurface::Hooks,
-        "GROK_CLAUDE_HOOKS_ENABLED",
+        "CGROK_CLAUDE_HOOKS_ENABLED",
         Some(CompatRemoteKey::ClaudeHooks),
     ),
     CompatCell::new(
         CompatVendor::Claude,
         CompatSurface::Sessions,
-        "GROK_CLAUDE_SESSIONS_ENABLED",
+        "CGROK_CLAUDE_SESSIONS_ENABLED",
         Some(CompatRemoteKey::ClaudeSessions),
     ),
     CompatCell::new(
         CompatVendor::Codex,
         CompatSurface::Skills,
-        "GROK_CODEX_SKILLS_ENABLED",
+        "CGROK_CODEX_SKILLS_ENABLED",
         None,
     ),
     CompatCell::new(
         CompatVendor::Codex,
         CompatSurface::Rules,
-        "GROK_CODEX_RULES_ENABLED",
+        "CGROK_CODEX_RULES_ENABLED",
         None,
     ),
     CompatCell::new(
         CompatVendor::Codex,
         CompatSurface::Agents,
-        "GROK_CODEX_AGENTS_ENABLED",
+        "CGROK_CODEX_AGENTS_ENABLED",
         None,
     ),
     CompatCell::new(
         CompatVendor::Codex,
         CompatSurface::Mcps,
-        "GROK_CODEX_MCPS_ENABLED",
+        "CGROK_CODEX_MCPS_ENABLED",
         None,
     ),
     CompatCell::new(
         CompatVendor::Codex,
         CompatSurface::Hooks,
-        "GROK_CODEX_HOOKS_ENABLED",
+        "CGROK_CODEX_HOOKS_ENABLED",
         None,
     ),
     CompatCell::new(
         CompatVendor::Codex,
         CompatSurface::Sessions,
-        "GROK_CODEX_SESSIONS_ENABLED",
+        "CGROK_CODEX_SESSIONS_ENABLED",
         Some(CompatRemoteKey::CodexSessions),
     ),
 ];
@@ -332,7 +332,7 @@ pub struct CompatSessions {
     pub codex: bool,
 }
 
-/// The `GROK_<VENDOR>_<SURFACE>_ENABLED` values set in the environment, which outrank every other
+/// The `CGROK_<VENDOR>_<SURFACE>_ENABLED` values set in the environment, which outrank every other
 /// source of their cell.
 #[derive(Debug, Clone, Default)]
 pub struct CompatEnv {
@@ -400,10 +400,10 @@ impl CompatConfig {
         }
     }
 
-    /// Config directories that may contain `skills/` subdirectories, in priority order. `.grok` and `.agents` are always included; `.claude` and
+    /// Config directories that may contain `skills/` subdirectories, in priority order. `.cgrok` and `.agents` are always included; `.claude` and
     /// `.cursor` are gated on their respective `skills` cell.
     pub fn skill_config_dirs(&self) -> Vec<&'static str> {
-        let mut dirs = vec![".grok", ".agents"];
+        let mut dirs = vec![".cgrok", ".agents"];
         if self.claude.skills {
             dirs.push(".claude");
         }
@@ -413,10 +413,10 @@ impl CompatConfig {
         dirs
     }
 
-    /// Subdirectories scanned for `*.md` rules files. `.grok/rules` is always included;
+    /// Subdirectories scanned for `*.md` rules files. `.cgrok/rules` is always included;
     /// `.claude/rules` and `.cursor/rules` are gated on their respective `rules` cell.
     pub fn rules_dirs(&self) -> Vec<&'static str> {
-        let mut dirs = vec![".grok/rules"];
+        let mut dirs = vec![".cgrok/rules"];
         if self.claude.rules {
             dirs.push(".claude/rules");
         }

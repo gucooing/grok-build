@@ -20,7 +20,7 @@ pub struct HeadlessResult {
     pub elapsed: Duration,
 }
 
-/// Timeout for one headless grok invocation: 60 seconds, multiplied by [`crate::scaled`]'s `GROK_TEST_TIMEOUT_SCALE`.
+/// Timeout for one headless grok invocation: 60 seconds, multiplied by [`crate::scaled`]'s `CGROK_TEST_TIMEOUT_SCALE`.
 fn headless_timeout() -> Duration {
     crate::scaled(Duration::from_secs(60))
 }
@@ -48,7 +48,7 @@ pub async fn run_headless_with_env(
     let mut sandbox = TestSandbox::builder().mock_url(server.url()).build();
     // The baseline clears the env, so this is the child's only route to trusting the throwaway CA.
     if let Some(ca_pem) = server.ca_pem_path() {
-        sandbox.set_env("GROK_EXTRA_CA_BUNDLE", ca_pem);
+        sandbox.set_env("CGROK_EXTRA_CA_BUNDLE", ca_pem);
     }
     let mut cmd = tokio::process::Command::new(grok_binary());
     cmd.args(args).current_dir(cwd);
@@ -336,16 +336,16 @@ mod tests {
         let mut cmd = tokio::process::Command::new("/bin/sh");
         cmd.args([
             "-c",
-            "printf '%s|%s|%s|%s' \"${AMBIENT_ONLY-unset}\" \"$GROK_PROMPT_SUGGESTIONS\" \"$FEATURE_TEST_VAR\" \"$HOME\"",
+            "printf '%s|%s|%s|%s' \"${AMBIENT_ONLY-unset}\" \"$CGROK_PROMPT_SUGGESTIONS\" \"$FEATURE_TEST_VAR\" \"$HOME\"",
         ])
         .env("AMBIENT_ONLY", "discarded")
-        .env("GROK_PROMPT_SUGGESTIONS", "command-level-discarded");
+        .env("CGROK_PROMPT_SUGGESTIONS", "command-level-discarded");
 
         let result = run_headless_in_sandbox_borrowed_with_env(
             cmd,
             &sandbox,
             &[
-                ("GROK_PROMPT_SUGGESTIONS", "explicit-override"),
+                ("CGROK_PROMPT_SUGGESTIONS", "explicit-override"),
                 ("FEATURE_TEST_VAR", "enabled"),
             ],
         )

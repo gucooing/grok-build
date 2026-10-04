@@ -34,7 +34,7 @@ pub use bot_relay::{
     BotRosterParams, BotRosterResult, BotRunState, BotStatusParams, BotStatusResult,
     BotSubscribeParams, BotSubscribeResult, BotTranscriptEntryStamp, BotTranscriptOffboxParams,
     BotTranscriptOffboxResult, BotUnsubscribeParams, BotUnsubscribeResult, BotUsageParams,
-    BotUsageResult, BotVncDescriptorParams, BotVncDescriptorResult,
+    BotUsageResult, BotVncDescriptorParams, BotVncDescriptorResult, CGROK_CHAT_CLIENT_NONCE_PREFIX,
     COMMAND_REJECTED_AGENT_ID_MISMATCH, COMMAND_REJECTED_ARGS_INVALID,
     COMMAND_REJECTED_ARGS_TOO_LARGE, COMMAND_REJECTED_ATTACHMENT_CREDENTIAL_UNAVAILABLE,
     COMMAND_REJECTED_ATTACHMENT_NOT_FOUND, COMMAND_REJECTED_ATTACHMENT_NOT_READY,
@@ -44,9 +44,9 @@ pub use bot_relay::{
     COMMAND_REJECTED_HARNESS_REFUSED, COMMAND_REJECTED_MAIN_AGENT_NOT_ENABLED,
     COMMAND_REJECTED_NOT_SUPPORTED_IN_LIVE, COMMAND_REJECTED_NOT_YET_ENABLED,
     COMMAND_REJECTED_REASONS, COMMAND_REJECTED_TEMPORAL_UNSUPPORTED,
-    COMMAND_REJECTED_VOICE_CALL_UNAVAILABLE, GROK_CHAT_CLIENT_NONCE_PREFIX, HubChannel,
-    HubResyncRequiredEvent, HubTurnFinishedEvent, HubTurnStartedEvent, HubUnknownChannel,
-    UpstreamChannel, is_gateway_method_unsupported,
+    COMMAND_REJECTED_VOICE_CALL_UNAVAILABLE, HubChannel, HubResyncRequiredEvent,
+    HubTurnFinishedEvent, HubTurnStartedEvent, HubUnknownChannel, UpstreamChannel,
+    is_gateway_method_unsupported,
 };
 pub use capabilities::{HookKind, NotificationSchemas, StreamingSpec, ToolCapabilities, ToolScope};
 pub use connection::{ConnectionKind, ToolDefinitionMode};

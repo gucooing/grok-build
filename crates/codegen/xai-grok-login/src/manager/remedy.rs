@@ -192,7 +192,7 @@ impl AuthManager {
         match (user_must_act, provider_mints_sessions) {
             (false, _) => AuthRemedy::SelfHealing,
             (true, true) => AuthRemedy::ProviderLogin {
-                label: self.grok_com_config().auth_provider_label.clone(),
+                label: self.cgrok_com_config().auth_provider_label.clone(),
             },
             (true, false) => AuthRemedy::ManualLogin,
         }

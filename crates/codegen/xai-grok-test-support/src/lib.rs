@@ -18,7 +18,7 @@
 //! - [`TestProcess`]: Own detached child lifecycle, process-tree teardown, bounded output tails
 //! - [`run_headless`]: Run `grok -p` against the mock server and capture output
 //! - [`git_workdir`]: Create a git-initialized [`TestSandbox`]
-//! - [`grok_binary`]: Resolve the grok binary path (GROK_BINARY env or cargo_bin)
+//! - [`grok_binary`]: Resolve the grok binary path (CGROK_BINARY env or cargo_bin)
 //! - [`spawn_counting_server`]: Connection-counting HTTP/1.1 server for wire/pooling tests
 //! - [`ResourceSnapshot`]: RSS/threads/fds sampling for soak tests
 //! - [`MockOtelServer`]: OTLP/HTTP collector recording the shell's exported logs, metrics, and traces
@@ -27,10 +27,10 @@
 //! - [`ManagedPolicy`]: the configuration row the mock server serves for one principal, signed by a [`TestSigningKey`] or not
 //! - [`acp_fixtures`]: Constructors for the ACP values that tests build by hand
 #![deny(clippy::indexing_slicing)]
-/// Multiply a harness timeout by `GROK_TEST_TIMEOUT_SCALE` (positive integer, default 1).
+/// Multiply a harness timeout by `CGROK_TEST_TIMEOUT_SCALE` (positive integer, default 1).
 /// CI lanes on shared runner pools raise it so pool load slows tests instead of failing them (see the Grok Build merge CI workflow).
 pub fn scaled(base: std::time::Duration) -> std::time::Duration {
-    let scale = std::env::var("GROK_TEST_TIMEOUT_SCALE")
+    let scale = std::env::var("CGROK_TEST_TIMEOUT_SCALE")
         .ok()
         .and_then(|v| v.parse::<u32>().ok())
         .filter(|&v| v > 0)
@@ -160,4 +160,4 @@ pub use process::{
 pub use resources::{ResourceGrowth, ResourceSnapshot, RssMeasurement, RssOutcome, RssSampler};
 pub use sandbox::{TestSandbox, TestSandboxBuilder};
 pub use sse::UsageReport;
-pub use tools::{DAEMON_SPAWN_TOOL, GROK_BUILD_SPAWN_TOOL, Tool};
+pub use tools::{CGROK_BUILD_SPAWN_TOOL, DAEMON_SPAWN_TOOL, Tool};

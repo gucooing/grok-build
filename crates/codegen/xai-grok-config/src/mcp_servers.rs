@@ -1,4 +1,4 @@
-//! The user `config.toml` comes before project `.grok/config.toml` files.
+//! The user `config.toml` comes before project `.cgrok/config.toml` files.
 //! A server with `enabled = false` still hides its name from later sources.
 //! Plugins come after those toml files.
 //! `~/.claude.json` comes after plugins.
@@ -160,9 +160,9 @@ pub(crate) fn plugin_substitute(root: &Path, data_dir: &Path) -> impl Fn(&str) -
     move |value: &str| {
         let value = value
             .replace("${CLAUDE_PLUGIN_ROOT}", &plugin_root)
-            .replace("${GROK_PLUGIN_ROOT}", &plugin_root)
+            .replace("${CGROK_PLUGIN_ROOT}", &plugin_root)
             .replace("${CLAUDE_PLUGIN_DATA}", &plugin_data)
-            .replace("${GROK_PLUGIN_DATA}", &plugin_data);
+            .replace("${CGROK_PLUGIN_DATA}", &plugin_data);
         crate::expand_env_vars_in_string(&value)
     }
 }

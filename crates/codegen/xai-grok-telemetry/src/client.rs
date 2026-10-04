@@ -57,8 +57,8 @@ impl std::fmt::Debug for TelemetryClient {
             .finish()
     }
 }
-/// Opts a dev build (no `GROK_VERSION` at compile time) back into the baked production sinks.
-const ALLOW_DEV_BUILD_ENV: &str = "GROK_TELEMETRY_ALLOW_DEV_BUILD";
+/// Opts a dev build (no `CGROK_VERSION` at compile time) back into the baked production sinks.
+const ALLOW_DEV_BUILD_ENV: &str = "CGROK_TELEMETRY_ALLOW_DEV_BUILD";
 /// `from_config` runs on every (re-)init, up to three times per process; the disarm is logged once.
 static DEV_BUILD_DISARM_LOGGED: Once = Once::new();
 impl TelemetryClient {

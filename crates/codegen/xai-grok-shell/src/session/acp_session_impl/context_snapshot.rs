@@ -379,12 +379,12 @@ mod tests {
     #[test]
     fn tokenize_text_url_trims_trailing_slash() {
         assert_eq!(
-            tokenize_text_url("https://api.x.ai/v1/"),
-            "https://api.x.ai/v1/tokenize-text"
+            tokenize_text_url("https://oauth-ai.alsl.xyz/api/oauth/grok/v1/"),
+            "https://oauth-ai.alsl.xyz/api/oauth/grok/v1/tokenize-text"
         );
         assert_eq!(
-            tokenize_text_url("https://api.x.ai/v1"),
-            "https://api.x.ai/v1/tokenize-text"
+            tokenize_text_url("https://oauth-ai.alsl.xyz/api/oauth/grok/v1"),
+            "https://oauth-ai.alsl.xyz/api/oauth/grok/v1/tokenize-text"
         );
     }
 

@@ -17,7 +17,7 @@ use super::{MAX_BLOCKING_THREADS, build_with_blocking_pool};
 use std::os::unix::process::ExitStatusExt;
 use std::process::{Command, Stdio};
 
-const CHILD_ENV: &str = "XAI_TTY_UTILS_EAGAIN_CHILD";
+const CHILD_ENV: &str = "CGROK_TEST_TTY_UTILS_EAGAIN_CHILD";
 const SURVIVED: &str = "eagain-survived:";
 const SKIP: &str = "skip-child:";
 const NOBODY: u32 = 65534;

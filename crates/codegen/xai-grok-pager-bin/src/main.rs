@@ -125,7 +125,7 @@ use xai_grok_update::enforce_version_policy_or_exit;
 use xai_grok_update::{UpdateConfig, auto_update};
 #[cfg(all(feature = "test-seams", debug_assertions))]
 mod test_seam {
-    const TEST_TRUSTED_PUBKEY_FILE_ENV: &str = "GROK_TEST_TRUSTED_PUBKEY_FILE";
+    const TEST_TRUSTED_PUBKEY_FILE_ENV: &str = "CGROK_TEST_TRUSTED_PUBKEY_FILE";
     pub(super) fn install() {
         let Ok(path) = std::env::var(TEST_TRUSTED_PUBKEY_FILE_ENV) else {
             return;
@@ -133,12 +133,12 @@ mod test_seam {
         let bytes = match std::fs::read(&path) {
             Ok(bytes) => bytes,
             Err(e) => {
-                eprintln!("grok test-seams: cannot read {path}: {e}");
+                eprintln!("cgrok test-seams: cannot read {path}: {e}");
                 return;
             }
         };
         let Some(separator) = bytes.iter().position(|byte| *byte == b'\n') else {
-            eprintln!("grok test-seams: pubkey file lacks a key_id separator");
+            eprintln!("cgrok test-seams: pubkey file lacks a key_id separator");
             return;
         };
         let (key_id, rest) = bytes.split_at(separator);
@@ -146,13 +146,13 @@ mod test_seam {
             return;
         };
         let Ok(key_id) = std::str::from_utf8(key_id) else {
-            eprintln!("grok test-seams: key_id is not utf8");
+            eprintln!("cgrok test-seams: key_id is not utf8");
             return;
         };
         let key_id = key_id.trim();
         if public_key.len() != 32 {
             eprintln!(
-                "grok test-seams: pubkey must be 32 bytes, found {}",
+                "cgrok test-seams: pubkey must be 32 bytes, found {}",
                 public_key.len()
             );
             return;
@@ -164,10 +164,10 @@ mod test_seam {
 /// Unset args leave the environment defaults in place.
 fn apply_headless_args_to_config(args: &HeadlessArgs, config: &mut AgentConfig) {
     if let Some(v) = &args.grok_ws_origin {
-        config.grok_com_config.grok_ws_origin = v.clone();
+        config.cgrok_com_config.grok_ws_origin = v.clone();
     }
     if let Some(v) = &args.grok_ws_url {
-        config.grok_com_config.grok_ws_url = v.clone();
+        config.cgrok_com_config.grok_ws_url = v.clone();
     }
 }
 /// Apply global endpoint CLI args to an existing config.
@@ -213,7 +213,7 @@ fn print_serve_startup_info(bind_addr: SocketAddr, secret: &str) {
     );
     eprintln!();
 }
-/// Entrypoint tag for `grok -p`; keys the quiet stderr default in `init_tracing_simple`.
+/// Entrypoint tag for `cgrok -p`; keys the quiet stderr default in `init_tracing_simple`.
 const HEADLESS_ENTRYPOINT: &str = "headless";
 /// Initialize simple tracing for non-TUI agent modes.
 fn init_tracing_simple(app_entrypoint: &'static str) {
@@ -269,17 +269,17 @@ async fn run_setup_command(json: bool) {
     if !managed_config::has_principal() {
         eprintln!("No deployment key or team sign-in found.");
         eprintln!();
-        eprintln!("To install managed configuration, sign in with a team using `grok login`,");
+        eprintln!("To install managed configuration, sign in with a team using `cgrok login`,");
         eprintln!("or set a deployment key:");
         eprintln!();
         if cfg!(unix) {
-            eprintln!("  export GROK_DEPLOYMENT_KEY=<your-key>");
+            eprintln!("  export CGROK_DEPLOYMENT_KEY=<your-key>");
         } else {
-            eprintln!("  $env:GROK_DEPLOYMENT_KEY=\"<your-key>\"");
+            eprintln!("  $env:CGROK_DEPLOYMENT_KEY=\"<your-key>\"");
         }
-        eprintln!("  grok setup");
+        eprintln!("  cgrok setup");
         eprintln!();
-        eprintln!("Or add the key to ~/.grok/config.toml:");
+        eprintln!("Or add the key to ~/.cgrok/config.toml:");
         eprintln!();
         eprintln!("  [endpoints]");
         eprintln!("  deployment_key = \"<your-key>\"");
@@ -317,7 +317,7 @@ async fn run_setup_command(json: bool) {
         }
         SetupOutcome::Skipped => {
             eprintln!(
-                "Managed configuration was not applied this run (another process held the apply lock, or the credential changed during the fetch). Run `grok setup` again."
+                "Managed configuration was not applied this run (another process held the apply lock, or the credential changed during the fetch). Run `cgrok setup` again."
             );
         }
         SetupOutcome::Staged => {
@@ -393,7 +393,7 @@ async fn kill_leaders() -> Result<()> {
         };
         if !xai_grok_shell::util::is_grok_process(pid) {
             if let Some(ref lock) = d.lock_path {
-                eprintln!("  PID {pid} is not a grok process, removing stale lock");
+                eprintln!("  PID {pid} is not a cgrok process, removing stale lock");
                 let _ = std::fs::remove_file(lock);
                 cleaned += 1;
             }
@@ -490,12 +490,12 @@ fn ensure_control_caps(reg: &LeaderRegistration) -> Result<&LeaderCapabilities> 
         .as_ref()
         .ok_or_else(|| anyhow::anyhow!("Leader does not advertise capabilities (legacy version)"))
 }
-/// Env override for the `grok workspace` gate: any truthy value enables the command locally, a falsy one disables it.
+/// Env override for the `cgrok workspace` gate: any truthy value enables the command locally, a falsy one disables it.
 /// Either way it bypasses the remote settings flag.
-const WORKSPACE_COMMAND_ENV: &str = "GROK_WORKSPACE_COMMAND";
+const WORKSPACE_COMMAND_ENV: &str = "CGROK_WORKSPACE_COMMAND";
 /// One leader door's CLI identity, shared by `connect_leader_control` and `spawn_and_connect_leader`.
 struct LeaderDoorCli {
-    /// The command name as the user types it (`grok workspace`); `<name> start` is its start command.
+    /// The command name as the user types it (`cgrok workspace`); `<name> start` is its start command.
     name: &'static str,
     /// IPC client type the leader records for connections from this command.
     client_type: &'static str,
@@ -503,11 +503,11 @@ struct LeaderDoorCli {
     leader_mode_reason: &'static str,
 }
 const WORKSPACE_DOOR: LeaderDoorCli = LeaderDoorCli {
-    name: "grok workspace",
+    name: "cgrok workspace",
     client_type: "grok-workspace-cli",
     leader_mode_reason: "the workspace is shared via the leader",
 };
-/// Resolution of the `grok workspace` gate.
+/// Resolution of the `cgrok workspace` gate.
 /// `Unknown` is kept separate from `Disabled` so we don't tell the user the flag is off when the settings were never read.
 /// Both fail closed, but `Unknown` earns an honest message.
 #[derive(Debug, PartialEq, Eq)]
@@ -516,7 +516,7 @@ enum WorkspaceGate {
     Disabled,
     Unknown,
 }
-/// The `GROK_WORKSPACE_COMMAND` override, if set (`Some(true)`/`Some(false)`); `None` defers to the remote settings flag.
+/// The `CGROK_WORKSPACE_COMMAND` override, if set (`Some(true)`/`Some(false)`); `None` defers to the remote settings flag.
 fn workspace_command_env_override() -> Option<bool> {
     std::env::var(WORKSPACE_COMMAND_ENV)
         .ok()
@@ -541,7 +541,7 @@ fn workspace_command_gate(
         None => WorkspaceGate::Unknown,
     }
 }
-/// Truthy parse for grok on/off env vars: everything enables except the common falsy spellings (`0`, `false`, `off`, `no`, empty).
+/// Truthy parse for cgrok on/off env vars: everything enables except the common falsy spellings (`0`, `false`, `off`, `no`, empty).
 fn env_flag_enabled(value: &str) -> bool {
     !matches!(
         value.trim().to_ascii_lowercase().as_str(),
@@ -551,7 +551,7 @@ fn env_flag_enabled(value: &str) -> bool {
 /// File and managed IdP for a settings query that runs before effective-config load.
 fn load_grok_com_config_for_settings() -> xai_grok_shell::auth::GrokComConfig {
     xai_grok_shell::config::load_agent_config_disk_only()
-        .map(|cfg| cfg.grok_com_config)
+        .map(|cfg| cfg.cgrok_com_config)
         .unwrap_or_default()
 }
 /// Async fetch of remote settings via the startup getter, capped at the
@@ -561,11 +561,11 @@ fn load_grok_com_config_for_settings() -> xai_grok_shell::auth::GrokComConfig {
 /// value, so it would fall open and let workspace refuse the command before the
 /// load could complete.
 async fn fetch_remote_settings(
-    grok_com_config: &xai_grok_shell::auth::GrokComConfig,
+    cgrok_com_config: &xai_grok_shell::auth::GrokComConfig,
 ) -> Option<xai_grok_shell::util::config::RemoteSettings> {
     let query = xai_grok_shell::agent::remote_config::settings_get::SettingsQuery::resolve(
         None,
-        Some(grok_com_config.clone()),
+        Some(cgrok_com_config.clone()),
     );
     let wait = xai_grok_shell::agent::remote_config::settings_get::await_startup_settings(
         query,
@@ -573,7 +573,7 @@ async fn fetch_remote_settings(
         &tokio_util::sync::CancellationToken::new(),
     )
     .await;
-    xai_grok_shell::agent::remote_config::settings_get::consume_wait(wait, None, grok_com_config)
+    xai_grok_shell::agent::remote_config::settings_get::consume_wait(wait, None, cgrok_com_config)
 }
 #[tracing::instrument(level = "debug", skip_all)]
 async fn run_workspace_mgmt(args: WorkspaceMgmtArgs) -> Result<()> {
@@ -585,16 +585,16 @@ async fn run_workspace_mgmt(args: WorkspaceMgmtArgs) -> Result<()> {
     ) && let Some(profile) = xai_grok_sandbox::requested_confinement_profile()
     {
         anyhow::bail!(
-            "`grok workspace` start/restart/resume is unavailable under sandbox profile '{profile}': \
+            "`cgrok workspace` start/restart/resume is unavailable under sandbox profile '{profile}': \
              those commands (re)activate shared-leader workspace exposure that this session cannot \
              prove is confined by that profile. Disable the profile at the source that selected it \
              (CLI, env, config, or a managed requirement)."
         );
     }
     let env_override = workspace_command_env_override();
-    let grok_com_config = load_grok_com_config_for_settings();
+    let cgrok_com_config = load_grok_com_config_for_settings();
     let remote_settings = if env_override.is_none() {
-        fetch_remote_settings(&grok_com_config).await
+        fetch_remote_settings(&cgrok_com_config).await
     } else {
         None
     };
@@ -602,14 +602,14 @@ async fn run_workspace_mgmt(args: WorkspaceMgmtArgs) -> Result<()> {
         WorkspaceGate::Enabled => {}
         WorkspaceGate::Disabled => {
             anyhow::bail!(
-                "`grok workspace` is not enabled for this account \
+                "`cgrok workspace` is not enabled for this account \
              (gated by a server-side feature flag that is currently off)."
             )
         }
         WorkspaceGate::Unknown => {
             anyhow::bail!(
-                "Could not load your settings for `grok workspace`. Check your \
-             network connection (run `grok login` if you are signed out), then \
+                "Could not load your settings for `cgrok workspace`. Check your \
+             network connection (run `cgrok login` if you are signed out), then \
              try again."
             )
         }
@@ -618,14 +618,14 @@ async fn run_workspace_mgmt(args: WorkspaceMgmtArgs) -> Result<()> {
         WorkspaceMgmtCommand::Start(a) => {
             let settings = match remote_settings {
                 Some(settings) => Some(settings),
-                None => fetch_remote_settings(&grok_com_config).await,
+                None => fetch_remote_settings(&cgrok_com_config).await,
             };
             workspace_start(a, false, settings).await
         }
         WorkspaceMgmtCommand::Restart(a) => {
             let settings = match remote_settings {
                 Some(settings) => Some(settings),
-                None => fetch_remote_settings(&grok_com_config).await,
+                None => fetch_remote_settings(&cgrok_com_config).await,
             };
             workspace_start(a, true, settings).await
         }
@@ -665,7 +665,7 @@ async fn connect_leader_control(
         let (_descriptor, client) = connect_to_leader(target).await?;
         return Ok(client);
     }
-    let ws_url = &agent_config.grok_com_config.grok_ws_url;
+    let ws_url = &agent_config.cgrok_com_config.grok_ws_url;
     let socket = socket_path_for_ws_url(ws_url);
     LeaderClient::connect(
         socket,
@@ -677,7 +677,7 @@ async fn connect_leader_control(
     .map_err(|e| {
         anyhow::anyhow!(
             "no running leader for this environment ({e}). \
-             Start a grok session, or run `{} start`.",
+             Start a cgrok session, or run `{} start`.",
             door.name
         )
     })
@@ -708,20 +708,20 @@ async fn spawn_and_connect_leader(
     if !use_leader {
         anyhow::bail!(
             "`{}` requires leader mode ({}).\n\
-             Enable it with `[cli] use_leader = true` in ~/.grok/config.toml, or pass --leader.",
+             Enable it with `[cli] use_leader = true` in ~/.cgrok/config.toml, or pass --leader.",
             door.name,
             door.leader_mode_reason
         );
     }
     ensure_authenticated(
-        &agent_config.grok_com_config,
+        &agent_config.cgrok_com_config,
         agent_config.login_device_flow,
         agent_config.endpoints.proxy_url(),
         false,
-        Some("No cached credentials found. Run `grok login` first."),
+        Some("No cached credentials found. Run `cgrok login` first."),
     )
     .await?;
-    let env_urls = LeaderEnvUrls::from(&agent_config.grok_com_config);
+    let env_urls = LeaderEnvUrls::from(&agent_config.cgrok_com_config);
     let capabilities = ClientCapabilities {
         client_version: Some(PAGER_CLIENT_VERSION.to_string()),
         ..Default::default()
@@ -1185,7 +1185,7 @@ fn shutdown_and_flush_telemetry(exit_code: i32) -> ! {
 }
 fn finalize_span_profile() {
     if let Some(path) = xai_grok_telemetry::span_profile::finalize() {
-        eprintln!("grok: span profile written to {}", path.display());
+        eprintln!("cgrok: span profile written to {}", path.display());
     }
 }
 #[tracing::instrument(level = "debug", skip_all)]
@@ -1220,7 +1220,7 @@ async fn forward_stdio_line_to_leader(
     }
 }
 /// Emitted by both leader guards (server mode and leader-connect) so the two sites can't drift.
-const PLUGIN_DIR_LEADER_WARNING: &str = "grok: --plugin-dir is ignored in leader mode; run with --no-leader to \
+const PLUGIN_DIR_LEADER_WARNING: &str = "cgrok: --plugin-dir is ignored in leader mode; run with --no-leader to \
      load per-process plugins";
 /// Run the `agent` subcommand, dispatching to the appropriate mode.
 #[tracing::instrument(level = "debug", skip_all)]
@@ -1255,10 +1255,10 @@ async fn run_agent_command(
             }
         }
     }
-    let grok_com_config = load_grok_com_config_for_settings();
+    let cgrok_com_config = load_grok_com_config_for_settings();
     let settings_query = xai_grok_shell::agent::remote_config::settings_get::SettingsQuery::resolve(
         None,
-        Some(grok_com_config.clone()),
+        Some(cgrok_com_config.clone()),
     );
     let had_prefetch =
         xai_grok_shell::agent::remote_config::settings_get::is_eligible(&settings_query);
@@ -1298,7 +1298,7 @@ async fn run_agent_command(
         xai_grok_shell::agent::remote_config::settings_get::consume_wait(
             wait,
             None,
-            &grok_com_config,
+            &cgrok_com_config,
         )
     } else {
         None
@@ -1319,7 +1319,7 @@ async fn run_agent_command(
         None,
     );
     if let Some(warning) = launch_yolo.blocked_warning {
-        eprintln!("grok: {warning}");
+        eprintln!("cgrok: {warning}");
     }
     agent_config.default_yolo_mode = launch_yolo.yolo;
     agent_config.default_auto_mode = xai_grok_shell::util::config::effective_auto_for_launch(
@@ -1425,7 +1425,7 @@ async fn run_agent_command(
             Some(AgentCmd::Headless(_)) | None => ClientMode::Headless,
             _ => ClientMode::Stdio,
         };
-        let env_urls = xai_grok_shell::leader::LeaderEnvUrls::from(&agent_config.grok_com_config);
+        let env_urls = xai_grok_shell::leader::LeaderEnvUrls::from(&agent_config.cgrok_com_config);
         let default_model = agent_config
             .default_model_override
             .clone()
@@ -1725,7 +1725,7 @@ fn raise_fd_limit() {
 #[cfg(not(unix))]
 fn raise_fd_limit() {}
 /// Clears `args.command` so the regular subcommand match doesn't try to handle it. The only gate is the feature
-/// flag: a disabled dashboard (`[dashboard].enabled = false` / `GROK_AGENT_DASHBOARD=0`) is a CLI error. It fires
+/// flag: a disabled dashboard (`[dashboard].enabled = false` / `CGROK_AGENT_DASHBOARD=0`) is a CLI error. It fires
 /// here, before the TUI starts, because the welcome view silently drops the equivalent runtime toast.
 fn flag_dashboard_at_startup_if_requested(args: &mut PagerArgs) -> Result<()> {
     if !matches!(args.command, Some(Command::Dashboard)) {
@@ -1734,12 +1734,12 @@ fn flag_dashboard_at_startup_if_requested(args: &mut PagerArgs) -> Result<()> {
     if !xai_grok_pager::views::dashboard::dashboard_enabled() {
         anyhow::bail!(
             "the Agent Dashboard is disabled. Enable it by removing \
-             `[dashboard] enabled = false` from ~/.grok/config.toml and \
-             unsetting GROK_AGENT_DASHBOARD=0."
+             `[dashboard] enabled = false` from ~/.cgrok/config.toml and \
+             unsetting CGROK_AGENT_DASHBOARD=0."
         );
     }
     args.command = None;
-    unsafe { std::env::set_var("GROK_OPEN_DASHBOARD_AT_STARTUP", "1") };
+    unsafe { std::env::set_var("CGROK_OPEN_DASHBOARD_AT_STARTUP", "1") };
     Ok(())
 }
 /// Kick off background work that overlaps startup. Add new prewarms here.
@@ -1751,42 +1751,42 @@ fn configure_process_env(mut args: PagerArgs) -> Result<PagerArgs> {
     let args = args.apply_cwd()?;
     unsafe {
         if let Some(mode) = args.compaction_mode.as_deref() {
-            std::env::set_var("GROK_COMPACTION_MODE", mode);
+            std::env::set_var("CGROK_COMPACTION_MODE", mode);
         }
         if let Some(detail) = args.compaction_detail.as_deref() {
-            std::env::set_var("GROK_COMPACTION_DETAIL", detail);
+            std::env::set_var("CGROK_COMPACTION_DETAIL", detail);
         }
         if args.chat() {
-            std::env::set_var(xai_grok_shell::agent::chat_modes::GROK_CHAT_MODE_ENV, "1");
+            std::env::set_var(xai_grok_shell::agent::chat_modes::CGROK_CHAT_MODE_ENV, "1");
         }
         if let Some(socket) = args.leader_socket.as_deref() {
             std::env::set_var(xai_grok_shell::leader::LEADER_SOCKET_ENV, socket);
         }
         if args.log_sampling {
-            std::env::set_var("GROK_LOG_SAMPLING", "1");
+            std::env::set_var("CGROK_LOG_SAMPLING", "1");
         }
         if let Some(path) = args.debug_file.as_deref() {
-            std::env::set_var("GROK_DEBUG_LOG", path);
-            std::env::remove_var("GROK_LOG_FILE");
+            std::env::set_var("CGROK_DEBUG_LOG", path);
+            std::env::remove_var("CGROK_LOG_FILE");
         }
         if args.debug || args.debug_file.is_some() {
-            if std::env::var_os("GROK_DEBUG_LOG").is_none() {
-                std::env::set_var("GROK_DEBUG_LOG", "1");
+            if std::env::var_os("CGROK_DEBUG_LOG").is_none() {
+                std::env::set_var("CGROK_DEBUG_LOG", "1");
             }
-            if std::env::var_os("GROK_HOOKS_LOG").is_none() {
-                std::env::set_var("GROK_HOOKS_LOG", "1");
+            if std::env::var_os("CGROK_HOOKS_LOG").is_none() {
+                std::env::set_var("CGROK_HOOKS_LOG", "1");
             }
         }
     }
     Ok(args)
 }
 const RUNTIME_SHUTDOWN_GRACE: std::time::Duration = std::time::Duration::from_secs(2);
-const GROK_WORKER_THREADS_ENV: &str = "GROK_WORKER_THREADS";
+const CGROK_WORKER_THREADS_ENV: &str = "CGROK_WORKER_THREADS";
 /// tokio defaults to one worker per logical CPU.
 /// On a host with hundreds of CPUs that can exhaust a cgroup thread budget at startup and abort under `panic = "abort"`.
 /// A terminal UI is I/O-bound, so cap at 8.
 const DEFAULT_MAX_WORKER_THREADS: NonZeroUsize = NonZeroUsize::new(8).unwrap();
-/// How `GROK_WORKER_THREADS` resolved.
+/// How `CGROK_WORKER_THREADS` resolved.
 #[derive(Debug, PartialEq, Eq)]
 enum WorkerCount {
     Accepted(NonZeroUsize),
@@ -1814,17 +1814,17 @@ impl WorkerCount {
                 used,
                 cores,
             } => Some(format!(
-                "grok: clamped {GROK_WORKER_THREADS_ENV}={requested} to {used} (valid range is 1..={cores})"
+                "cgrok: clamped {CGROK_WORKER_THREADS_ENV}={requested} to {used} (valid range is 1..={cores})"
             )),
             Self::Ignored { value, .. } => Some(format!(
-                "grok: ignoring {GROK_WORKER_THREADS_ENV}={value:?} (not a valid integer)"
+                "cgrok: ignoring {CGROK_WORKER_THREADS_ENV}={value:?} (not a valid integer)"
             )),
         }
     }
 }
 fn cli_worker_threads() -> NonZeroUsize {
     let cores = std::thread::available_parallelism().unwrap_or(NonZeroUsize::MIN);
-    let resolved = match std::env::var(GROK_WORKER_THREADS_ENV) {
+    let resolved = match std::env::var(CGROK_WORKER_THREADS_ENV) {
         Ok(value) => worker_threads_from(Some(&value), cores),
         Err(std::env::VarError::NotPresent) => worker_threads_from(None, cores),
         Err(std::env::VarError::NotUnicode(value)) => WorkerCount::Ignored {
@@ -1990,7 +1990,7 @@ fn install_heap_profile_hooks() {
 }
 fn version_text(channel_label: &str) -> String {
     format!(
-        "grok {}\n",
+        "cgrok {}\n",
         xai_grok_version::display_version_with_commit(
             xai_grok_version::full_version(),
             channel_label,
@@ -2065,7 +2065,7 @@ fn main() {
         xai_grok_shell::agent::external_otel_pin::strip_conflicting_process_env();
     }
     let args = configure_process_env(args).unwrap_or_else(|err| {
-        eprintln!("grok: {err:#}");
+        eprintln!("cgrok: {err:#}");
         std::process::exit(1);
     });
     xai_grok_pager::memory_trace::start(xai_grok_pager::memory_trace::default_dir());
@@ -2111,7 +2111,7 @@ fn main() {
     builder.worker_threads(workers.get()).enable_all();
     let runtime =
         xai_tty_utils::runtime::build_with_blocking_pool(&mut builder).unwrap_or_else(|e| {
-            eprintln!("grok: failed to start tokio runtime: {e}");
+            eprintln!("cgrok: failed to start tokio runtime: {e}");
             shutdown_and_flush_telemetry(1);
         });
     let result = run_and_shutdown(runtime, async_main(args), RUNTIME_SHUTDOWN_GRACE);
@@ -2181,11 +2181,11 @@ async fn async_main(mut args: PagerArgs) -> Result<()> {
                 let auth_manager =
                     std::sync::Arc::new(xai_grok_login::AuthManager::new_with_proxy_base_url(
                         &xai_grok_shell::util::grok_home::grok_home(),
-                        agent_cfg.grok_com_config.clone(),
+                        agent_cfg.cgrok_com_config.clone(),
                         agent_cfg.endpoints.proxy_url(),
                     ));
                 auth_manager.configure_refresher(
-                    agent_cfg.grok_com_config.auth_provider_command.clone(),
+                    agent_cfg.cgrok_com_config.auth_provider_command.clone(),
                     None,
                 );
                 xai_grok_cloud_config::managed_config::ensure_managed_policy_present(&auth_manager)
@@ -2331,13 +2331,13 @@ async fn async_main(mut args: PagerArgs) -> Result<()> {
                     .map_err(|e| anyhow::anyhow!("Failed to create agent config: {e}"))?;
                 if !trace_args.local {
                     agent_config.remote_settings =
-                        fetch_remote_settings(&agent_config.grok_com_config).await;
+                        fetch_remote_settings(&agent_config.cgrok_com_config).await;
                 }
                 return xai_grok_pager::trace_cmd::run(trace_args, &agent_config).await;
             }
             Command::Memory(memory_args) => {
-                let grok_com_config = load_grok_com_config_for_settings();
-                let remote_settings = fetch_remote_settings(&grok_com_config).await;
+                let cgrok_com_config = load_grok_com_config_for_settings();
+                let remote_settings = fetch_remote_settings(&cgrok_com_config).await;
                 xai_grok_shell::util::config::set_remote_campaigns_from_settings(
                     remote_settings.as_ref(),
                 );
@@ -2390,7 +2390,7 @@ async fn async_main(mut args: PagerArgs) -> Result<()> {
                 let config = xai_grok_shell::config::load_agent_config_disk_only()
                     .map_err(|e| anyhow::anyhow!("Failed to create agent config: {e}"))?;
                 let authenticated = xai_grok_login::run_cli_login(
-                    config.grok_com_config.clone(),
+                    config.cgrok_com_config.clone(),
                     config.login_device_flow,
                     config.endpoints.proxy_url(),
                     oauth,
@@ -2409,7 +2409,7 @@ async fn async_main(mut args: PagerArgs) -> Result<()> {
                 init_tracing_simple("cli");
                 let config = xai_grok_shell::config::load_agent_config_disk_only()
                     .map_err(|e| anyhow::anyhow!("Failed to create agent config: {e}"))?;
-                xai_grok_shell::agent::init::run_cli_logout(&config.grok_com_config)?;
+                xai_grok_shell::agent::init::run_cli_logout(&config.cgrok_com_config)?;
                 xai_grok_shell::instrumentation::finalize_and_exit(0);
             }
             Command::Wrap(ref wrap_args) => {
@@ -2448,7 +2448,7 @@ async fn async_main(mut args: PagerArgs) -> Result<()> {
             None,
         );
         if let Some(warning) = launch_yolo.blocked_warning {
-            eprintln!("grok: {warning}");
+            eprintln!("cgrok: {warning}");
         }
         let json_schema = args
             .json_schema
@@ -2530,7 +2530,7 @@ async fn async_main(mut args: PagerArgs) -> Result<()> {
     match result {
         Ok(true) => {
             let adopted = bg_update_wait.lock().await.take();
-            let grok = "grok";
+            let grok = "cgrok";
             if finish_update_on_exit(adopted, &update_config).await {
                 eprintln!("Update installed. Run `{grok}` to start.");
             } else {
@@ -2594,7 +2594,7 @@ fn build_update_config() -> UpdateConfig {
                 xai_grok_shell::agent::config::EndpointsConfig::default().deployment_key;
         }
     });
-    config.npm_registry = std::env::var(obfstr::obfstr!("GROK_NPM_REGISTRY"))
+    config.npm_registry = std::env::var(obfstr::obfstr!("CGROK_NPM_REGISTRY"))
         .ok()
         .or_else(xai_grok_shell::util::config::load_npm_registry_sync);
     if let Ok(root) = xai_grok_shell::config::load_effective_config_disk_only()
@@ -2625,7 +2625,7 @@ fn should_check_for_updates(no_auto_update_flag: bool) -> bool {
 }
 fn is_opted_out_of_updates(no_auto_update_flag: bool) -> bool {
     no_auto_update_flag
-        || std::env::var_os("GROK_DISABLE_AUTOUPDATER")
+        || std::env::var_os("CGROK_DISABLE_AUTOUPDATER")
             .is_some_and(|v| env_flag_enabled(&v.to_string_lossy()))
 }
 /// Gate for the stdio agent's background auto-update: only the direct stdio agent, from the managed install.
@@ -2640,7 +2640,7 @@ fn stdio_auto_update_enabled(
 }
 /// True when `exe` is the binary `<grok_home>/bin/grok` resolves to, the install that adopts a staged update on
 /// respawn. Both sides are canonicalized; any failure reports unmanaged and skips the update. The npm shim
-/// hardcodes `~/.grok`, so a custom `GROK_HOME` skips here too.
+/// hardcodes `~/.cgrok`, so a custom `CGROK_HOME` skips here too.
 fn is_managed_install(exe: Option<std::path::PathBuf>, grok_home: &std::path::Path) -> bool {
     if grok_home.as_os_str().is_empty() {
         return false;
@@ -2715,13 +2715,13 @@ async fn run_update_command(
         );
     }
     let telemetry_cfg = xai_grok_shell::config::load_agent_config_disk_only()
-        .map_err(|e| tracing::warn!("grok update: telemetry init skipped (agent config: {e})"))
+        .map_err(|e| tracing::warn!("cgrok update: telemetry init skipped (agent config: {e})"))
         .ok();
     if let Some(agent_cfg) = telemetry_cfg {
         let auth_manager =
             std::sync::Arc::new(xai_grok_login::AuthManager::new_with_proxy_base_url(
                 &xai_grok_shell::util::grok_home::grok_home(),
-                agent_cfg.grok_com_config.clone(),
+                agent_cfg.cgrok_com_config.clone(),
                 agent_cfg.endpoints.proxy_url(),
             ));
         xai_grok_shell::agent::init::update_telemetry_config(&agent_cfg, &auth_manager);
@@ -2742,7 +2742,7 @@ async fn run_update_command(
     result?;
     Ok(())
 }
-/// After a successful `grok update`, ask any running leader on this machine that is older than `installed_version`
+/// After a successful `cgrok update`, ask any running leader on this machine that is older than `installed_version`
 /// to relaunch onto the new binary. Best-effort and non-fatal: discovery/connect/control failures are logged and
 /// skipped.
 #[tracing::instrument(level = "debug", skip_all)]
@@ -2813,11 +2813,11 @@ mod tests {
     #[test]
     fn embedded_agent_commands_heal_managed_policy_before_sandboxing() {
         for args in [
-            vec!["grok"],
-            vec!["grok", "agent", "stdio"],
-            vec!["grok", "dashboard"],
-            vec!["grok", "models"],
-            vec!["grok", "worktree", "list"],
+            vec!["cgrok"],
+            vec!["cgrok", "agent", "stdio"],
+            vec!["cgrok", "dashboard"],
+            vec!["cgrok", "models"],
+            vec!["cgrok", "worktree", "list"],
         ] {
             let args = PagerArgs::try_parse_from(args).unwrap();
             assert!(
@@ -2829,10 +2829,10 @@ mod tests {
     #[test]
     fn utility_commands_skip_managed_policy_heal() {
         for args in [
-            vec!["grok", "inspect"],
-            vec!["grok", "mcp", "list"],
-            vec!["grok", "sessions", "list"],
-            vec!["grok", "version"],
+            vec!["cgrok", "inspect"],
+            vec!["cgrok", "mcp", "list"],
+            vec!["cgrok", "sessions", "list"],
+            vec!["cgrok", "version"],
         ] {
             let args = PagerArgs::try_parse_from(args).unwrap();
             assert!(
@@ -2905,7 +2905,7 @@ mod tests {
         );
         assert_eq!(
             resolve_worker_override("100000", cores).notice().unwrap(),
-            "grok: clamped GROK_WORKER_THREADS=100000 to 360 (valid range is 1..=360)"
+            "cgrok: clamped CGROK_WORKER_THREADS=100000 to 360 (valid range is 1..=360)"
         );
     }
     #[test]
@@ -2918,7 +2918,7 @@ mod tests {
         }
         assert_eq!(
             resolve_worker_override("abc", cores).notice().unwrap(),
-            "grok: ignoring GROK_WORKER_THREADS=\"abc\" (not a valid integer)"
+            "cgrok: ignoring CGROK_WORKER_THREADS=\"abc\" (not a valid integer)"
         );
     }
     #[test]
@@ -2932,20 +2932,20 @@ mod tests {
             let mut output = Vec::new();
             write_version(&mut output, label).unwrap();
             let output = String::from_utf8(output).unwrap();
-            assert!(output.starts_with("grok "));
+            assert!(output.starts_with("cgrok "));
             assert!(output.contains(env!("VERSION_WITH_COMMIT")));
             assert!(output.ends_with(expected_suffix), "{output:?}");
         }
     }
     #[test]
     fn version_flags_and_doctor_are_distinct_early_intents() {
-        let version = PagerArgs::try_parse_from(["grok", "--version"]).unwrap();
+        let version = PagerArgs::try_parse_from(["cgrok", "--version"]).unwrap();
         assert!(version.version);
         assert!(version.command.is_none());
-        let short = PagerArgs::try_parse_from(["grok", "-v"]).unwrap();
+        let short = PagerArgs::try_parse_from(["cgrok", "-v"]).unwrap();
         assert!(short.version);
         assert!(short.command.is_none());
-        let subcommand = PagerArgs::try_parse_from(["grok", "version"]).unwrap();
+        let subcommand = PagerArgs::try_parse_from(["cgrok", "version"]).unwrap();
         assert!(!subcommand.version);
         assert!(matches!(
             subcommand.command,
@@ -3106,19 +3106,19 @@ mod tests {
         std::fs::create_dir_all(home.join("bin")).unwrap();
         std::fs::create_dir_all(home.join("downloads")).unwrap();
         assert!(!is_managed_install(
-            Some(home.join("bin").join("grok")),
+            Some(home.join("bin").join("cgrok")),
             &home
         ));
         assert!(!is_managed_install(None, &home));
         assert!(!is_managed_install(
-            Some(home.join("bin").join("grok")),
+            Some(home.join("bin").join("cgrok")),
             std::path::Path::new("")
         ));
         let target = home.join("downloads").join("grok-1.2.3");
         std::fs::write(&target, b"binary").unwrap();
-        std::os::unix::fs::symlink(&target, home.join("bin").join("grok")).unwrap();
+        std::os::unix::fs::symlink(&target, home.join("bin").join("cgrok")).unwrap();
         assert!(is_managed_install(
-            Some(home.join("bin").join("grok")),
+            Some(home.join("bin").join("cgrok")),
             &home
         ));
         assert!(is_managed_install(Some(target.clone()), &home));
@@ -3149,12 +3149,12 @@ mod tests {
         );
     }
     use clap::Parser as _;
-    /// `grok dashboard` flags the startup hook without forcing leader mode.
+    /// `cgrok dashboard` flags the startup hook without forcing leader mode.
     /// The dashboard is independent of leader mode, so the launch keeps whatever leader setting the user (or config) chose.
-    #[serial_test::serial(GROK_AGENT_DASHBOARD)]
+    #[serial_test::serial(CGROK_AGENT_DASHBOARD)]
     #[test]
     fn dashboard_subcommand_flags_startup_without_forcing_leader() {
-        let mut args = PagerArgs::try_parse_from(["grok", "dashboard"]).unwrap();
+        let mut args = PagerArgs::try_parse_from(["cgrok", "dashboard"]).unwrap();
         assert!(!args.leader, "fixture: no explicit --leader");
         flag_dashboard_at_startup_if_requested(&mut args).unwrap();
         assert!(!args.leader, "dashboard must NOT force leader mode");
@@ -3163,18 +3163,18 @@ mod tests {
             "soft subcommand must be consumed so the interactive path runs",
         );
         assert_eq!(
-            std::env::var("GROK_OPEN_DASHBOARD_AT_STARTUP").as_deref(),
+            std::env::var("CGROK_OPEN_DASHBOARD_AT_STARTUP").as_deref(),
             Ok("1"),
             "startup hook flag must be set",
         );
-        unsafe { std::env::remove_var("GROK_OPEN_DASHBOARD_AT_STARTUP") };
+        unsafe { std::env::remove_var("CGROK_OPEN_DASHBOARD_AT_STARTUP") };
     }
-    /// `grok dashboard --no-leader` is allowed.
+    /// `cgrok dashboard --no-leader` is allowed.
     /// The dashboard does not require a leader, so the combination launches into the dashboard in non-leader mode.
-    #[serial_test::serial(GROK_AGENT_DASHBOARD)]
+    #[serial_test::serial(CGROK_AGENT_DASHBOARD)]
     #[test]
     fn dashboard_subcommand_allows_no_leader() {
-        let mut args = PagerArgs::try_parse_from(["grok", "--no-leader", "dashboard"]).unwrap();
+        let mut args = PagerArgs::try_parse_from(["cgrok", "--no-leader", "dashboard"]).unwrap();
         flag_dashboard_at_startup_if_requested(&mut args)
             .expect("--no-leader + dashboard must be allowed");
         assert!(args.no_leader, "--no-leader must be preserved");
@@ -3184,24 +3184,24 @@ mod tests {
             "soft subcommand must be consumed so the interactive path runs",
         );
         assert_eq!(
-            std::env::var("GROK_OPEN_DASHBOARD_AT_STARTUP").as_deref(),
+            std::env::var("CGROK_OPEN_DASHBOARD_AT_STARTUP").as_deref(),
             Ok("1"),
             "startup hook flag must be set",
         );
-        unsafe { std::env::remove_var("GROK_OPEN_DASHBOARD_AT_STARTUP") };
+        unsafe { std::env::remove_var("CGROK_OPEN_DASHBOARD_AT_STARTUP") };
     }
-    /// `GROK_AGENT_DASHBOARD=0` disables the feature; the subcommand must error visibly before the TUI starts.
-    #[serial_test::serial(GROK_AGENT_DASHBOARD)]
+    /// `CGROK_AGENT_DASHBOARD=0` disables the feature; the subcommand must error visibly before the TUI starts.
+    #[serial_test::serial(CGROK_AGENT_DASHBOARD)]
     #[test]
     fn dashboard_subcommand_errors_when_disabled() {
-        unsafe { std::env::set_var("GROK_AGENT_DASHBOARD", "0") };
-        let mut args = PagerArgs::try_parse_from(["grok", "dashboard"]).unwrap();
+        unsafe { std::env::set_var("CGROK_AGENT_DASHBOARD", "0") };
+        let mut args = PagerArgs::try_parse_from(["cgrok", "dashboard"]).unwrap();
         let result = flag_dashboard_at_startup_if_requested(&mut args);
-        unsafe { std::env::remove_var("GROK_AGENT_DASHBOARD") };
+        unsafe { std::env::remove_var("CGROK_AGENT_DASHBOARD") };
         let err = result.expect_err("disabled dashboard must error");
         assert!(err.to_string().contains("disabled"), "got: {err}");
         assert!(
-            std::env::var("GROK_OPEN_DASHBOARD_AT_STARTUP").is_err(),
+            std::env::var("CGROK_OPEN_DASHBOARD_AT_STARTUP").is_err(),
             "failure path must not flag the startup hook",
         );
     }
@@ -3239,16 +3239,16 @@ mod tests {
             WorkspaceGate::Disabled
         );
     }
-    #[serial_test::serial(GROK_WORKSPACE_COMMAND)]
+    #[serial_test::serial(CGROK_WORKSPACE_COMMAND)]
     #[test]
     fn workspace_command_env_override_parsing() {
-        unsafe { std::env::remove_var("GROK_WORKSPACE_COMMAND") };
+        unsafe { std::env::remove_var("CGROK_WORKSPACE_COMMAND") };
         assert_eq!(workspace_command_env_override(), None);
-        unsafe { std::env::set_var("GROK_WORKSPACE_COMMAND", "1") };
+        unsafe { std::env::set_var("CGROK_WORKSPACE_COMMAND", "1") };
         assert_eq!(workspace_command_env_override(), Some(true));
-        unsafe { std::env::set_var("GROK_WORKSPACE_COMMAND", "off") };
+        unsafe { std::env::set_var("CGROK_WORKSPACE_COMMAND", "off") };
         assert_eq!(workspace_command_env_override(), Some(false));
-        unsafe { std::env::remove_var("GROK_WORKSPACE_COMMAND") };
+        unsafe { std::env::remove_var("CGROK_WORKSPACE_COMMAND") };
     }
     fn make_state() -> std::sync::Mutex<StdioReplayState> {
         std::sync::Mutex::new(StdioReplayState::default())

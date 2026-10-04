@@ -146,7 +146,7 @@ fn resolve_session_end_default(value: Option<&str>) -> u64 {
         _ => {
             tracing::warn!(
                 value,
-                "GROK_SESSION_END_HOOKS_TIMEOUT_MS must be a positive integer; using default {}ms",
+                "CGROK_SESSION_END_HOOKS_TIMEOUT_MS must be a positive integer; using default {}ms",
                 SESSION_END_HOOK_BUDGET_DEFAULT_MS
             );
             SESSION_END_HOOK_BUDGET_DEFAULT_MS
@@ -158,7 +158,7 @@ fn session_end_default_timeout_ms() -> u64 {
     static VALUE: std::sync::OnceLock<u64> = std::sync::OnceLock::new();
     *VALUE.get_or_init(|| {
         resolve_session_end_default(
-            std::env::var("GROK_SESSION_END_HOOKS_TIMEOUT_MS")
+            std::env::var("CGROK_SESSION_END_HOOKS_TIMEOUT_MS")
                 .ok()
                 .as_deref(),
         )
@@ -232,10 +232,10 @@ pub struct HookSpec {
 }
 
 pub const RUNNER_ALWAYS_SET_ENV: &[&str] = &[
-    "GROK_HOOK_EVENT",
-    "GROK_HOOK_NAME",
-    "GROK_SESSION_ID",
-    "GROK_WORKSPACE_ROOT",
+    "CGROK_HOOK_EVENT",
+    "CGROK_HOOK_NAME",
+    "CGROK_SESSION_ID",
+    "CGROK_WORKSPACE_ROOT",
     "CLAUDE_PROJECT_DIR",
 ];
 
@@ -1329,13 +1329,13 @@ mod tests {
     fn source_dir_from_file_path() {
         let json =
             r#"{"hooks":{"SessionStart":[{"hooks":[{"type":"command","command":"x.sh"}]}]}}"#;
-        let (specs, _) = parse_hook_file(json, Path::new("/home/user/.grok/hooks/safety.json"));
+        let (specs, _) = parse_hook_file(json, Path::new("/home/user/.cgrok/hooks/safety.json"));
         assert_eq!(
             specs
                 .first()
                 .unwrap_or_else(|| panic!("expected specs item 0: {specs:?}"))
                 .source_dir,
-            PathBuf::from("/home/user/.grok/hooks")
+            PathBuf::from("/home/user/.cgrok/hooks")
         );
     }
 
@@ -1442,7 +1442,7 @@ mod tests {
 
     #[test]
     fn parse_hook_file_expands_env_var_in_command_from_process_env() {
-        let key = "GROK_HOOKS_PARSE_TEST_CMD_PROC_ENV";
+        let key = "CGROK_HOOKS_PARSE_TEST_CMD_PROC_ENV";
         with_env_var(key, Some("/usr/local"), || {
             let json = format!(
                 r#"{{
@@ -1476,7 +1476,7 @@ mod tests {
 
     #[test]
     fn parse_hook_file_expands_env_var_in_url_from_process_env() {
-        let key = "GROK_HOOKS_PARSE_TEST_URL_PROC_ENV";
+        let key = "CGROK_HOOKS_PARSE_TEST_URL_PROC_ENV";
         with_env_var(key, Some("hooks.example.com"), || {
             let json = format!(
                 r#"{{
@@ -1605,7 +1605,7 @@ mod tests {
 
     #[test]
     fn parse_hook_file_preserves_unresolved_env_refs_in_command() {
-        let key = "GROK_HOOKS_PARSE_TEST_NEVER_SET_AT_LOAD_TIME";
+        let key = "CGROK_HOOKS_PARSE_TEST_NEVER_SET_AT_LOAD_TIME";
         with_env_var(key, None, || {
             let json = format!(
                 r#"{{
@@ -1633,7 +1633,7 @@ mod tests {
 
     #[test]
     fn parse_hook_file_preserves_unresolved_env_refs_in_url() {
-        let key = "GROK_HOOKS_PARSE_TEST_URL_NEVER_SET_AT_LOAD_TIME";
+        let key = "CGROK_HOOKS_PARSE_TEST_URL_NEVER_SET_AT_LOAD_TIME";
         with_env_var(key, None, || {
             let json = format!(
                 r#"{{
@@ -1716,7 +1716,7 @@ mod tests {
 
     #[test]
     fn parse_hook_file_matcher_is_not_env_expanded() {
-        let key = "GROK_HOOKS_PARSE_TEST_MATCHER_VAR";
+        let key = "CGROK_HOOKS_PARSE_TEST_MATCHER_VAR";
         with_env_var(key, Some("expanded_value_should_not_appear"), || {
             let pattern = format!("foo{key}");
             let json = serde_json::json!({
@@ -1800,10 +1800,10 @@ mod tests {
                                 "type": "command",
                                 "command": "echo hi",
                                 "env": {
-                                    "GROK_HOOK_EVENT": "spoofed",
-                                    "GROK_HOOK_NAME": "spoofed",
-                                    "GROK_SESSION_ID": "spoofed",
-                                    "GROK_WORKSPACE_ROOT": "/etc",
+                                    "CGROK_HOOK_EVENT": "spoofed",
+                                    "CGROK_HOOK_NAME": "spoofed",
+                                    "CGROK_SESSION_ID": "spoofed",
+                                    "CGROK_WORKSPACE_ROOT": "/etc",
                                     "CLAUDE_PROJECT_DIR": "/etc",
                                     "USER_KEY": "kept"
                                 }
@@ -1817,10 +1817,10 @@ mod tests {
         assert!(errors.is_empty(), "unexpected errors: {errors:?}");
         assert_eq!(specs.len(), 1);
         for reserved in [
-            "GROK_HOOK_EVENT",
-            "GROK_HOOK_NAME",
-            "GROK_SESSION_ID",
-            "GROK_WORKSPACE_ROOT",
+            "CGROK_HOOK_EVENT",
+            "CGROK_HOOK_NAME",
+            "CGROK_SESSION_ID",
+            "CGROK_WORKSPACE_ROOT",
             "CLAUDE_PROJECT_DIR",
         ] {
             assert!(

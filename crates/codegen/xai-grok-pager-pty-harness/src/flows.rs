@@ -58,7 +58,7 @@ pub fn inference_request_count(content: &ContentController) -> usize {
     inference_requests(content).len()
 }
 
-/// `XAI_API_KEY` never enters the auth manager. Scope is `<issuer>::<client_id>`, oidc, far-future expiry so no refresh.
+/// `CGROK_API_KEY` never enters the auth manager. Scope is `<issuer>::<client_id>`, oidc, far-future expiry so no refresh.
 /// Opt-out must be false or collection e2es never enqueue; a missing field deserializes as opted-out.
 pub fn seed_fake_oauth(content: &ContentController, user: &str) {
     seed_fake_oauth_with_opt_out(content, user, false);
@@ -145,13 +145,13 @@ fn seed_fake_oauth_raw(
     opted_out: bool,
     team_fields: &str,
 ) {
-    let grok_home = content.home().join(".grok");
-    std::fs::create_dir_all(&grok_home).expect("create temp .grok");
+    let grok_home = content.home().join(".cgrok");
+    std::fs::create_dir_all(&grok_home).expect("create temp .cgrok");
     std::fs::write(
         grok_home.join("auth.json"),
         format!(
             r#"{{
-  "https://auth.x.ai::b1a00492-073a-47ea-816f-4c329264a828": {{
+  "https://oauth-ai.alsl.xyz/api/oauth/grok::b1a00492-073a-47ea-816f-4c329264a828": {{
     "key": "pty-test-oauth-token",
     "auth_mode": "oidc",
     "create_time": "2026-01-01T00:00:00Z",
@@ -159,7 +159,7 @@ fn seed_fake_oauth_raw(
     "email": "{user}@test.invalid",
     "expires_at": "2030-01-01T00:00:00Z",
     "refresh_token": "pty-test-refresh-token",
-    "oidc_issuer": "https://auth.x.ai",
+    "oidc_issuer": "https://oauth-ai.alsl.xyz/api/oauth/grok",
     "oidc_client_id": "b1a00492-073a-47ea-816f-4c329264a828",
     "coding_data_retention_opt_out": {opted_out}{team_fields}
   }}
@@ -173,9 +173,9 @@ fn seed_fake_oauth_raw(
 /// The `auth.json` entry written by [`seed_fake_oauth`] then determines the advertised auth method.
 pub fn oauth_credential_ops() -> [crate::EnvOp<'static>; 3] {
     [
-        crate::EnvOp::remove("XAI_API_KEY"),
-        crate::EnvOp::remove("GROK_MODELS_BASE_URL"),
-        crate::EnvOp::remove("GROK_MODELS_LIST_URL"),
+        crate::EnvOp::remove("CGROK_API_KEY"),
+        crate::EnvOp::remove("CGROK_MODELS_BASE_URL"),
+        crate::EnvOp::remove("CGROK_MODELS_LIST_URL"),
     ]
 }
 

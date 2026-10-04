@@ -1,4 +1,4 @@
-//! Merges native `.grok/config.toml`, managed/enterprise settings, and `.claude` settings into the effective `PermissionConfig`.
+//! Merges native `.cgrok/config.toml`, managed/enterprise settings, and `.claude` settings into the effective `PermissionConfig`.
 //! Also holds the MCP-server and marketplace allowlists and the always-approve policy pin.
 
 use crate::claude_settings::*;
@@ -187,7 +187,7 @@ fn extract_toml_permissions(
 
 /// Load `[permission]` rules from requirements.toml layers. Trust keys on the
 /// `is_system` flag (set at load, never from `path`): system → `SystemRequirements`,
-/// user `~/.grok` → `Requirements`, so [`is_admin_source`] trusts only the root tier.
+/// user `~/.cgrok` → `Requirements`, so [`is_admin_source`] trusts only the root tier.
 fn load_requirements_permissions() -> Vec<Sourced<PermissionRule>> {
     xai_grok_config::requirements_layers()
         .into_iter()
@@ -206,13 +206,13 @@ fn load_requirements_permissions() -> Vec<Sourced<PermissionRule>> {
         .collect()
 }
 
-/// Load `[permission]` rules from `~/.grok/config.toml` (lowest) then each `.grok/config.toml` from repo root to `cwd`.
+/// Load `[permission]` rules from `~/.cgrok/config.toml` (lowest) then each `.cgrok/config.toml` from repo root to `cwd`.
 /// The walk matches [`crate::project_config::find_project_configs`] so detector and loader agree. Empty if no `[permission]` section.
 fn load_config_toml_permissions(cwd: &Path, project_trusted: bool) -> Vec<Sourced<PermissionRule>> {
     let mut rules = Vec::new();
 
-    // Global `~/.grok/config.toml` first (lowest priority within this layer).
-    // Gated on user_grok_home() so a project's .grok/config.toml is never read as global permissions when neither GROK_HOME nor a home dir resolves
+    // Global `~/.cgrok/config.toml` first (lowest priority within this layer).
+    // Gated on user_grok_home() so a project's .cgrok/config.toml is never read as global permissions when neither CGROK_HOME nor a home dir resolves
     if let Some(global_path) = xai_grok_config::user_grok_home().map(|g| g.join("config.toml"))
         && global_path.is_file()
     {
@@ -229,7 +229,7 @@ fn load_config_toml_permissions(cwd: &Path, project_trusted: bool) -> Vec<Source
     }
 
     // Project-scoped configs walking from git root down to cwd, gated on trust.
-    // An untrusted clone must not contribute allow/deny/ask rules via `.grok/config.toml` (same gate as project `.claude/settings.json`)
+    // An untrusted clone must not contribute allow/deny/ask rules via `.cgrok/config.toml` (same gate as project `.claude/settings.json`)
     if project_trusted {
         for path in crate::project_config::find_project_configs(cwd) {
             match xai_grok_config::load_config_file(&path) {
@@ -447,7 +447,7 @@ struct ResolveInputs<'a> {
     managed: &'a ManagedSettings,
     managed_config_rules: Vec<Sourced<PermissionRule>>,
     /// Folder-trust verdict for `cwd`.
-    /// When false, project-tier `.claude/settings.json` / `.grok/config.toml` permission rules are dropped (global/user/admin tiers still load).
+    /// When false, project-tier `.claude/settings.json` / `.cgrok/config.toml` permission rules are dropped (global/user/admin tiers still load).
     project_trusted: bool,
 }
 

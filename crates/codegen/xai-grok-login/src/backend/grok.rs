@@ -46,7 +46,7 @@ impl AuthBackend for GrokAuthBackend {
     async fn login(&self, req: LoginRequest<'_>) -> anyhow::Result<(GrokAuth, bool)> {
         crate::flow::run_auth_flow_steps(
             req.auth_manager,
-            req.grok_com_config,
+            req.cgrok_com_config,
             req.config_device_flow,
             req.reauth,
             req.force_interactive,

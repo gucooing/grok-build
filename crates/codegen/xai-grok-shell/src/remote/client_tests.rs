@@ -238,9 +238,13 @@ fn parse_openai_format_uses_id_field() {
         "owned_by": "xai",
         "context_window": 131072
     });
-    let result = parse_remote_model_value(&value, "https://api.x.ai/v1").unwrap();
+    let result =
+        parse_remote_model_value(&value, "https://oauth-ai.alsl.xyz/api/oauth/grok/v1").unwrap();
     assert_eq!(result.model, "grok-3");
-    assert_eq!(result.base_url, "https://api.x.ai/v1");
+    assert_eq!(
+        result.base_url,
+        "https://oauth-ai.alsl.xyz/api/oauth/grok/v1"
+    );
     assert_eq!(result.name.as_deref(), Some("grok-3"));
 }
 #[test]
@@ -810,13 +814,13 @@ fn get_object_returns_some_for_actual_object() {
 fn deployment_config_url_uses_cli_chat_proxy_when_not_overridden() {
     use crate::agent::config::EndpointsConfig;
     for k in [
-        "GROK_CLI_CHAT_PROXY_BASE_URL",
-        "GROK_MANAGED_CONFIG_URL",
-        "GROK_XAI_API_BASE_URL",
+        "CGROK_CLI_CHAT_PROXY_BASE_URL",
+        "CGROK_MANAGED_CONFIG_URL",
+        "CGROK_XAI_API_BASE_URL",
     ] {
         unsafe { std::env::remove_var(k) };
     }
-    unsafe { std::env::set_var("GROK_DEPLOYMENT_KEY", "xai-token-ENTERPRISE") };
+    unsafe { std::env::set_var("CGROK_DEPLOYMENT_KEY", "xai-token-ENTERPRISE") };
     let managed: toml::Value = toml::from_str(
         r#"[endpoints]
             deployment_key = "xai-token-ENTERPRISE"
@@ -824,7 +828,10 @@ fn deployment_config_url_uses_cli_chat_proxy_when_not_overridden() {
     )
     .unwrap();
     let url = EndpointsConfig::from_config_value(&managed).resolve_managed_config_url();
-    assert_eq!(url, "https://cli-chat-proxy.grok.com/v1/deployment/config");
+    assert_eq!(
+        url,
+        "https://oauth-ai.alsl.xyz/api/oauth/grok/v1/deployment/config"
+    );
     assert!(
         !url.contains("acme-corp"),
         "deployment key would be sent to the inference host: {url}"
@@ -839,7 +846,7 @@ fn deployment_config_url_uses_cli_chat_proxy_when_not_overridden() {
         EndpointsConfig::from_config_value(&pinned).resolve_managed_config_url(),
         "https://proxy.acme-corp.example/v1/deployment/config"
     );
-    unsafe { std::env::remove_var("GROK_DEPLOYMENT_KEY") };
+    unsafe { std::env::remove_var("CGROK_DEPLOYMENT_KEY") };
 }
 #[derive(Clone)]
 struct DualBundleServerState {

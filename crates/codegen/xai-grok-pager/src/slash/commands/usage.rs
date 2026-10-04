@@ -28,7 +28,7 @@ fn auth_method_is_external_provider(method: &acp::AuthMethod) -> bool {
 }
 
 fn auth_provider_env_set() -> bool {
-    std::env::var("GROK_AUTH_PROVIDER_COMMAND")
+    std::env::var("CGROK_AUTH_PROVIDER_COMMAND")
         .ok()
         .is_some_and(|s| !s.trim().is_empty())
 }
@@ -40,7 +40,7 @@ fn auth_provider_config_set() -> bool {
     let Ok(cfg) = xai_grok_shell::agent::config::Config::new_from_toml_cfg(&raw) else {
         return false;
     };
-    cfg.grok_com_config
+    cfg.cgrok_com_config
         .auth_provider_command
         .as_deref()
         .is_some_and(|s| !s.trim().is_empty())

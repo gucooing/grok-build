@@ -13,7 +13,7 @@ pub(crate) struct AgentProcessOptions {
     sandbox: TestSandbox,
     pub(crate) extra_env: Vec<(String, String)>,
     /// Keys removed from the sandbox baseline after the mock URL and `extra_env` are applied, so a
-    /// scenario can drop a variable the baseline sets (e.g. the mock's `XAI_API_KEY`).
+    /// scenario can drop a variable the baseline sets (e.g. the mock's `CGROK_API_KEY`).
     pub(crate) removed_env: Vec<String>,
     pub(crate) leading_args: Vec<String>,
     pub(crate) agent_args: Vec<String>,

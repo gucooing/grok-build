@@ -674,7 +674,7 @@ mod tests {
     async fn reload_from_disk_picks_up_different_token() {
         let (dir, m) = mgr();
         seed(&m, AuthMode::Oidc, Some("rt"));
-        let scope = m.grok_com_config().auth_scope();
+        let scope = m.cgrok_com_config().auth_scope();
         let fresh = GrokAuth {
             key: "fresh-from-disk".into(),
             auth_mode: AuthMode::Oidc,
@@ -696,7 +696,7 @@ mod tests {
     async fn reload_from_disk_skips_same_token_then_proceeds_to_authority() {
         let (dir, m) = mgr();
         seed(&m, AuthMode::Oidc, Some("rt"));
-        let scope = m.grok_com_config().auth_scope();
+        let scope = m.cgrok_com_config().auth_scope();
         let same = GrokAuth {
             key: "rejected-tok".into(),
             auth_mode: AuthMode::Oidc,
@@ -868,7 +868,7 @@ mod tests {
     async fn reload_from_disk_rejects_expired_different_token() {
         let (dir, m) = mgr();
         seed(&m, AuthMode::Oidc, Some("rt"));
-        let scope = m.grok_com_config().auth_scope();
+        let scope = m.cgrok_com_config().auth_scope();
         let expired_different = GrokAuth {
             key: "different-but-expired".into(),
             auth_mode: AuthMode::Oidc,

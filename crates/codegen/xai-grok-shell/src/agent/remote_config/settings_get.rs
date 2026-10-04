@@ -39,12 +39,12 @@ pub async fn await_startup_settings(
 pub fn consume_wait(
     wait: SettingsWait,
     auth: Option<&GrokAuth>,
-    grok_com_config: &GrokComConfig,
+    cgrok_com_config: &GrokComConfig,
 ) -> Option<RemoteSettings> {
     xai_grok_cloud_config::settings_get::consume_wait(
         wait,
         auth,
-        grok_com_config,
+        cgrok_com_config,
         policy_repair_pending,
     )
 }

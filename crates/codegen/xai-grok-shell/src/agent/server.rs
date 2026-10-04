@@ -481,7 +481,7 @@ async fn run_persistent_agent(
         Err(crate::agent::init::BootstrapError::Cancelled) => return,
         Err(err) => crate::agent::init::exit_on_config_error(err),
     };
-    crate::agent::app::apply_otel_config(&auth_manager, &agent_config.grok_com_config);
+    crate::agent::app::apply_otel_config(&auth_manager, &agent_config.cgrok_com_config);
     let agent = Rc::new(
         MvpAgent::new(
             gateway,

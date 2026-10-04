@@ -83,7 +83,7 @@ const MACOS_CASES: &[Case] = &[
     (
         "mkdir-ws-grok",
         include_str!("../../../tests/fixtures/violations/macos/mkdir-ws-grok.txt"),
-        Some(|| write("/opt/ws-fixture/homedir/w1-scratch/ws/.grok")),
+        Some(|| write("/opt/ws-fixture/homedir/w1-scratch/ws/.cgrok")),
     ),
     // `rename A to B`: the kernel refused unlinking the source
     (
@@ -594,10 +594,10 @@ fn dot_directory_relative_paths_join_the_cwd_but_bare_names_do_not() {
     let policy = workspace_policy(Path::new(CWD));
     assert_eq!(
         Some(write(
-            "/opt/ws-fixture/homedir/w1-scratch/ws/.grok/config.toml"
+            "/opt/ws-fixture/homedir/w1-scratch/ws/.cgrok/config.toml"
         )),
         decode_coarse(
-            "sh: 1: cannot create .grok/config.toml: Operation not permitted\n",
+            "sh: 1: cannot create .cgrok/config.toml: Operation not permitted\n",
             Path::new(CWD),
             &policy
         )

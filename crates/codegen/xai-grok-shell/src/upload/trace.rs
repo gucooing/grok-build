@@ -1708,8 +1708,8 @@ pub(crate) mod tests {
         use std::collections::BTreeMap;
         use xai_grok_login::{GrokAuth, GrokComConfig};
         let dir = tempfile::tempdir().unwrap();
-        let grok_com_config = GrokComConfig::default();
-        let scope = grok_com_config.auth_scope();
+        let cgrok_com_config = GrokComConfig::default();
+        let scope = cgrok_com_config.auth_scope();
         let initial_auth = GrokAuth {
             key: "initial-token".into(),
             ..GrokAuth::test_default()
@@ -1720,7 +1720,7 @@ pub(crate) mod tests {
         std::fs::write(dir.path().join("auth.json"), &auth_json).unwrap();
         let auth_manager = Arc::new(xai_grok_login::AuthManager::new(
             dir.path(),
-            grok_com_config.clone(),
+            cgrok_com_config.clone(),
         ));
         let base_config = TraceExportConfig {
             bucket_url: None,
@@ -1777,8 +1777,8 @@ pub(crate) mod tests {
         use std::collections::BTreeMap;
         use xai_grok_login::{GrokAuth, GrokComConfig};
         let dir = tempfile::tempdir().unwrap();
-        let grok_com_config = GrokComConfig::default();
-        let scope = grok_com_config.auth_scope();
+        let cgrok_com_config = GrokComConfig::default();
+        let scope = cgrok_com_config.auth_scope();
         let expired_auth = GrokAuth {
             key: "expired-token".into(),
             expires_at: Some(Utc::now() - Duration::hours(1)),
@@ -1790,7 +1790,7 @@ pub(crate) mod tests {
         std::fs::write(dir.path().join("auth.json"), &auth_json).unwrap();
         let auth_manager = Arc::new(xai_grok_login::AuthManager::new(
             dir.path(),
-            grok_com_config.clone(),
+            cgrok_com_config.clone(),
         ));
         assert!(auth_manager.current().is_none());
         let resolver = DynamicResolver {
@@ -1838,8 +1838,8 @@ pub(crate) mod tests {
         use std::collections::BTreeMap;
         use xai_grok_login::{GrokAuth, GrokComConfig};
         let dir = tempfile::tempdir().unwrap();
-        let grok_com_config = GrokComConfig::default();
-        let scope = grok_com_config.auth_scope();
+        let cgrok_com_config = GrokComConfig::default();
+        let scope = cgrok_com_config.auth_scope();
         let expired_auth = GrokAuth {
             key: "expired-on-disk".into(),
             expires_at: Some(Utc::now() - Duration::hours(1)),
@@ -1851,7 +1851,7 @@ pub(crate) mod tests {
         std::fs::write(dir.path().join("auth.json"), &auth_json).unwrap();
         let auth_manager = Arc::new(xai_grok_login::AuthManager::new(
             dir.path(),
-            grok_com_config,
+            cgrok_com_config,
         ));
         let resolver = DynamicResolver {
             auth_manager,
@@ -1886,8 +1886,8 @@ pub(crate) mod tests {
         use std::collections::BTreeMap;
         use xai_grok_login::{GrokAuth, GrokComConfig};
         let dir = tempfile::tempdir().unwrap();
-        let grok_com_config = GrokComConfig::default();
-        let scope = grok_com_config.auth_scope();
+        let cgrok_com_config = GrokComConfig::default();
+        let scope = cgrok_com_config.auth_scope();
         let valid_auth = GrokAuth {
             key: "fresh-disk-token".into(),
             expires_at: Some(Utc::now() + Duration::hours(1)),
@@ -1899,7 +1899,7 @@ pub(crate) mod tests {
         std::fs::write(dir.path().join("auth.json"), &auth_json).unwrap();
         let auth_manager = Arc::new(xai_grok_login::AuthManager::new(
             dir.path(),
-            grok_com_config,
+            cgrok_com_config,
         ));
         let resolver = DynamicResolver {
             auth_manager,
@@ -1938,8 +1938,8 @@ pub(crate) mod tests {
         use std::collections::BTreeMap;
         use xai_grok_login::{GrokAuth, GrokComConfig};
         let dir = tempfile::tempdir().unwrap();
-        let grok_com_config = GrokComConfig::default();
-        let scope = grok_com_config.auth_scope();
+        let cgrok_com_config = GrokComConfig::default();
+        let scope = cgrok_com_config.auth_scope();
         let expired_auth = GrokAuth {
             key: "expired-oidc".into(),
             refresh_token: Some("rt-old".into()),
@@ -1952,7 +1952,7 @@ pub(crate) mod tests {
         std::fs::write(dir.path().join("auth.json"), &auth_json).unwrap();
         let auth_manager = Arc::new(xai_grok_login::AuthManager::new(
             dir.path(),
-            grok_com_config,
+            cgrok_com_config,
         ));
         struct FreshRefresher;
         #[async_trait::async_trait]
@@ -2008,10 +2008,10 @@ pub(crate) mod tests {
         use chrono::{Duration, Utc};
         use xai_grok_login::{GrokAuth, GrokComConfig};
         let dir = tempfile::tempdir().unwrap();
-        let grok_com_config = GrokComConfig::default();
+        let cgrok_com_config = GrokComConfig::default();
         let auth_manager = Arc::new(xai_grok_login::AuthManager::new(
             dir.path(),
-            grok_com_config,
+            cgrok_com_config,
         ));
         auth_manager.hot_swap(GrokAuth {
             key: "expired-oidc".into(),
@@ -2084,10 +2084,10 @@ pub(crate) mod tests {
     fn dynamic_resolver_preserves_token_when_auth_unavailable() {
         use crate::session::repo_changes::UploadMethod;
         let dir = tempfile::tempdir().unwrap();
-        let grok_com_config = xai_grok_login::GrokComConfig::default();
+        let cgrok_com_config = xai_grok_login::GrokComConfig::default();
         let auth_manager = Arc::new(xai_grok_login::AuthManager::new(
             dir.path(),
-            grok_com_config,
+            cgrok_com_config,
         ));
         let base_config = TraceExportConfig {
             bucket_url: None,
@@ -2121,8 +2121,8 @@ pub(crate) mod tests {
         use std::collections::BTreeMap;
         use xai_grok_login::GrokAuth;
         let dir = tempfile::tempdir().unwrap();
-        let grok_com_config = xai_grok_login::GrokComConfig::default();
-        let scope = grok_com_config.auth_scope();
+        let cgrok_com_config = xai_grok_login::GrokComConfig::default();
+        let scope = cgrok_com_config.auth_scope();
         let auth = GrokAuth {
             key: "some-token".into(),
             ..GrokAuth::test_default()
@@ -2133,7 +2133,7 @@ pub(crate) mod tests {
         std::fs::write(dir.path().join("auth.json"), &auth_json).unwrap();
         let auth_manager = Arc::new(xai_grok_login::AuthManager::new(
             dir.path(),
-            grok_com_config,
+            cgrok_com_config,
         ));
         let base_config = TraceExportConfig {
             bucket_url: Some("gs://bucket".into()),
@@ -2289,10 +2289,10 @@ pub(crate) mod tests {
     async fn spawn_upload_queue_uses_dynamic_resolver_when_auth_manager_provided() {
         use crate::session::repo_changes::UploadMethod;
         let dir = tempfile::tempdir().unwrap();
-        let grok_com_config = xai_grok_login::GrokComConfig::default();
+        let cgrok_com_config = xai_grok_login::GrokComConfig::default();
         let auth_manager = Arc::new(xai_grok_login::AuthManager::new(
             dir.path(),
-            grok_com_config,
+            cgrok_com_config,
         ));
         let gcs_config = TraceExportConfig {
             bucket_url: None,

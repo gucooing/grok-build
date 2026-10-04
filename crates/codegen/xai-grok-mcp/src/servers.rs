@@ -58,8 +58,8 @@ pub use crate::tool_name::{
 pub use xai_grok_workspace_types::MCP_TOOL_NAME_DELIMITER;
 
 /// Routing hint for first-party local app MCP endpoints: which agent/session a request belongs to. **Advisory only, never authentication** — any local process can set it, so receivers must not treat it as proof of identity.
-/// Caller-supplied configs cannot smuggle it: the header is stripped from every HTTP/SSE config and re-added only when the spawn context asks for it (mirroring the `GROK_SESSION_ID` env protection on stdio servers).
-pub const GROK_AGENT_ID_HEADER: &str = "X-Grok-Agent-ID";
+/// Caller-supplied configs cannot smuggle it: the header is stripped from every HTTP/SSE config and re-added only when the spawn context asks for it (mirroring the `CGROK_SESSION_ID` env protection on stdio servers).
+pub const CGROK_AGENT_ID_HEADER: &str = "X-Grok-Agent-ID";
 
 /// Reqwest 0.13 twin of the 0.12 adapters in `xai_grok_extra_ca`.
 fn with_extra_root_certificates(mut builder: reqwest::ClientBuilder) -> reqwest::ClientBuilder {
@@ -452,7 +452,7 @@ pub struct McpState {
     /// Monotonic source for [`UnreachableRetry::InFlight`] attempt tokens.
     unreachable_attempt_counter: u64,
     /// Per-server set of unqualified tool names that the user has disabled.
-    /// Persisted to `~/.grok/config.toml` under `[mcp_servers.<name>].disabled_tools`.
+    /// Persisted to `~/.cgrok/config.toml` under `[mcp_servers.<name>].disabled_tools`.
     pub disabled_tools: HashMap<McpServerName, std::collections::HashSet<ToolName>>,
     /// Stashed registrations for disabled tools so they can be re-enabled without a full MCP re-init (no need to call `list_tools` again).
     pub disabled_tool_registrations: HashMap<String, McpToolRegistration>,
@@ -2488,7 +2488,7 @@ async fn decide_http_auth_over_network(
 pub struct HttpConfig {
     pub url: String,
     pub headers: Vec<(String, String)>,
-    /// This server is a first-party local app endpoint addressed by [`GROK_AGENT_ID_HEADER`]. Set only from the spawn context — never inferred from headers — and it keys the transport hardening (no proxy, no redirects) and the OAuth skip.
+    /// This server is a first-party local app endpoint addressed by [`CGROK_AGENT_ID_HEADER`]. Set only from the spawn context — never inferred from headers — and it keys the transport hardening (no proxy, no redirects) and the OAuth skip.
     pub local_agent_endpoint: bool,
     /// `bearer_token_file` from config; it replaces any configured `Authorization` header.
     pub bearer_token_file: Option<BearerTokenFile>,
@@ -4603,7 +4603,7 @@ fn sanitize_mcp_log_filename(name: &str) -> String {
     }
 }
 
-/// Copy an MCP server's stderr to `~/.grok/logs/mcp/<server>.stderr.log`
+/// Copy an MCP server's stderr to `~/.cgrok/logs/mcp/<server>.stderr.log`
 /// in a background task. Truncated per spawn.
 fn drain_mcp_stderr_to_log(server_name: &str, mut stderr: tokio::process::ChildStderr) {
     let log_dir = xai_grok_config::grok_home().join("logs").join("mcp");
@@ -4773,7 +4773,7 @@ fn apply_stdio_env(cmd: &mut Command, env: &[acp::EnvVariable], session_id: Opti
         cmd.env(&env_variable.name, &env_variable.value);
     }
     if let Some(session_id) = session_id {
-        cmd.env("GROK_SESSION_ID", session_id);
+        cmd.env("CGROK_SESSION_ID", session_id);
     }
 }
 
@@ -4943,14 +4943,14 @@ pub async fn start_mcp_server(
 
             let mut headers = expand_session_id_headers(headers, ctx.session_id);
             // Stripped unconditionally: the agent-id header identifies the session to first-party app endpoints, and a caller-supplied config must not be able to impersonate one (see
-            // [`GROK_AGENT_ID_HEADER`]). Re-added only from the spawn context, like `GROK_SESSION_ID` on stdio servers.
-            headers.retain(|(name, _)| !name.eq_ignore_ascii_case(GROK_AGENT_ID_HEADER));
+            // [`CGROK_AGENT_ID_HEADER`]). Re-added only from the spawn context, like `CGROK_SESSION_ID` on stdio servers.
+            headers.retain(|(name, _)| !name.eq_ignore_ascii_case(CGROK_AGENT_ID_HEADER));
             let local_agent_endpoint = ctx.send_grok_agent_id_header;
             if local_agent_endpoint && let Some(session_id) = ctx.session_id {
                 reqwest::header::HeaderValue::try_from(session_id).map_err(|error| {
-                    McpError::ClientError(format!("invalid {GROK_AGENT_ID_HEADER} value: {error}"))
+                    McpError::ClientError(format!("invalid {CGROK_AGENT_ID_HEADER} value: {error}"))
                 })?;
-                headers.push((GROK_AGENT_ID_HEADER.to_owned(), session_id.to_owned()));
+                headers.push((CGROK_AGENT_ID_HEADER.to_owned(), session_id.to_owned()));
             }
             let bearer_token_file = BearerTokenPath::from_meta(meta.as_ref())
                 .map_err(|e| McpError::ClientError(format!("MCP server '{name}': {e}")))?

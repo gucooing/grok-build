@@ -11,7 +11,7 @@
 //! Invariants:
 //! - A session whose issuer is a foreign login authority is never returned.
 //! - A missing bearer is an error, never a cue to fall back to a different credential.
-//! - A configured static key (`XAI_API_KEY`, the process model key, or `xai::api_key` on disk)
+//! - A configured static key (`CGROK_API_KEY`, the process model key, or `cgrok::api_key` on disk)
 //!   still applies, under the same kill-switch and `preferred_method` rules as chat.
 //! - Every other credential goes to the server as before, and the server decides, as it does
 //!   today for enterprise IdP sessions and bare external-provider tokens.
@@ -142,18 +142,18 @@ impl xai_grok_tools::types::ApiKeyProvider for SharedAuthKeyProvider {
 
 fn prefers_static_api_key(am: &AuthManager) -> bool {
     matches!(
-        am.grok_com_config().preferred_method,
+        am.cgrok_com_config().preferred_method,
         Some(PreferredAuthMethod::ApiKey)
     )
 }
 
 /// Precedence: env, then process model key, then disk. Off under kill-switch / oidc pin.
 pub(crate) fn resolve_static_api_key(am: &AuthManager) -> Option<String> {
-    if am.grok_com_config().api_key_auth_disabled() {
+    if am.cgrok_com_config().api_key_auth_disabled() {
         return None;
     }
     if matches!(
-        am.grok_com_config().preferred_method,
+        am.cgrok_com_config().preferred_method,
         Some(PreferredAuthMethod::Oidc)
     ) {
         return None;

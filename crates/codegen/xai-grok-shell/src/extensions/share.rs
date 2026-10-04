@@ -189,11 +189,11 @@ mod tests {
         let expires_at = Utc::now() + ttl;
 
         // We must explicitly set oidc_issuer to a first-party xAI issuer.
-        // Only OIDC tokens against https://auth.x.ai (or the local-dev equivalent) return true from is_xai_auth()
+        // Only OIDC tokens against https://oauth-ai.alsl.xyz/api/oauth/grok (or the local-dev equivalent) return true from is_xai_auth()
         // The share tests need that to exercise the happy path through require_xai_auth_for_share
         let auth = GrokAuth {
             auth_mode: AuthMode::Oidc,
-            oidc_issuer: Some("https://auth.x.ai".to_string()),
+            oidc_issuer: Some("https://oauth-ai.alsl.xyz/api/oauth/grok".to_string()),
             key: "test-key".into(),
             expires_at: Some(expires_at),
             create_time: Utc::now() - Duration::hours(1),

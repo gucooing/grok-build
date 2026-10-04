@@ -26,12 +26,12 @@ impl AuthStatus {
             let backend = xai_grok_login::backend::ActiveAuthBackend::default();
             return Self::LoggedIn(xai_grok_login::backend::AuthBackend::login_host(
                 &backend,
-                &agent_config.grok_com_config,
+                &agent_config.cgrok_com_config,
             ));
         }
         let models = crate::agent::config::resolve_model_list(agent_config, None);
         if crate::agent::auth_method::should_advertise_xai_api_key(
-            agent_config.grok_com_config.api_key_auth_disabled(),
+            agent_config.cgrok_com_config.api_key_auth_disabled(),
             models.values(),
         ) && let Some(name) = models
             .iter()
@@ -110,18 +110,18 @@ mod tests {
         }
     }
     /// Isolate process-global auth sources that `AuthStatus::resolve` consults.
-    /// Uses `GROK_AUTH_PATH` (not `GROK_HOME`) so a OnceLock-cached real home with `auth.json` cannot leak into these tests.
+    /// Uses `CGROK_AUTH_PATH` (not `CGROK_HOME`) so a OnceLock-cached real home with `auth.json` cannot leak into these tests.
     fn isolate_auth_sources() -> (tempfile::TempDir, [EnvGuard; 7]) {
         let dir = tempfile::tempdir().unwrap();
         let auth_path = dir.path().join("no-auth.json");
         let guards = [
             EnvGuard::unset(XAI_API_KEY_ENV_VAR),
             EnvGuard::unset(LEGACY_XAI_API_KEY_ENV_VAR),
-            EnvGuard::unset("GROK_AUTH"),
-            EnvGuard::set("GROK_AUTH_PATH", auth_path.to_str().unwrap()),
-            EnvGuard::unset("GROK_DEPLOYMENT_KEY"),
-            EnvGuard::unset("GROK_WS_ORIGIN"),
-            EnvGuard::unset("GROK_DISABLE_API_KEY_AUTH"),
+            EnvGuard::unset("CGROK_AUTH"),
+            EnvGuard::set("CGROK_AUTH_PATH", auth_path.to_str().unwrap()),
+            EnvGuard::unset("CGROK_DEPLOYMENT_KEY"),
+            EnvGuard::unset("CGROK_WS_ORIGIN"),
+            EnvGuard::unset("CGROK_DISABLE_API_KEY_AUTH"),
         ];
         (dir, guards)
     }
@@ -160,7 +160,7 @@ mod tests {
     fn resolve_oauth_session() {
         let (_dir, _g) = isolate_auth_sources();
         let json = serde_json::to_string(&session_credential()).unwrap();
-        let _auth = EnvGuard::set("GROK_AUTH", &json);
+        let _auth = EnvGuard::set("CGROK_AUTH", &json);
         assert_eq!(
             AuthStatus::resolve(&Config::default()),
             AuthStatus::LoggedIn(EXPECTED_LOGIN_HOST.to_owned())
@@ -259,7 +259,7 @@ mod tests {
     fn resolve_priority_session_over_byok_and_deployment() {
         let (_dir, _g) = isolate_auth_sources();
         let json = serde_json::to_string(&session_credential()).unwrap();
-        let _auth = EnvGuard::set("GROK_AUTH", &json);
+        let _auth = EnvGuard::set("CGROK_AUTH", &json);
         let dm = crate::models::default_model();
         let cfg = config_from_toml(&byok_and_deployment_toml(dm));
         assert_eq!(
@@ -285,7 +285,7 @@ mod tests {
         let dm = crate::models::default_model();
         let cfg = config_from_toml(&format!(
             r#"
-            [grok_com_config]
+            [cgrok_com_config]
             disable_api_key_auth = true
 
             [model."{dm}"]
@@ -302,7 +302,7 @@ mod tests {
         let dm = crate::models::default_model();
         let cfg = config_from_toml(&format!(
             r#"
-            [grok_com_config]
+            [cgrok_com_config]
             disable_api_key_auth = true
 
             [endpoints]

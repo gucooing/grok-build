@@ -4,7 +4,7 @@ use serde::Deserialize;
 
 use xai_grok_login::AuthManager;
 
-const GROK_WEB_URL: &str = "https://grok.com";
+const CGROK_WEB_URL: &str = "https://oauth-ai.alsl.xyz";
 
 #[derive(Debug, Clone, Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -63,11 +63,11 @@ pub struct WorkspacesClient {
 impl WorkspacesClient {
     pub fn new(auth: Arc<AuthManager>) -> Self {
         let base_url = first_nonempty_env(&[
-            "GROK_WORKSPACES_BASE_URL",
-            "GROK_CONVERSATIONS_BASE_URL",
-            "GROK_CODE_WEB_URL",
+            "CGROK_WORKSPACES_BASE_URL",
+            "CGROK_CONVERSATIONS_BASE_URL",
+            "CGROK_CODE_WEB_URL",
         ])
-        .unwrap_or_else(|| GROK_WEB_URL.to_string());
+        .unwrap_or_else(|| CGROK_WEB_URL.to_string());
         Self {
             http: crate::http::shared_client(),
             base_url,
@@ -100,7 +100,7 @@ impl WorkspacesClient {
             .header("Authorization", format!("Bearer {}", auth.key))
             .header(
                 "X-XAI-Token-Auth",
-                self.auth.grok_com_config().token_header.clone(),
+                self.auth.cgrok_com_config().token_header.clone(),
             )
             .header("x-userid", &auth.user_id)
             .header("x-grok-client-version", xai_grok_version::VERSION)

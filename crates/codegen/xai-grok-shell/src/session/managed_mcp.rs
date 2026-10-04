@@ -513,9 +513,9 @@ mod tests {
         };
 
         let cwd = tempfile::tempdir().unwrap();
-        std::fs::create_dir_all(cwd.path().join(".grok")).unwrap();
+        std::fs::create_dir_all(cwd.path().join(".cgrok")).unwrap();
         std::fs::write(
-            cwd.path().join(".grok").join("config.toml"),
+            cwd.path().join(".cgrok").join("config.toml"),
             r#"
 disabled_mcp_servers = ["corp"]
 
@@ -571,9 +571,9 @@ url = "https://denied.corp.com/mcp"
             .unwrap_or_default();
         let exe = std::env::current_exe().expect("current_exe");
         let mut cmd = std::process::Command::new(exe);
-        cmd.env("GROK_HOME", grok_home.path())
-            .env_remove("GROK_CONFIG")
-            .env_remove("GROK_CONFIG_PATH")
+        cmd.env("CGROK_HOME", grok_home.path())
+            .env_remove("CGROK_CONFIG")
+            .env_remove("CGROK_CONFIG_PATH")
             .env(UNTRUSTED_DISCOVERY_CHILD, "1")
             .arg("--ignored")
             .arg("--exact")
@@ -594,7 +594,7 @@ url = "https://denied.corp.com/mcp"
         );
     }
 
-    const UNTRUSTED_DISCOVERY_CHILD: &str = "GROK_TEST_UNTRUSTED_DISCOVERY_CHILD";
+    const UNTRUSTED_DISCOVERY_CHILD: &str = "CGROK_TEST_UNTRUSTED_DISCOVERY_CHILD";
     const UNTRUSTED_DISCOVERY_PASS_MARK: &str = "untrusted-discovery-child-passed";
     const USER_MCP_URL: &str = "https://user.example.com/mcp";
     const PLUGIN_MCP_URL: &str = "https://plugin.example.com/mcp";
@@ -614,9 +614,9 @@ url = "https://denied.corp.com/mcp"
         }
         let cwd = tempfile::tempdir().unwrap();
         git2::Repository::init(cwd.path()).unwrap();
-        std::fs::create_dir_all(cwd.path().join(".grok")).unwrap();
+        std::fs::create_dir_all(cwd.path().join(".cgrok")).unwrap();
         std::fs::write(
-            cwd.path().join(".grok").join("config.toml"),
+            cwd.path().join(".cgrok").join("config.toml"),
             r#"
 [mcp_servers.projsrv]
 command = "echo"
@@ -769,9 +769,9 @@ command = "echo"
     fn filter_policy_blocked_agent_mcp_drops_enabled_false_name() {
         let cwd = tempfile::tempdir().unwrap();
         git2::Repository::init(cwd.path()).unwrap();
-        std::fs::create_dir_all(cwd.path().join(".grok")).unwrap();
+        std::fs::create_dir_all(cwd.path().join(".cgrok")).unwrap();
         std::fs::write(
-            cwd.path().join(".grok").join("config.toml"),
+            cwd.path().join(".cgrok").join("config.toml"),
             r#"
 [mcp_servers.agent_md_ks_adder]
 url = "https://toml.example/mcp"
@@ -793,9 +793,9 @@ enabled = false
     fn toml_loaders_agree_on_env_and_header_bearing_definitions() {
         let tmp = tempfile::tempdir().unwrap();
         git2::Repository::init(tmp.path()).unwrap();
-        std::fs::create_dir_all(tmp.path().join(".grok")).unwrap();
+        std::fs::create_dir_all(tmp.path().join(".cgrok")).unwrap();
         std::fs::write(
-            tmp.path().join(".grok").join("config.toml"),
+            tmp.path().join(".cgrok").join("config.toml"),
             r#"
 [mcp_servers.parity_stdio]
 command = "echo"
@@ -1042,7 +1042,7 @@ headers = { "X-A" = "1", "X-B" = "2", "X-C" = "3" }
         let empty = std::collections::HashSet::new();
         let native = [
             McpServerOrigin::ConfigToml {
-                path: "/u/.grok/config.toml".into(),
+                path: "/u/.cgrok/config.toml".into(),
             },
             McpServerOrigin::Plugin {
                 plugin_name: "p".into(),
@@ -1458,9 +1458,9 @@ headers = { "X-A" = "1", "X-B" = "2", "X-C" = "3" }
     #[test]
     fn lower_precedence_http_servers_are_blocked_by_toml_name_claims() {
         let cwd = tempfile::tempdir().unwrap();
-        std::fs::create_dir_all(cwd.path().join(".grok")).unwrap();
+        std::fs::create_dir_all(cwd.path().join(".cgrok")).unwrap();
         std::fs::write(
-            cwd.path().join(".grok").join("config.toml"),
+            cwd.path().join(".cgrok").join("config.toml"),
             r#"
 [mcp_servers.github]
 url = "https://config.example.com/mcp"
@@ -1494,9 +1494,9 @@ enabled = false
 
     fn same_url_project_repo() -> tempfile::TempDir {
         let cwd = empty_cwd();
-        std::fs::create_dir_all(cwd.path().join(".grok")).unwrap();
+        std::fs::create_dir_all(cwd.path().join(".cgrok")).unwrap();
         std::fs::write(
-            cwd.path().join(".grok").join("config.toml"),
+            cwd.path().join(".cgrok").join("config.toml"),
             r#"
 [mcp_servers.gb5207-org1]
 url = "https://dup-url.example.test/mcp"
@@ -1654,9 +1654,9 @@ Authorization = "Bearer org2-token"
         );
 
         git2::Repository::init(cwd.path()).unwrap();
-        std::fs::create_dir_all(cwd.path().join(".grok")).unwrap();
+        std::fs::create_dir_all(cwd.path().join(".cgrok")).unwrap();
         std::fs::write(
-            cwd.path().join(".grok").join("config.toml"),
+            cwd.path().join(".cgrok").join("config.toml"),
             "[mcp_servers.plugsrv]\nurl = \"https://plug.example.test/mcp\"\nenabled = false\n",
         )
         .unwrap();

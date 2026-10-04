@@ -37,7 +37,7 @@ async fn handle_record(agent: &MvpAgent, args: &acp::ExtRequest) -> ExtResult {
 
     let proxy_url = agent.cfg.borrow().endpoints.proxy_url();
     let url = format!("{proxy_url}/consent/accept");
-    let token_header = agent.auth_manager.grok_com_config().token_header.clone();
+    let token_header = agent.auth_manager.cgrok_com_config().token_header.clone();
 
     let provider: std::sync::Arc<dyn xai_grok_auth::AuthCredentialProvider> = std::sync::Arc::new(
         xai_grok_login::credential_provider::ShellAuthCredentialProvider::new(

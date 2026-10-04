@@ -26,7 +26,7 @@ enum TierArg {
 #[derive(ClapParser, Debug)]
 #[command(
     name = "scroll-matrix",
-    about = "Run the scroll validation matrix against xai-grok-pager",
+    about = "Run the scroll validation matrix against cgrok",
     long_about = None,
 )]
 struct Cli {
@@ -47,7 +47,7 @@ struct Cli {
     artifacts: PathBuf,
 
     /// Pager binary.
-    /// Defaults to PAGER_BINARY, CARGO_BIN_EXE_xai-grok-pager, or a locally-built debug binary.
+    /// Defaults to PAGER_BINARY, CARGO_BIN_EXE_cgrok, or a locally-built debug binary.
     #[arg(long, value_name = "PATH")]
     binary: Option<PathBuf>,
 }
@@ -91,7 +91,7 @@ async fn run() -> Result<ExitCode> {
         );
     }
 
-    // The pager child resolves GROK_SCROLL_LOG against ITS cwd (the harness's temp workspace)
+    // The pager child resolves CGROK_SCROLL_LOG against ITS cwd (the harness's temp workspace)
     // A relative artifacts dir (including the default) would scatter captures there and starve the finalize wait
     // Absolutize against the invoking cwd
     let artifacts = std::path::absolute(&cli.artifacts)

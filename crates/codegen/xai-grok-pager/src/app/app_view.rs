@@ -430,14 +430,14 @@ impl PendingAction {
         Instant::now() >= self.expires_at
     }
 }
-/// Cap for the `GROK_ESC_DOUBLE_PRESS_MS` override; the pty_e2e suite sets exactly this value.
+/// Cap for the `CGROK_ESC_DOUBLE_PRESS_MS` override; the pty_e2e suite sets exactly this value.
 pub const ESC_DOUBLE_PRESS_TEST_MS: u64 = 60_000;
-/// Idle-Esc double-press confirm window, `GROK_ESC_DOUBLE_PRESS_MS`-overridable (read once, bounded).
+/// Idle-Esc double-press confirm window, `CGROK_ESC_DOUBLE_PRESS_MS`-overridable (read once, bounded).
 /// The override exists for tests: a loaded pty_e2e shard's render round-trip between the presses can outlast the 800ms default and expire the arm.
 pub(crate) fn esc_double_press_ttl() -> Duration {
     use std::sync::OnceLock;
     static TTL: OnceLock<Duration> = OnceLock::new();
-    *TTL.get_or_init(|| parse_esc_ttl(std::env::var("GROK_ESC_DOUBLE_PRESS_MS").ok()))
+    *TTL.get_or_init(|| parse_esc_ttl(std::env::var("CGROK_ESC_DOUBLE_PRESS_MS").ok()))
 }
 /// Extracted pure (no `OnceLock`) so the bounds are unit-testable: zero or garbage falls back to the default, oversized clamps.
 fn parse_esc_ttl(raw: Option<String>) -> Duration {
@@ -540,7 +540,7 @@ pub struct AppView {
     pub scroll_state: MouseScrollState,
     /// Scroll config derived from terminal detection.
     pub scroll_config: ScrollConfig,
-    /// Current appearance config (hot-reloadable from ~/.grok/pager.toml).
+    /// Current appearance config (hot-reloadable from ~/.cgrok/pager.toml).
     /// Stored here so new agents inherit the current config.
     pub appearance: AppearanceConfig,
     /// Notification service (terminal bell, OSC sequences, title updates).
@@ -559,10 +559,10 @@ pub struct AppView {
     /// Tracing log channel receiver. Set by the event loop after `init_tracing()`.
     /// Drained into `tracing_pane` each tick in debug/dev builds; otherwise drained-and-discarded.
     pub tracing_rx: Option<crate::tracing::LogRx>,
-    /// Scroll-diagnostics HUD (`GROK_SCROLL_DEBUG` env / `/debug scroll`).
+    /// Scroll-diagnostics HUD (`CGROK_SCROLL_DEBUG` env / `/debug scroll`).
     /// Release-compiled behind its runtime gate; see the module doc.
     pub scroll_debug_hud: crate::views::scroll_debug_hud::ScrollDebugHud,
-    /// Release-safe FPS HUD (`/debug fps`; `GROK_FPS` env on release builds, where the dev overlay is compiled out); see the module doc.
+    /// Release-safe FPS HUD (`/debug fps`; `CGROK_FPS` env on release builds, where the dev overlay is compiled out); see the module doc.
     pub fps_hud: crate::views::fps_hud::FpsHud,
     pub active_announcements: Vec<xai_grok_announcements::RemoteAnnouncement>,
     /// Persisted hide keys, filtered at the banner selection gate.
@@ -587,7 +587,7 @@ pub struct AppView {
     /// Currently forced off while session share links are temporarily disabled in clients.
     pub sharing_enabled: bool,
     /// Whether the plugin marketplace CTA is enabled.
-    /// Env `GROK_PLUGIN_CTA` overrides `RemoteSettings.plugin_cta` (remote settings); defaults to `false`.
+    /// Env `CGROK_PLUGIN_CTA` overrides `RemoteSettings.plugin_cta` (remote settings); defaults to `false`.
     pub plugin_cta_enabled: bool,
     /// Marketplace source name the plugin CTA draws candidates from, when `[marketplace].plugin_cta_marketplace` is set in the effective config.
     /// `None` keeps the default xAI Official source.
@@ -642,10 +642,10 @@ pub struct AppView {
     pub(crate) pending_running_adoptions:
         std::collections::HashMap<AgentId, crate::app::acp_handler::PendingRunningAdoption>,
     /// Whether the session picker groups entries by repo name with non-selectable headers.
-    /// Gated by `GROK_SESSION_PICKER_GROUPED` env var or remote settings `session_picker_grouped`; defaults to `false`.
+    /// Gated by `CGROK_SESSION_PICKER_GROUPED` env var or remote settings `session_picker_grouped`; defaults to `false`.
     pub session_picker_grouped: bool,
     /// Whether Ctrl+C before first server activity rewinds the prompt back into the input box.
-    /// Gated by `GROK_CANCEL_REWIND` env / `[features] cancel_rewind` config / remote settings flag.
+    /// Gated by `CGROK_CANCEL_REWIND` env / `[features] cancel_rewind` config / remote settings flag.
     pub cancel_rewind_enabled: bool,
     /// Whether session recap (`/recap` and the automatic away recap) is rolled out.
     /// Resolved by the shell and advertised on ACP initialize (`sessionRecap`).
@@ -882,7 +882,7 @@ pub struct AppView {
     pub new_worktree_dialog: Option<NewWorktreeDialogState>,
     /// Default all ON.
     /// Resolved at startup and on settings toggles.
-    /// Precedence: `GROK_CONTEXTUAL_HINTS` (master) > `[ui.contextual_hints]` user config > remote tier > default.
+    /// Precedence: `CGROK_CONTEXTUAL_HINTS` (master) > `[ui.contextual_hints]` user config > remote tier > default.
     pub contextual_hints: xai_grok_shell::util::config::ResolvedContextualHints,
     /// Remote tier for the contextual hints, kept so a settings toggle can re-resolve the untouched tips against the same remote defaults.
     pub remote_contextual_hints: Option<xai_grok_shell::util::config::ContextualHintsRemote>,
@@ -1062,7 +1062,7 @@ pub struct AppView {
     /// Where to return when leaving the dashboard. See [`DashboardReturn`].
     pub dashboard_return: Option<DashboardReturn>,
     /// Persisted dashboard configuration (pinned rows, reorderings, grouping).
-    /// Loaded once on startup from `~/.grok/config.toml`.
+    /// Loaded once on startup from `~/.cgrok/config.toml`.
     /// `None` when the file/section is absent or contained malformed data; falls back to in-memory defaults.
     pub dashboard_persisted: Option<crate::views::dashboard::PersistedDashboard>,
     /// Per-platform key event normalizer.
@@ -1070,7 +1070,7 @@ pub struct AppView {
     /// New event consumers that bypass `AppView::handle_input` will not get rescued modifiers unless they also normalize.
     pub(crate) keyboard_normalizer: KeyboardNormalizer,
     /// Voice gate (GA default on at startup resolution).
-    /// When false (remote kill switch or `GROK_VOICE_MODE=0`) the STT pipeline is not started and session voice mode cannot turn on.
+    /// When false (remote kill switch or `CGROK_VOICE_MODE=0`) the STT pipeline is not started and session voice mode cannot turn on.
     /// Unit tests leave this false until they call [`Self::apply_voice_mode_enabled`].
     pub voice_mode_enabled: bool,
     /// What this build may do. Tests set it; everything else takes [`Distribution::current`].
@@ -1081,7 +1081,7 @@ pub struct AppView {
     pub voice_ui_active: bool,
     /// Optional `[voice]` overrides from config (`api_base`, `language`, …).
     pub voice_config: xai_grok_voice::VoiceConfig,
-    /// Auth for STT (OAuth session via shell `AuthManager`, or `XAI_API_KEY`).
+    /// Auth for STT (OAuth session via shell `AuthManager`, or `CGROK_API_KEY`).
     /// `None` until the pipeline is first started (lazy on `/voice`).
     pub voice_auth: Option<xai_grok_voice::SharedVoiceAuth>,
     /// Commands into the voice pipeline (start/stop capture; toggle, not hold).
@@ -2122,7 +2122,7 @@ impl AppView {
             top_offset,
         })
     }
-    /// Rows the dev `GROK_FPS` overlay occupies (0 in non-dev builds), so runtime debug overlays stack below instead of overpainting it.
+    /// Rows the dev `CGROK_FPS` overlay occupies (0 in non-dev builds), so runtime debug overlays stack below instead of overpainting it.
     fn dev_fps_rows(&self) -> u16 {
         0
     }

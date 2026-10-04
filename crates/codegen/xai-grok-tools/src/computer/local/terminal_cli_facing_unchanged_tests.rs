@@ -93,23 +93,23 @@ fn assert_same_exec(golden: &[u8], live: &[u8]) {
 fn filtering_policy() -> ShellEnvironmentPolicy {
     ShellEnvironmentPolicy {
         exclude: vec![EnvironmentVariablePattern::new_case_insensitive(
-            "GROK_PIN_SECRET*",
+            "CGROK_PIN_SECRET*",
         )],
-        set: HashMap::from([("GROK_PIN_BASE".to_owned(), "base".to_owned())]),
+        set: HashMap::from([("CGROK_PIN_BASE".to_owned(), "base".to_owned())]),
         ..Default::default()
     }
 }
 
 fn request_env() -> HashMap<String, String> {
     HashMap::from([
-        ("GROK_PIN_REQ".to_owned(), "req".to_owned()),
-        ("GROK_PIN_SECRET_TOKEN".to_owned(), "leak".to_owned()),
+        ("CGROK_PIN_REQ".to_owned(), "req".to_owned()),
+        ("CGROK_PIN_SECRET_TOKEN".to_owned(), "leak".to_owned()),
     ])
 }
 
 fn login_env() -> HashMap<String, String> {
     HashMap::from([
-        ("GROK_PIN_LOGIN".to_owned(), "login".to_owned()),
+        ("CGROK_PIN_LOGIN".to_owned(), "login".to_owned()),
         ("PATH".to_owned(), "/login/bin:/usr/bin:/bin".to_owned()),
     ])
 }
@@ -193,8 +193,8 @@ async fn cli_facing_spawn_shell_command_unchanged_without_hook() {
         assert!(
             probe_env.contains(&format!(
                 "{}={}",
-                crate::util::GROK_AGENT_ENV,
-                crate::util::GROK_AGENT_ENV_VALUE
+                crate::util::CGROK_AGENT_ENV,
+                crate::util::CGROK_AGENT_ENV_VALUE
             )),
             "{probe_env:?}"
         );

@@ -61,7 +61,7 @@ impl SpawnOptions {
 
     /// Keys removed from the sandbox baseline after the mock URL and `with_extra_env` are applied.
     /// Use this to drop a baseline variable a scenario must run without, such as the mock's
-    /// `XAI_API_KEY`, so a login-only or missing-credential case is exercised faithfully.
+    /// `CGROK_API_KEY`, so a login-only or missing-credential case is exercised faithfully.
     #[must_use]
     pub fn with_removed_env(
         mut self,

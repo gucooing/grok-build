@@ -32,10 +32,10 @@ A hook is a shell command or HTTP endpoint that Grok calls when a specific lifec
 1. Create the hooks directory:
 
    ```sh
-   mkdir -p ~/.grok/hooks
+   mkdir -p ~/.cgrok/hooks
    ```
 
-2. Create a hook file, e.g. `~/.grok/hooks/session-start.json`:
+2. Create a hook file, e.g. `~/.cgrok/hooks/session-start.json`:
 
    ```json
    {
@@ -63,22 +63,22 @@ Hooks are discovered from several places (all are merged):
 
 | Scope | Path | Trusted? | Notes |
 |-------|------|----------|-------|
-| Global | `~/.grok/hooks/*.json` | Always | Personal hooks |
+| Global | `~/.cgrok/hooks/*.json` | Always | Personal hooks |
 | Global | `~/.claude/settings.json` (and `settings.local.json`) | Always | Claude Code compatibility (configurable) |
 | Global | `~/.cursor/hooks.json` | Always | Cursor compatibility (configurable) |
-| Project | `<project>/.grok/hooks/*.json` | Requires trust | Per-repo automation |
+| Project | `<project>/.cgrok/hooks/*.json` | Requires trust | Per-repo automation |
 | Project | `<project>/.claude/settings.json` (and `settings.local.json`) | Requires trust | Claude compatibility (configurable) |
 | Project | `<project>/.cursor/hooks.json` | Requires trust | Cursor compatibility (configurable) |
-| Config | `~/.grok/config.toml` | Always | Your hooks alongside the rest of your config |
-| Config | `managed_config.toml` (`$GROK_HOME` and `/etc/grok`) | Always | Organization-distributed hooks (server-synced and on-device) |
+| Config | `~/.cgrok/config.toml` | Always | Your hooks alongside the rest of your config |
+| Config | `managed_config.toml` (`$CGROK_HOME` and `/etc/grok`) | Always | Organization-distributed hooks (server-synced and on-device) |
 | Config | `requirements.toml` (signed cache, and `/etc/grok`) | Always | Organization-enforced hooks; see [Enforced hooks](#enforced-hooks) |
 | Plugin | Bundled inside installed plugins | Per-plugin | Shared team hooks |
 
-Config-file hooks live in the same TOML your organization already controls; see [Hooks in Config Files](#hooks-in-config-files) for the format. The compatible vendor hook sources are scanned by default. To disable scanning for a specific vendor, set `[compat.<vendor>] hooks = false` in `~/.grok/config.toml` or the corresponding environment variable. See [Configuration](05-configuration.md#harness-compatibility) for details.
+Config-file hooks live in the same TOML your organization already controls; see [Hooks in Config Files](#hooks-in-config-files) for the format. The compatible vendor hook sources are scanned by default. To disable scanning for a specific vendor, set `[compat.<vendor>] hooks = false` in `~/.cgrok/config.toml` or the corresponding environment variable. See [Configuration](05-configuration.md#harness-compatibility) for details.
 
-**Trusting a project**: The first time you open a project with hooks, you must trust it before its project hooks will run; until then they are silently skipped. Grant trust by running `/hooks-trust` (or launching with `--trust`); the decision is recorded in the unified folder-trust store (`~/.grok/trusted_folders.toml`), the same gate that governs repo-local MCP/LSP servers. Global hooks in `~/.grok/hooks/` are always trusted and need no entry. This prevents untrusted repos from running arbitrary code.
+**Trusting a project**: The first time you open a project with hooks, you must trust it before its project hooks will run; until then they are silently skipped. Grant trust by running `/hooks-trust` (or launching with `--trust`); the decision is recorded in the unified folder-trust store (`~/.cgrok/trusted_folders.toml`), the same gate that governs repo-local MCP/LSP servers. Global hooks in `~/.cgrok/hooks/` are always trusted and need no entry. This prevents untrusted repos from running arbitrary code.
 
-Because hooks are unified under folder-trust, a `--trust` / `/hooks-trust` grant trusts the whole folder for **MCP, LSP, hooks, project instructions, and project skills** together, and covers subdirectories of the same repository. A nested git checkout under that folder is a separate workspace and is not covered. Conversely, disabling folder-trust (`GROK_FOLDER_TRUST=0` or `[folder_trust] enabled = false`) ungates those surfaces together.
+Because hooks are unified under folder-trust, a `--trust` / `/hooks-trust` grant trusts the whole folder for **MCP, LSP, hooks, project instructions, and project skills** together, and covers subdirectories of the same repository. A nested git checkout under that folder is a separate workspace and is not covered. Conversely, disabling folder-trust (`CGROK_FOLDER_TRUST=0` or `[folder_trust] enabled = false`) ungates those surfaces together.
 
 ---
 
@@ -198,9 +198,9 @@ Hooks can also live directly in your Grok config, so a team can distribute them 
 
 | File | Tier | Who sets it |
 |------|------|-------------|
-| `~/.grok/config.toml` | User | You |
-| `managed_config.toml` (`$GROK_HOME`, `/etc/grok`) | Managed / system | Your organization |
-| `requirements.toml` (`$GROK_HOME` signed cache, `/etc/grok`) | Requirements | Your organization |
+| `~/.cgrok/config.toml` | User | You |
+| `managed_config.toml` (`$CGROK_HOME`, `/etc/grok`) | Managed / system | Your organization |
+| `requirements.toml` (`$CGROK_HOME` signed cache, `/etc/grok`) | Requirements | Your organization |
 
 The TOML is structurally identical to the JSON hook object, so an existing hook transliterates directly:
 
@@ -233,12 +233,12 @@ Prefer the inline form to avoid repeating the `[[hooks.<Event>.hooks]]` header f
 
 ### Enforced hooks
 
-Hooks from the config layers your organization controls are enforced: they carry a `[policy]` badge in `/hooks`, `Space` refuses to disable them, an entry in `~/.grok/disabled-hooks` does not skip them, and their source cannot be removed. Two layers qualify:
+Hooks from the config layers your organization controls are enforced: they carry a `[policy]` badge in `/hooks`, `Space` refuses to disable them, an entry in `~/.cgrok/disabled-hooks` does not skip them, and their source cannot be removed. Two layers qualify:
 
 - The root-owned system files `/etc/grok/requirements.toml` and `/etc/grok/managed_config.toml` (`requirements/system:` and `system_managed:` names).
-- The `~/.grok/requirements.toml` that the deployment sync writes, while its bytes match the signed policy the server sent (`requirements/signed:` names). If the file is edited or its signature file is missing or unreadable, its hooks load as your own (`requirements/user:` names) and can be disabled again; an unreadable `requirements.toml` contributes no hooks. Organizations that need the file to stay intact set `fail_closed = true` in the same requirements, which refuses to start on an edited copy or a missing signature (an unreadable file is a read error and still starts). See [Configuration](26-config-reference.md#requirementstoml).
+- The `~/.cgrok/requirements.toml` that the deployment sync writes, while its bytes match the signed policy the server sent (`requirements/signed:` names). If the file is edited or its signature file is missing or unreadable, its hooks load as your own (`requirements/user:` names) and can be disabled again; an unreadable `requirements.toml` contributes no hooks. Organizations that need the file to stay intact set `fail_closed = true` in the same requirements, which refuses to start on an edited copy or a missing signature (an unreadable file is a read error and still starts). See [Configuration](26-config-reference.md#requirementstoml).
 
-Hooks in `~/.grok/managed_config.toml` and `~/.grok/config.toml` are distribution, not enforcement: you can disable them.
+Hooks in `~/.cgrok/managed_config.toml` and `~/.cgrok/config.toml` are distribution, not enforcement: you can disable them.
 
 ### Allow only managed hooks
 
@@ -251,12 +251,12 @@ allow_managed_hooks_only = true
 
 With this set:
 
-- **What runs.** Only [enforced hooks](#enforced-hooks): the ones from the root-owned `/etc/grok/requirements.toml` and `/etc/grok/managed_config.toml`, and the ones in the synced `~/.grok/requirements.toml` while it matches its signature. An edited synced file loads as your own hooks, which the pin skips.
-- **What is skipped.** Every other hook, at dispatch: `~/.grok/hooks`, every `~/.grok/*.toml` file, project hooks, plugin hooks, agent frontmatter hooks, and the Claude and Cursor compatibility files. In `/hooks` they show `[disabled]`, and enabling them is refused ("Hooks outside managed policy are disabled by your organization."); `grok inspect` names the file that set the pin.
+- **What runs.** Only [enforced hooks](#enforced-hooks): the ones from the root-owned `/etc/grok/requirements.toml` and `/etc/grok/managed_config.toml`, and the ones in the synced `~/.cgrok/requirements.toml` while it matches its signature. An edited synced file loads as your own hooks, which the pin skips.
+- **What is skipped.** Every other hook, at dispatch: `~/.cgrok/hooks`, every `~/.cgrok/*.toml` file, project hooks, plugin hooks, agent frontmatter hooks, and the Claude and Cursor compatibility files. In `/hooks` they show `[disabled]`, and enabling them is refused ("Hooks outside managed policy are disabled by your organization."); `cgrok inspect` names the file that set the pin.
 - **What still runs.** Hooks the embedding client registers over ACP (an IDE or the desktop app), as under Claude Code's `allowManagedHooksOnly`. The pager's `[[ui.notifications.hooks]]` commands are a separate mechanism.
 - **Windows.** There is no root-owned layer (no `/etc/grok`), so only the signed synced `requirements.toml` hooks and ACP client hooks still run.
 
-The key is a tighten-only policy pin: any native policy layer (`requirements.toml` or `managed_config.toml` in `$GROK_HOME` or `/etc/grok`, or macOS MDM) or Claude's `managed-settings.json` can set it, the camelCase `allowManagedHooksOnly` is accepted everywhere, no layer can release it, and a non-boolean value engages it. Like the other policy pins it is read once at startup, so a pin added mid-session applies at the next start, not on `/hooks` Reload. `grok inspect` lists it under **Enforced by policy** as "Hooks outside managed policy disabled" with the file that set it.
+The key is a tighten-only policy pin: any native policy layer (`requirements.toml` or `managed_config.toml` in `$CGROK_HOME` or `/etc/grok`, or macOS MDM) or Claude's `managed-settings.json` can set it, the camelCase `allowManagedHooksOnly` is accepted everywhere, no layer can release it, and a non-boolean value engages it. Like the other policy pins it is read once at startup, so a pin added mid-session applies at the next start, not on `/hooks` Reload. `cgrok inspect` lists it under **Enforced by policy** as "Hooks outside managed policy disabled" with the file that set it.
 
 ---
 
@@ -449,7 +449,7 @@ What the two scripts have to get right:
   turn correctable. Re-read that record first, so you only clear a turn you recorded yourself.
 - **Keep it to a local write.** Teardown gives the whole queue of turn-end reports half a second,
   and each `SessionEnd` hook is then bounded by its own timeout (default 1.5s; set
-  `GROK_SESSION_END_HOOKS_TIMEOUT_MS`, in milliseconds, to change that default, capped at 60s).
+  `CGROK_SESSION_END_HOOKS_TIMEOUT_MS`, in milliseconds, to change that default, capped at 60s).
 
 `Stop` is a gate, so that entry runs on the turn's critical path: keep it fast, give it a `timeout`,
 and exit 0, because exit 2 blocks the stop and keeps the agent working. Leave `Stop` out if you also
@@ -514,11 +514,11 @@ These variables are set by the hook runner for **every** hook:
 
 | Variable              | Description |
 |-----------------------|-------------|
-| `GROK_HOOK_EVENT`     | The name of the event that triggered the hook (e.g. `pre_tool_use`, `session_start`, `post_tool_use`, `session_end`, `stop`, `notification`). |
-| `GROK_HOOK_NAME`      | The configured name of this specific hook (includes the plugin prefix for plugin-provided hooks). |
-| `GROK_SESSION_ID`     | The unique identifier of the current Grok session. |
-| `GROK_WORKSPACE_ROOT` | Absolute path to the root of the current workspace. |
-| `CLAUDE_PROJECT_DIR`  | Absolute path to the workspace root. A Claude Code-compatible alias for `GROK_WORKSPACE_ROOT`, set for every hook. |
+| `CGROK_HOOK_EVENT`     | The name of the event that triggered the hook (e.g. `pre_tool_use`, `session_start`, `post_tool_use`, `session_end`, `stop`, `notification`). |
+| `CGROK_HOOK_NAME`      | The configured name of this specific hook (includes the plugin prefix for plugin-provided hooks). |
+| `CGROK_SESSION_ID`     | The unique identifier of the current Grok session. |
+| `CGROK_WORKSPACE_ROOT` | Absolute path to the root of the current workspace. |
+| `CLAUDE_PROJECT_DIR`  | Absolute path to the workspace root. A Claude Code-compatible alias for `CGROK_WORKSPACE_ROOT`, set for every hook. |
 
 These variables are **reserved**. Any values you attempt to set for them via the `env` field in your hook JSON are stripped at load time (a warning is logged), and the runner always injects the real values at spawn time.
 
@@ -528,10 +528,10 @@ When a hook originates from a plugin, Grok additionally injects the following va
 
 | Variable             | Description |
 |----------------------|-------------|
-| `GROK_PLUGIN_ROOT`   | Absolute path to the plugin's installed directory. |
-| `GROK_PLUGIN_DATA`   | Absolute path to the plugin's writable data directory (for storing plugin state, caches, etc.). |
+| `CGROK_PLUGIN_ROOT`   | Absolute path to the plugin's installed directory. |
+| `CGROK_PLUGIN_DATA`   | Absolute path to the plugin's writable data directory (for storing plugin state, caches, etc.). |
 
-These values are provided by the plugin system. For the four plugin-related keys (`GROK_PLUGIN_ROOT`, `GROK_PLUGIN_DATA`, and their Claude aliases), the plugin adapter ensures the official plugin values always win over any user-declared values in the hook's `env` map.
+These values are provided by the plugin system. For the four plugin-related keys (`CGROK_PLUGIN_ROOT`, `CGROK_PLUGIN_DATA`, and their Claude aliases), the plugin adapter ensures the official plugin values always win over any user-declared values in the hook's `env` map.
 
 #### User-defined environment variables
 
@@ -618,7 +618,7 @@ Hooks are quiet unless they hold the turn up or change its course:
 
 - While the turn is blocked on a hook batch (a `PreToolUse` gate before a tool, the `UserPromptSubmit` gate, a `Stop` gate), the status row reads `Running pre_tool_use hook…` (or `Running 3 stop hooks…`) once the batch has run for about 300 ms. The timer counts from when the batch started, so a slow hook shows its full wait; a fast one never shows at all.
 - A hook that ran and allowed leaves no trace. Its stdout is not shown.
-- A hook that denies a tool call, blocks a prompt, or stops or continues the agent gets one annotation line with the reason. Hooks from `~/.grok`, project, and plugin files are named; hooks from managed configuration read as "a managed policy hook".
+- A hook that denies a tool call, blocks a prompt, or stops or continues the agent gets one annotation line with the reason. Hooks from `~/.cgrok`, project, and plugin files are named; hooks from managed configuration read as "a managed policy hook".
 - A hook that fails (non-zero exit, timeout, crash, malformed output) gets one line: `<event> hook (<name>) failed, ignored: <reason>`, where the reason is the exit code with the first stderr line, or the timeout. "Ignored" is literal: failures are fail-open, so the tool call or turn proceeds as if the hook had allowed it.
 
 Deny and failure lines carry the same bullet as the tool rows, so they read as part of the tool call above them.
@@ -666,7 +666,7 @@ echo '{"decision": "allow"}'
 
 ## Security Notes
 
-- Global hooks (`~/.grok/hooks/`) run with your user permissions; treat them like shell scripts.
+- Global hooks (`~/.cgrok/hooks/`) run with your user permissions; treat them like shell scripts.
 - Project hooks require folder trust (`/hooks-trust` or `--trust`, the same gate as repo-local MCP/LSP) to prevent supply-chain attacks from malicious repos.
 - HTTP hooks send session data; only use trusted endpoints.
 - A `PostToolUse` hook decides what the model reads for that tool call — it can add instructions or replace the output outright — so trust one the way you trust a `PreToolUse` gate. The scrollback and the transcript keep the real output, so a replacement is always visible to you.
@@ -679,7 +679,7 @@ echo '{"decision": "allow"}'
 2. **Use explicit `deny` to block**: hooks fail-open on any error, so a hook that crashes will not block the tool. To enforce policy, your hook must run to completion and emit `{"decision":"deny","reason":"..."}` on stdout. Always handle errors inside your script so it can return an explicit decision.
 3. **Use absolute paths or relative to hook file**: scripts in `bin/` next to the JSON file are portable.
 4. **Test with the modal**: press `Ctrl+L` (non–VS Code family) or run `/hooks` to verify hooks are loaded and matching before relying on them.
-5. **Version control project hooks**: commit `.grok/hooks/` (but never secrets).
+5. **Version control project hooks**: commit `.cgrok/hooks/` (but never secrets).
 
 ---
 
@@ -688,4 +688,4 @@ echo '{"decision": "allow"}'
 - **Hook not running?** Press `Ctrl+L` on non–VS Code family (or run `/hooks` anywhere) to see if it is loaded and matched.
 - **Project hooks ignored?** The folder may be untrusted. Run `/hooks-trust` (or relaunch with `--trust`).
 - **Script not found?** Check the path is relative to the `.json` file and executable (`chmod +x`).
-- **See errors?** Capture logs by launching with `RUST_LOG=debug GROK_LOG_FILE=/tmp/grok.log grok`, then check `/tmp/grok.log`.
+- **See errors?** Capture logs by launching with `RUST_LOG=debug CGROK_LOG_FILE=/tmp/grok.log grok`, then check `/tmp/grok.log`.

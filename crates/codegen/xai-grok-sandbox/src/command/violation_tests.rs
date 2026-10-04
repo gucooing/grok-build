@@ -634,14 +634,14 @@ fn a_symlinked_read_root_never_allows_its_target() {
 }
 
 /// A protected *file* under a writable parent (`<ws>/.git/config` beside a writable `.git`) and
-/// the first `mkdir <ws>/.grok` are the floor holding the line, not the OS: the user sees a
+/// the first `mkdir <ws>/.cgrok` are the floor holding the line, not the OS: the user sees a
 /// protected card and the model is told.
 #[test]
 fn a_protected_target_under_a_writable_parent_is_the_floor_not_the_os() {
     let scratch = Scratch::new("protected-under-writable");
     let mut policy = scratch.policy();
     let config = scratch.ws.join(".git").join("config");
-    let grok = scratch.ws.join(".grok");
+    let grok = scratch.ws.join(".cgrok");
     std::fs::write(&config, "[core]\n").unwrap();
     policy.protected.push(Protected::Path {
         path: config.clone(),
@@ -665,7 +665,7 @@ fn a_protected_target_under_a_writable_parent_is_the_floor_not_the_os() {
     assert!(violation.protected_target());
     assert_eq!(None, violation.proposed);
     assert!(violation.produces_card());
-    // `.grok` does not exist yet: its nearest existing directory is the writable workspace
+    // `.cgrok` does not exist yet: its nearest existing directory is the writable workspace
     let stderr = format!("mkdir: {}: Operation not permitted\n", grok.display());
     let violation = decode(input(&scratch, &policy, one, &stderr)).unwrap();
     assert_eq!(Blocked::FsWrite { path: grok }, violation.blocked);

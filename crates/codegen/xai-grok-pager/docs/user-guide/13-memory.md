@@ -46,7 +46,7 @@ paths, model output, or free-form errors.
 ### Config (Persistent)
 
 ```toml
-# ~/.grok/config.toml
+# ~/.cgrok/config.toml
 [memory]
 enabled = true
 ```
@@ -54,8 +54,8 @@ enabled = true
 ### Environment Variable
 
 ```bash
-export GROK_MEMORY=1
-grok
+export CGROK_MEMORY=1
+cgrok
 ```
 
 ### Force-Disable
@@ -63,7 +63,7 @@ grok
 To disable memory for the process even when TOML or remote settings enable it:
 
 ```bash
-export GROK_MEMORY=0
+export CGROK_MEMORY=0
 ```
 
 ### Mid-Session Toggle
@@ -73,16 +73,16 @@ and press `t`.
 
 The toggle is session-scoped -- it does not persist to `config.toml`, and it works in both directions: a session that started with `[memory] enabled = true` can turn memory off, and a session that started with `[memory] enabled = false` can turn it on. New sessions follow `config.toml` again. Toggling off removes access to memory tools and the memory instructions in the system prompt but keeps existing files on disk. Toggling on re-initializes memory storage, registers the memory tools, restores the memory instructions, and injects the memory index on the next turn. Turning memory on waits for any turn in progress to finish.
 
-The toggle cannot override the process-wide force-disable (`--no-memory` or `GROK_MEMORY=0`); those hide `/memory` for the whole session.
+The toggle cannot override the process-wide force-disable (`--no-memory` or `CGROK_MEMORY=0`); those hide `/memory` for the whole session.
 
 ### Priority Order
 
 1. A process-wide force-disable (`--no-memory` compatibility flag or
-   `GROK_MEMORY=0`) turns memory off.
+   `CGROK_MEMORY=0`) turns memory off.
 2. An explicit `[memory] enabled = false` in effective TOML turns memory off,
    including anything enabled by managed remote settings. The `/memory` `t`
    toggle can still turn it on for the current session.
-3. Otherwise memory is enabled by `GROK_MEMORY=1`, `[memory] enabled = true`,
+3. Otherwise memory is enabled by `CGROK_MEMORY=1`, `[memory] enabled = true`,
    or a managed remote setting.
 
 Staged-rollout and kill-switch controls for operators are documented in the
@@ -92,7 +92,7 @@ internal hardening notes, not here.
 
 ## How Memory Is Stored
 
-When v2 is on (`[memory_v2] enabled`), each scope stores Markdown under `~/.grok/memory-v2/`: `topics/` for curated notes and `observations/_inbox/` for new facts. When v2 is off and legacy memory is on, files live under `~/.grok/memory/` (`MEMORY.md` plus hashed workspace directories). `[memory] enabled` and `[memory_v2] enabled` both default off.
+When v2 is on (`[memory_v2] enabled`), each scope stores Markdown under `~/.cgrok/memory-v2/`: `topics/` for curated notes and `observations/_inbox/` for new facts. When v2 is off and legacy memory is on, files live under `~/.cgrok/memory/` (`MEMORY.md` plus hashed workspace directories). `[memory] enabled` and `[memory_v2] enabled` both default off.
 
 ---
 
@@ -131,7 +131,7 @@ Use `/flush` when you want to preserve important context:
 
 ### Remember
 
-Ask Grok to remember something, and it appends the note to a `MEMORY.md` file -- the workspace file for project-specific items, or the global `~/.grok/memory/MEMORY.md` for cross-project preferences:
+Ask Grok to remember something, and it appends the note to a `MEMORY.md` file -- the workspace file for project-specific items, or the global `~/.cgrok/memory/MEMORY.md` for cross-project preferences:
 
 ```
 > remember to always open PR links after pushing
@@ -145,7 +145,7 @@ You can also save a note directly with the `/remember` command:
 /remember always open PR links after pushing
 ```
 
-Run `/remember` with no text to enter remember mode, where the next line you type becomes the note. Either way, Grok opens a review panel showing the note (with an optional rewritten version you can toggle with `Tab`); the note is written only after you confirm. On save, Grok shows `Memory saved to ~/.grok/memory/MEMORY.md`.
+Run `/remember` with no text to enter remember mode, where the next line you type becomes the note. Either way, Grok opens a review panel showing the note (with an optional rewritten version you can toggle with `Tab`); the note is written only after you confirm. On save, Grok shows `Memory saved to ~/.cgrok/memory/MEMORY.md`.
 
 ### Forget
 
@@ -155,7 +155,7 @@ Ask Grok to forget something, and it finds and removes the matching entry:
 > forget the snake_case convention
 ```
 
-Forget is best-effort: the model searches memory and removes entries that match. For guaranteed removal, edit the files under `~/.grok/memory/` directly and delete the entry yourself. To locate a file, open the `/memory` browser and press `y` to copy its path.
+Forget is best-effort: the model searches memory and removes entries that match. For guaranteed removal, edit the files under `~/.cgrok/memory/` directly and delete the entry yourself. To locate a file, open the `/memory` browser and press `y` to copy its path.
 
 ### Recall
 
@@ -169,7 +169,7 @@ Grok searches across all memory files and summarizes what it knows, grouped by s
 
 ### Direct Editing
 
-You can edit memory files directly under `~/.grok/memory/`. The file watcher reindexes your changes on the next memory search. Use `/flush` to save the current session now, and `/dream` to consolidate session logs into organized topics.
+You can edit memory files directly under `~/.cgrok/memory/`. The file watcher reindexes your changes on the next memory search. Use `/flush` to save the current session now, and `/dream` to consolidate session logs into organized topics.
 
 ---
 
@@ -217,7 +217,7 @@ You can also open `/memory` from the command palette.
 When you save a note with `/remember`, Grok confirms in the scrollback:
 
 ```
-Memory saved to ~/.grok/memory/MEMORY.md
+Memory saved to ~/.cgrok/memory/MEMORY.md
 ```
 
 Background saves — automatic flush, automatic Dream, and session-end — run silently and do not post a scrollback message. `/flush` and `/dream` report their outcome in scrollback when you run them yourself. Use `/memory` at any time to browse what Grok has stored.
@@ -321,26 +321,26 @@ lambda = 0.7             # 0.0 = max diversity, 1.0 = pure relevance
 
 ## CLI Commands
 
-The `grok memory` command manages memory from the shell. It has one subcommand, `clear`:
+The `cgrok memory` command manages memory from the shell. It has one subcommand, `clear`:
 
 ```bash
 # Clear workspace memory (MEMORY.md, sessions/, and index.sqlite). This is the default scope.
-grok memory clear
+cgrok memory clear
 
 # The same scope, stated explicitly
-grok memory clear --workspace
+cgrok memory clear --workspace
 
 # Clear the global MEMORY.md
-grok memory clear --global
+cgrok memory clear --global
 
 # Clear both workspace and global memory
-grok memory clear --all
+cgrok memory clear --all
 
 # Skip the confirmation prompt (-y is the short form)
-grok memory clear --yes
+cgrok memory clear --yes
 ```
 
-To edit memory from the shell, open the files in your editor directly -- for example, `$EDITOR ~/.grok/memory/MEMORY.md`.
+To edit memory from the shell, open the files in your editor directly -- for example, `$EDITOR ~/.cgrok/memory/MEMORY.md`.
 
 ---
 
@@ -352,7 +352,7 @@ To edit memory from the shell, open the files in your editor directly -- for exa
 |-----|---------|-------------|
 | `enabled` | `false` | Enable memory |
 | `session.save_on_end` | `true` | Write metadata summary on session end |
-| `watcher.enabled` | `true` | Watch `~/.grok/memory/` for external edits and reindex |
+| `watcher.enabled` | `true` | Watch `~/.cgrok/memory/` for external edits and reindex |
 
 ### Index Settings (`[memory.index]`)
 
@@ -431,7 +431,7 @@ When a session memory is old, Grok attaches a staleness note to it in search res
 
 ## File Watcher
 
-By default, Grok watches `~/.grok/memory/` for external file changes. If you edit memory files directly (e.g., in your editor), the changes are picked up automatically on the next memory search:
+By default, Grok watches `~/.cgrok/memory/` for external file changes. If you edit memory files directly (e.g., in your editor), the changes are picked up automatically on the next memory search:
 
 - Created or modified files are reindexed.
 - Deleted files have their stale chunks removed from the index.
@@ -447,9 +447,9 @@ enabled = true    # default
 
 ### Memory Not Working
 
-1. Verify memory is enabled: check `grok inspect` output.
-2. Check `GROK_MEMORY` or `[memory] enabled` in effective TOML.
-3. Check for `GROK_MEMORY=0` or a deprecated compatibility flag overriding config.
+1. Verify memory is enabled: check `cgrok inspect` output.
+2. Check `CGROK_MEMORY` or `[memory] enabled` in effective TOML.
+3. Check for `CGROK_MEMORY=0` or a deprecated compatibility flag overriding config.
 
 ### Memory Not Appearing in Sessions
 
@@ -460,14 +460,14 @@ Memory is injected on the first turn. If you started a session before enabling m
 Use `/memory` in the TUI to browse all memory files with a preview. You can also access them directly:
 
 ```bash
-ls ~/.grok/memory/
-cat ~/.grok/memory/MEMORY.md
-$EDITOR ~/.grok/memory/MEMORY.md
+ls ~/.cgrok/memory/
+cat ~/.cgrok/memory/MEMORY.md
+$EDITOR ~/.cgrok/memory/MEMORY.md
 ```
 
 ### Debug Logging
 
 ```bash
-RUST_LOG=debug GROK_LOG_FILE=/tmp/grok.log grok
+RUST_LOG=debug CGROK_LOG_FILE=/tmp/grok.log grok
 grep "memory" /tmp/grok.log
 ```

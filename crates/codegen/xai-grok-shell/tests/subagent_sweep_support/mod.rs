@@ -305,7 +305,7 @@ pub fn run_burst(
     isolation: &str,
     deadline: Duration,
 ) -> BurstOutcome {
-    let repo_files = env_usize("GROK_SWEEP_REPO_FILES", 50);
+    let repo_files = env_usize("CGROK_SWEEP_REPO_FILES", 50);
     let repo = build_repo(repo_files);
     let repo_path = repo.path().to_path_buf();
 
@@ -482,7 +482,7 @@ pub struct SweepEnv {
 pub fn sweep_env_init() -> SweepEnv {
     let _ = rustls::crypto::ring::default_provider().install_default();
     // The spawn pipeline reports failures via tracing only.
-    let filter = std::env::var("GROK_SWEEP_LOG").unwrap_or_else(|_| "warn".to_string());
+    let filter = std::env::var("CGROK_SWEEP_LOG").unwrap_or_else(|_| "warn".to_string());
     let _ = tracing_subscriber::fmt()
         .with_env_filter(filter)
         .with_writer(std::io::stderr)
@@ -495,15 +495,15 @@ pub fn sweep_env_init() -> SweepEnv {
         .expect("mock runtime");
     let grok_home = TempDir::new().expect("grok home");
     unsafe {
-        std::env::set_var("GROK_HOME", grok_home.path());
-        std::env::set_var("XAI_API_KEY", "test-key-for-ci");
-        std::env::set_var("GROK_TELEMETRY_ENABLED", "false");
-        std::env::set_var("GROK_FEEDBACK_ENABLED", "false");
-        std::env::set_var("GROK_TRACE_UPLOAD", "false");
+        std::env::set_var("CGROK_HOME", grok_home.path());
+        std::env::set_var("CGROK_API_KEY", "test-key-for-ci");
+        std::env::set_var("CGROK_TELEMETRY_ENABLED", "false");
+        std::env::set_var("CGROK_FEEDBACK_ENABLED", "false");
+        std::env::set_var("CGROK_TRACE_UPLOAD", "false");
     }
     SweepEnv {
         mock_rt,
-        deadline: Duration::from_secs(env_usize("GROK_SWEEP_DEADLINE_S", 240) as u64),
+        deadline: Duration::from_secs(env_usize("CGROK_SWEEP_DEADLINE_S", 240) as u64),
         _grok_home: grok_home,
     }
 }
@@ -516,8 +516,8 @@ pub fn burst_on_fresh_mock(env: &SweepEnv, n: usize, isolation: &str) -> BurstOu
         .block_on(MockInferenceServer::start())
         .expect("mock server");
     unsafe {
-        std::env::set_var("GROK_CLI_CHAT_PROXY_BASE_URL", server.url());
-        std::env::set_var("GROK_XAI_API_BASE_URL", server.url());
+        std::env::set_var("CGROK_CLI_CHAT_PROXY_BASE_URL", server.url());
+        std::env::set_var("CGROK_XAI_API_BASE_URL", server.url());
     }
     let outcome = run_burst(&server, n, isolation, env.deadline);
     std::thread::sleep(Duration::from_secs(1));
@@ -596,7 +596,7 @@ pub fn run_sweep(ns: &[usize], isolation: &str) {
             outcome.failures,
         );
 
-        if std::env::var_os("GROK_SWEEP_ASSERT_NO_FAILURES").is_some() {
+        if std::env::var_os("CGROK_SWEEP_ASSERT_NO_FAILURES").is_some() {
             assert_eq!(outcome.failures, 0, "burst n={n} had failed subagents");
         }
     }

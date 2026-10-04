@@ -1031,7 +1031,7 @@ mod tests {
     #[test]
     fn preamble_multiline_command_keeps_separate_lines() {
         // Regression: the block viewer preamble flattened `\n` to spaces, smashing multi-line commands into one row
-        let block = ExecuteToolCallBlock::new("export XAI_ROOT=/tmp\ncd /tmp\necho start");
+        let block = ExecuteToolCallBlock::new("export CGROK_ROOT=/tmp\ncd /tmp\necho start");
         let mut appearance = AppearanceConfig::default();
         appearance.scrollback.blocks.execute.header_style = ExecuteHeaderStyle::Shell;
         let ctx = BlockContext {
@@ -1053,7 +1053,7 @@ mod tests {
             .collect();
         assert_eq!(
             plain,
-            vec!["$ export XAI_ROOT=/tmp", "  cd /tmp", "  echo start"]
+            vec!["$ export CGROK_ROOT=/tmp", "  cd /tmp", "  echo start"]
         );
     }
 }

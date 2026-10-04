@@ -14,12 +14,12 @@ disk), or the workflows run UI (`/workflow runs`).
 
 ## Opening the dashboard
 
-- **`grok dashboard`** — launch the TUI into the dashboard.
+- **`cgrok dashboard`** — launch the TUI into the dashboard.
 - **`/dashboard`** (aliases **`/agents-dashboard`**, **`/sessions`**) — open
   from inside a session.
 - **`Ctrl+\`** — same view as the slash command.
 
-Hidden in minimal mode. Set `GROK_AGENT_DASHBOARD=0` or
+Hidden in minimal mode. Set `CGROK_AGENT_DASHBOARD=0` or
 `[dashboard].enabled = false` to disable.
 
 ---
@@ -305,7 +305,7 @@ Prefixes (only inside search mode):
 
 ## Persistence
 
-Per-user preferences under `[dashboard]` in `~/.grok/config.toml`:
+Per-user preferences under `[dashboard]` in `~/.cgrok/config.toml`:
 
 ```toml
 [dashboard]

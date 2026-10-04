@@ -20,7 +20,7 @@ pub struct TraceArgs {
     /// Save locally only, skip remote upload
     #[arg(long)]
     pub local: bool,
-    /// Output path (default: $GROK_HOME/trace-exports/<session-id>.tar.gz)
+    /// Output path (default: $CGROK_HOME/trace-exports/<session-id>.tar.gz)
     #[arg(short, long)]
     pub output: Option<PathBuf>,
     /// Emit machine-readable JSON output
@@ -479,8 +479,8 @@ async fn run_upload(
         )
     {
         anyhow::bail!(
-            "No trace upload bucket configured. Set `GROK_TELEMETRY_GCS_BUCKET`, \
-             `GROK_TRACE_UPLOAD_BUCKET`, or `endpoints.trace_upload_bucket` in \
+            "No trace upload bucket configured. Set `CGROK_TELEMETRY_GCS_BUCKET`, \
+             `CGROK_TRACE_UPLOAD_BUCKET`, or `endpoints.trace_upload_bucket` in \
              config for direct GCS uploads."
         );
     }
@@ -714,7 +714,7 @@ pub(crate) enum UploadGate {
 pub(crate) async fn resolve_upload_gate(agent_config: &AgentConfig) -> UploadGate {
     // On login failure, fall back to ambient creds rather than erroring.
     let auth = xai_grok_login::ensure_authenticated_or_noninteractive(
-        &agent_config.grok_com_config,
+        &agent_config.cgrok_com_config,
         agent_config.login_device_flow,
         agent_config.endpoints.proxy_url(),
         agent_config.endpoints.has_noninteractive_upload_auth(),

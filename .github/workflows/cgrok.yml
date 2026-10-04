@@ -1,0 +1,149 @@
+name: cgrok
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.94.0
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: sudo apt-get update && sudo apt-get install -y protobuf-compiler libssl-dev pkg-config
+      - run: cargo test --locked -p xai-grok-env -p xai-dirs
+      - run: cargo check --locked -p xai-grok-pager-bin
+        env:
+          PROTOC: /usr/bin/protoc
+      - run: npm install --ignore-scripts --omit=optional --no-package-lock --no-audit --no-fund
+        working-directory: crates/codegen/xai-grok-pager/npm/cgrok
+      - run: node scripts/test-distribution.js
+        working-directory: crates/codegen/xai-grok-pager/npm/cgrok
+      - run: bash -n crates/codegen/xai-grok-pager/scripts/install.sh && bash -n crates/codegen/xai-grok-pager/scripts/install-enterprise.sh
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: check
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-24.04, target: x86_64-unknown-linux-gnu, platform: linux-x86_64, binary: cgrok }
+          - { os: ubuntu-24.04-arm, target: aarch64-unknown-linux-gnu, platform: linux-aarch64, binary: cgrok }
+          - { os: macos-15-intel, target: x86_64-apple-darwin, platform: macos-x86_64, binary: cgrok }
+          - { os: macos-15, target: aarch64-apple-darwin, platform: macos-aarch64, binary: cgrok }
+          - { os: windows-2022, target: x86_64-pc-windows-msvc, platform: windows-x86_64, binary: cgrok.exe }
+          - { os: windows-11-arm, target: aarch64-pc-windows-msvc, platform: windows-aarch64, binary: cgrok.exe }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.94.0
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+      - uses: arduino/setup-protoc@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Linux dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libssl-dev pkg-config
+      - name: Build
+        shell: bash
+        run: |
+          export PROTOC="$(command -v protoc)"
+          export GROK_VERSION="${GITHUB_REF_NAME#v}"
+          cargo build --locked --release -p xai-grok-pager-bin --target '${{ matrix.target }}'
+      - name: Assemble artifact
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          test "$version" = "$(python -c 'import tomllib; print(tomllib.load(open("crates/codegen/xai-grok-pager-bin/Cargo.toml", "rb"))["package"]["version"])')"
+          mkdir -p dist
+          cp 'target/${{ matrix.target }}/release/${{ matrix.binary }}' "dist/cgrok-${version}-${{ matrix.platform }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cgrok-${{ matrix.platform }}
+          path: dist/*
+
+  publish:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: release
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
+    environment: npm
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: cgrok-*
+          path: dist
+          merge-multiple: true
+      - name: Publish npm platform packages, then CLI
+        shell: bash
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          npm_root=crates/codegen/xai-grok-pager/npm
+          test "$version" = "$(node -p "require('./$npm_root/cgrok/package.json').version")"
+          export CGROK_DARWIN_ARM64="$PWD/dist/cgrok-$version-macos-aarch64"
+          export CGROK_DARWIN_X64="$PWD/dist/cgrok-$version-macos-x86_64"
+          export CGROK_LINUX_ARM64="$PWD/dist/cgrok-$version-linux-aarch64"
+          export CGROK_LINUX_X64="$PWD/dist/cgrok-$version-linux-x86_64"
+          export CGROK_WIN32_ARM64="$PWD/dist/cgrok-$version-windows-aarch64"
+          export CGROK_WIN32_X64="$PWD/dist/cgrok-$version-windows-x86_64"
+          for binary in "$CGROK_DARWIN_ARM64" "$CGROK_DARWIN_X64" "$CGROK_LINUX_ARM64" "$CGROK_LINUX_X64" "$CGROK_WIN32_ARM64" "$CGROK_WIN32_X64"; do
+            test -s "$binary"
+          done
+          node "$npm_root/cgrok/scripts/assemble-platform-packages.js"
+          for package in cgrok-darwin-arm64 cgrok-darwin-x64 cgrok-linux-arm64 cgrok-linux-x64 cgrok-win32-arm64 cgrok-win32-x64; do
+            npm publish "$npm_root/$package" --access public
+          done
+          npm publish "$npm_root/cgrok" --access public
+
+  publish-release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: publish
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: cgrok-*
+          path: dist
+          merge-multiple: true
+      - name: Release pointers
+        shell: bash
+        run: |
+          printf '%s\n' "${GITHUB_REF_NAME#v}" > dist/stable
+          cp dist/stable dist/alpha
+          cp dist/stable dist/enterprise
+          cd dist
+          sha256sum cgrok-* > SHA256SUMS
+      - uses: softprops/action-gh-release@v2
+        with:
+          draft: false
+          files: dist/*

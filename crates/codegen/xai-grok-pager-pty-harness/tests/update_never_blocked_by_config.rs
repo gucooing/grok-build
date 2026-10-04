@@ -67,9 +67,9 @@ fn grok_command(exe: &Path, home: &Path, base: &str) -> Command {
     command
         .env_clear()
         .env("HOME", home)
-        .env("GROK_HOME", home)
+        .env("CGROK_HOME", home)
         .env("PATH", std::env::var("PATH").unwrap_or_default())
-        .env("GROK_CLI_BASE_URL", base);
+        .env("CGROK_CLI_BASE_URL", base);
     xai_tty_utils::detach_std_command(&mut command);
     command
 }
@@ -196,7 +196,7 @@ fn winget_install_update_hands_off_without_update_writes() {
     let mut pinned = grok_command(&exe, home.path(), &base);
     pinned
         .args(["update", "--version", "0.0.1"])
-        .env("GROK_REQUIRED_MINIMUM_VERSION", "0.0.2");
+        .env("CGROK_REQUIRED_MINIMUM_VERSION", "0.0.2");
     let pinned = output(pinned);
     let stderr = String::from_utf8_lossy(&pinned.stderr);
     assert!(
@@ -216,8 +216,8 @@ fn winget_install_update_hands_off_without_update_writes() {
     let capped_cases = [
         CappedCase {
             envs: &[
-                ("GROK_MAXIMUM_VERSION", "5.0.0"),
-                ("GROK_TEST_VERSION", "1.0.0"),
+                ("CGROK_MAXIMUM_VERSION", "5.0.0"),
+                ("CGROK_TEST_VERSION", "1.0.0"),
             ],
             succeeds: true,
             expected: install_5,
@@ -225,8 +225,8 @@ fn winget_install_update_hands_off_without_update_writes() {
         },
         CappedCase {
             envs: &[
-                ("GROK_REQUIRED_MAXIMUM_VERSION", "5.0.0"),
-                ("GROK_TEST_VERSION", "6.0.0"),
+                ("CGROK_REQUIRED_MAXIMUM_VERSION", "5.0.0"),
+                ("CGROK_TEST_VERSION", "6.0.0"),
             ],
             succeeds: true,
             expected: install_5,
@@ -234,8 +234,8 @@ fn winget_install_update_hands_off_without_update_writes() {
         },
         CappedCase {
             envs: &[
-                ("GROK_MAXIMUM_VERSION", "5.0.0"),
-                ("GROK_TEST_VERSION", "5.0.0"),
+                ("CGROK_MAXIMUM_VERSION", "5.0.0"),
+                ("CGROK_TEST_VERSION", "5.0.0"),
             ],
             succeeds: true,
             expected: "Already up to date (5.0.0).",
@@ -243,8 +243,8 @@ fn winget_install_update_hands_off_without_update_writes() {
         },
         CappedCase {
             envs: &[
-                ("GROK_MAXIMUM_VERSION", "5.0.0"),
-                ("GROK_TEST_VERSION", "6.0.0"),
+                ("CGROK_MAXIMUM_VERSION", "5.0.0"),
+                ("CGROK_TEST_VERSION", "6.0.0"),
             ],
             succeeds: true,
             expected: "Already up to date (6.0.0).",
@@ -252,8 +252,8 @@ fn winget_install_update_hands_off_without_update_writes() {
         },
         CappedCase {
             envs: &[
-                ("GROK_MAXIMUM_VERSION", "5.0.0"),
-                ("GROK_MINIMUM_VERSION", "6.0.0"),
+                ("CGROK_MAXIMUM_VERSION", "5.0.0"),
+                ("CGROK_MINIMUM_VERSION", "6.0.0"),
             ],
             succeeds: true,
             expected: "is not an allowed update",
@@ -261,8 +261,8 @@ fn winget_install_update_hands_off_without_update_writes() {
         },
         CappedCase {
             envs: &[
-                ("GROK_MAXIMUM_VERSION", "2000.0.0"),
-                ("GROK_REQUIRED_MINIMUM_VERSION", "1000.0.0"),
+                ("CGROK_MAXIMUM_VERSION", "2000.0.0"),
+                ("CGROK_REQUIRED_MINIMUM_VERSION", "1000.0.0"),
             ],
             succeeds: false,
             expected: "newer than the latest available release (999.0.0)",
@@ -313,7 +313,7 @@ fn winget_install_update_hands_off_without_update_writes() {
     let mut explicit = grok_command(&exe, home.path(), &base);
     explicit
         .args(["update", "--check", "--json"])
-        .env("GROK_INSTALLER", "internal");
+        .env("CGROK_INSTALLER", "internal");
     let status: Value = serde_json::from_slice(&output(explicit).stdout)
         .unwrap_or_else(|e| panic!("update --check --json must emit JSON: {e}"));
     assert_eq!(

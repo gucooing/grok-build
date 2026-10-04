@@ -8,7 +8,7 @@
 //! Answering the private request OSC is effectively an image clipboard *read* for the wrapped session.
 //! Any process that can write to the PTY (not only the inner `grok`) can solicit the host pasteboard.
 //! That is intentional and acceptable for `grok wrap`: the user opted into wrap on their own host, and the answer stays inside their session.
-//! The remote also only requests when `osc52_sink_active()` (wrap already set `GROK_OSC52_SINK` / `LC_GROK_OSC52_SINK`).
+//! The remote also only requests when `osc52_sink_active()` (wrap already set `CGROK_OSC52_SINK` / `LC_GROK_OSC52_SINK`).
 //! Do not generalize this pattern to untrusted multiplexers without an explicit allowlist.
 
 use base64::Engine as _;
@@ -27,11 +27,11 @@ pub fn request_osc_bytes() -> Vec<u8> {
     v
 }
 
-/// Successful host image frame: `GROK_WRAP_IMG\n<mime>\n<base64>`.
-pub const MAGIC_IMG: &str = "GROK_WRAP_IMG";
+/// Successful host image frame: `CGROK_WRAP_IMG\n<mime>\n<base64>`.
+pub const MAGIC_IMG: &str = "CGROK_WRAP_IMG";
 
-/// Host has no image (`GROK_WRAP_NONE`; not a prefix of [`MAGIC_IMG`]).
-pub const MAGIC_NONE: &str = "GROK_WRAP_NONE";
+/// Host has no image (`CGROK_WRAP_NONE`; not a prefix of [`MAGIC_IMG`]).
+pub const MAGIC_NONE: &str = "CGROK_WRAP_NONE";
 
 /// Max decoded image bytes on this path (OSC 52 text limits unchanged).
 /// Retina screenshots are often multi-MB PNG; 4 MiB was too small and silently became [`MAGIC_NONE`].
@@ -238,21 +238,21 @@ mod tests {
     fn garbage_is_not_wrap_paste() {
         assert_eq!(try_decode_wrap_host_image_paste("hello world"), None);
         assert_eq!(try_decode_wrap_host_image_paste(""), None);
-        assert_eq!(try_decode_wrap_host_image_paste("GROK_WRAP_IM"), None);
+        assert_eq!(try_decode_wrap_host_image_paste("CGROK_WRAP_IM"), None);
     }
 
     #[test]
     fn malformed_img_frame_consumed_not_text() {
         assert_eq!(
-            try_decode_wrap_host_image_paste("GROK_WRAP_IMG"),
+            try_decode_wrap_host_image_paste("CGROK_WRAP_IMG"),
             Some(WrapImagePaste::NoImage)
         );
         assert_eq!(
-            try_decode_wrap_host_image_paste("GROK_WRAP_IMG\nbad"),
+            try_decode_wrap_host_image_paste("CGROK_WRAP_IMG\nbad"),
             Some(WrapImagePaste::NoImage)
         );
         assert_eq!(
-            try_decode_wrap_host_image_paste("GROK_WRAP_IMG\nimage/png\n!!!"),
+            try_decode_wrap_host_image_paste("CGROK_WRAP_IMG\nimage/png\n!!!"),
             Some(WrapImagePaste::NoImage)
         );
     }
@@ -260,7 +260,7 @@ mod tests {
     #[test]
     fn oversized_b64_rejected_before_decode() {
         let huge = "A".repeat((MAX_WRAP_IMAGE_BYTES / 3 + 10) * 4);
-        let payload = format!("GROK_WRAP_IMG\nimage/png\n{huge}");
+        let payload = format!("CGROK_WRAP_IMG\nimage/png\n{huge}");
         assert_eq!(
             try_decode_wrap_host_image_paste(&payload),
             Some(WrapImagePaste::NoImage)

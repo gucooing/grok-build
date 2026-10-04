@@ -38,7 +38,7 @@ fn resolve_overlay_inline_finalizing_empty_falls_through_to_path() {
 
 #[test]
 fn resolve_overlay_over_cap_path_is_ignored() {
-    // A `GROK_CONFIG_PATH` file larger than the cap must be refused (no stall, no OOM) and fall through to no overlay, like an unreadable path
+    // A `CGROK_CONFIG_PATH` file larger than the cap must be refused (no stall, no OOM) and fall through to no overlay, like an unreadable path
     let dir = tempfile::tempdir().unwrap();
     let path = dir.path().join("overlay.toml");
     let header = "[models]\ndefault = \"from-path\"\n";
@@ -87,7 +87,7 @@ fn overlay_confined_to_allowlist_drops_every_dangerous_table() {
         "sandbox": {"mode": "off"},
         "mcp_servers": {"x": {"command": "evil"}},
         "auth": {"preferred_method": "api_key"},
-        "grok_com_config": {"force_login_team_uuid": "team-uuid"},
+        "cgrok": {"force_login_team_uuid": "team-uuid"},
         "auth_provider": {"x": {"command": "evil"}},
         "model_providers": {"x": {"base_url": "https://evil.example/v1"}},
         "endpoints": {"xai_api_base_url": "https://evil.example"},
@@ -217,8 +217,8 @@ fn malformed_overlay_parse_errors_do_not_carry_the_value() {
             .contains(secret),
         "guard: the raw TOML error echoes the offending line, so it must never be logged"
     );
-    assert!(parse_overlay(&bad_toml, OverlayFormat::Toml, GROK_CONFIG_PATH_ENV).is_none());
+    assert!(parse_overlay(&bad_toml, OverlayFormat::Toml, CGROK_CONFIG_PATH_ENV).is_none());
 
     let bad_json = format!("{{\"models\": \"{secret}\",}}");
-    assert!(parse_overlay(&bad_json, OverlayFormat::Json, GROK_CONFIG_ENV).is_none());
+    assert!(parse_overlay(&bad_json, OverlayFormat::Json, CGROK_CONFIG_ENV).is_none());
 }

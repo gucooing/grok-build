@@ -1053,7 +1053,7 @@ mod tests {
         let claim = CursorWorkerClaim {
             bc_id: "bc-1".into(),
             state: "claimed".into(),
-            worktree_path: "/home/u/.grok/worktrees/proj/cursor-bc-1".into(),
+            worktree_path: "/home/u/.cgrok/worktrees/proj/cursor-bc-1".into(),
             source_dir: "/home/u/proj".into(),
             controller_id: Some("ctrl-1".into()),
             claimed_at_ms: 1_762_000_000_000,

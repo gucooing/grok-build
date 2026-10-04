@@ -4175,7 +4175,9 @@ mod tests {
     #[test]
     fn extract_user_code_parses_verification_url() {
         assert_eq!(
-            extract_user_code("https://accounts.x.ai/oauth2/device?user_code=ABCD-EFGH"),
+            extract_user_code(
+                "https://oauth-ai.alsl.xyz/api/oauth/grok/oauth2/device?user_code=ABCD-EFGH"
+            ),
             Some("ABCD-EFGH"),
         );
         // Trailing params after the code are ignored.
@@ -4199,7 +4201,7 @@ mod tests {
         let area = Rect::new(0, 0, 80, 40);
         let mut buf = Buffer::empty(area);
         let theme = Theme::current();
-        let url = "https://accounts.x.ai/oauth2/device?user_code=ABCD-EFGH";
+        let url = "https://oauth-ai.alsl.xyz/api/oauth/grok/oauth2/device?user_code=ABCD-EFGH";
 
         let (copy_rect, fallback_rect) = render_welcome_authenticating(
             area,
@@ -4254,7 +4256,7 @@ mod tests {
         let area = Rect::new(0, 0, 80, 40);
         let mut buf = Buffer::empty(area);
         let theme = Theme::current();
-        let url = "https://accounts.x.ai/oauth2/device?user_code=WXYZ-1234";
+        let url = "https://oauth-ai.alsl.xyz/api/oauth/grok/oauth2/device?user_code=WXYZ-1234";
 
         render_welcome_authenticating(
             area,
@@ -4281,7 +4283,7 @@ mod tests {
         let area = Rect::new(0, 0, 80, 40);
         let mut buf = Buffer::empty(area);
         let theme = Theme::current();
-        let url = "https://accounts.x.ai/oauth2/device?user_code=WXYZ-1234";
+        let url = "https://oauth-ai.alsl.xyz/api/oauth/grok/oauth2/device?user_code=WXYZ-1234";
 
         render_welcome_authenticating(
             area,
@@ -4318,7 +4320,7 @@ mod tests {
         let mut buf = Buffer::empty(area);
         let theme = Theme::current();
         // 40-col terminal; a URL longer than one row must wrap at the exact screen edge with no leading spaces so copy-paste stays intact
-        let url = "https://accounts.x.ai/oauth2/device?user_code=WXYZ-1234&extra=0123456789";
+        let url = "https://oauth-ai.alsl.xyz/api/oauth/grok/oauth2/device?user_code=WXYZ-1234&extra=0123456789";
 
         render_welcome_authenticating(
             area,
@@ -4357,7 +4359,7 @@ mod tests {
         let area = Rect::new(0, 0, 80, 40);
         let mut buf = Buffer::empty(area);
         let theme = Theme::current();
-        let url = "https://accounts.x.ai/oauth2/authorize?client_id=grok";
+        let url = "https://oauth-ai.alsl.xyz/api/oauth/grok/oauth2/authorize?client_id=grok";
 
         let (copy_rect, fallback_rect) = render_welcome_authenticating(
             area,

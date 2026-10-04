@@ -4,7 +4,7 @@
 //! CI fails when a registered key has no row, or an MCP or `features.*` row names an unknown key.
 //! It also fails when a Requirements or Managed cell disagrees with the resolver metadata.
 //! The pager extracts the file to
-//! `~/.grok/docs/user-guide/` on launch.
+//! `~/.cgrok/docs/user-guide/` on launch.
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -51,26 +51,26 @@ const USER_ONLY_KEYS: &[&str] = &["features.remember_mode", "privacy.privacy_ban
 
 /// The nested GrokComConfig, OAuth2, and OIDC leaf keys that enterprise deployments write today.
 /// Keep in sync with `src/auth/config.rs`.
-const GROK_COM_CONFIG_LEAVES: &[&str] = &[
-    "grok_com_config.grok_ws_origin",
-    "grok_com_config.grok_ws_url",
-    "grok_com_config.token_header",
-    "grok_com_config.auth_provider_label",
-    "grok_com_config.auth_token_ttl",
-    "grok_com_config.auth_provider_command",
-    "grok_com_config.preferred_method",
-    "grok_com_config.disable_api_key_auth",
-    "grok_com_config.force_login_team_uuid",
-    "grok_com_config.oauth2.issuer",
-    "grok_com_config.oauth2.client_id",
-    "grok_com_config.oauth2.scopes",
-    "grok_com_config.oauth2.principal_type",
-    "grok_com_config.oauth2.principal_id",
-    "grok_com_config.oauth2.referrer",
-    "grok_com_config.oidc.issuer",
-    "grok_com_config.oidc.client_id",
-    "grok_com_config.oidc.scopes",
-    "grok_com_config.oidc.audience",
+const CGROK_COM_CONFIG_LEAVES: &[&str] = &[
+    "cgrok.grok_ws_origin",
+    "cgrok.grok_ws_url",
+    "cgrok.token_header",
+    "cgrok.auth_provider_label",
+    "cgrok.auth_token_ttl",
+    "cgrok.auth_provider_command",
+    "cgrok.preferred_method",
+    "cgrok.disable_api_key_auth",
+    "cgrok.force_login_team_uuid",
+    "cgrok.oauth2.issuer",
+    "cgrok.oauth2.client_id",
+    "cgrok.oauth2.scopes",
+    "cgrok.oauth2.principal_type",
+    "cgrok.oauth2.principal_id",
+    "cgrok.oauth2.referrer",
+    "cgrok.oidc.issuer",
+    "cgrok.oidc.client_id",
+    "cgrok.oidc.scopes",
+    "cgrok.oidc.audience",
 ];
 
 #[derive(Clone, Debug)]
@@ -84,12 +84,12 @@ struct Row {
 }
 
 fn committed_markdown_path() -> PathBuf {
-    if let Some(path) = std::env::var_os("GROK_CONFIG_REFERENCE_MD") {
+    if let Some(path) = std::env::var_os("CGROK_CONFIG_REFERENCE_MD") {
         return PathBuf::from(path);
     }
     let root = find_monorepo_root().unwrap_or_else(|| {
         panic!(
-            "committed config-reference user-guide not found; set GROK_CONFIG_REFERENCE_MD or run from the monorepo (CARGO_MANIFEST_DIR={})",
+            "committed config-reference user-guide not found; set CGROK_CONFIG_REFERENCE_MD or run from the monorepo (CARGO_MANIFEST_DIR={})",
             env!("CARGO_MANIFEST_DIR")
         )
     });
@@ -130,7 +130,7 @@ fn load_markdown() -> String {
 }
 
 fn agents_md_path() -> PathBuf {
-    if let Some(path) = std::env::var_os("GROK_CONFIG_DOCS_AGENTS_MD") {
+    if let Some(path) = std::env::var_os("CGROK_CONFIG_DOCS_AGENTS_MD") {
         return PathBuf::from(path);
     }
     let crate_agents = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("AGENTS.md");
@@ -139,7 +139,7 @@ fn agents_md_path() -> PathBuf {
     }
     let root = find_monorepo_root().unwrap_or_else(|| {
         panic!(
-            "xai-grok-shell AGENTS.md not found; set GROK_CONFIG_DOCS_AGENTS_MD or run from the monorepo (CARGO_MANIFEST_DIR={})",
+            "xai-grok-shell AGENTS.md not found; set CGROK_CONFIG_DOCS_AGENTS_MD or run from the monorepo (CARGO_MANIFEST_DIR={})",
             env!("CARGO_MANIFEST_DIR")
         )
     });
@@ -379,9 +379,9 @@ mod tests {
     fn grok_com_config_nested_fields_and_auth_aliases() {
         let (config, _, _) = page();
         let map = by_key(&config);
-        for leaf in GROK_COM_CONFIG_LEAVES {
+        for leaf in CGROK_COM_CONFIG_LEAVES {
             let row = map.get(*leaf).unwrap_or_else(|| panic!("missing {leaf}"));
-            let alias = leaf.replacen("grok_com_config.", "auth.", 1);
+            let alias = leaf.replacen("cgrok.", "auth.", 1);
             let alias_row = map
                 .get(alias.as_str())
                 .unwrap_or_else(|| panic!("missing alias {alias}"));
@@ -395,12 +395,12 @@ mod tests {
                 "{alias} should name `{leaf}`"
             );
         }
-        let Some(disable_auth) = map.get("grok_com_config.disable_api_key_auth") else {
-            panic!("missing grok_com_config.disable_api_key_auth: {map:?}");
+        let Some(disable_auth) = map.get("cgrok.disable_api_key_auth") else {
+            panic!("missing cgrok_com_config.disable_api_key_auth: {map:?}");
         };
         assert_eq!(disable_auth.requirements, "pin");
-        let Some(force_team) = map.get("grok_com_config.force_login_team_uuid") else {
-            panic!("missing grok_com_config.force_login_team_uuid: {map:?}");
+        let Some(force_team) = map.get("cgrok.force_login_team_uuid") else {
+            panic!("missing cgrok_com_config.force_login_team_uuid: {map:?}");
         };
         assert_eq!(force_team.requirements, "pin");
     }
@@ -437,8 +437,8 @@ mod tests {
                     | "features.image_edit"
             ) {
                 assert!(
-                    !row.details.contains("GROK_CONFIG"),
-                    "{} must not claim GROK_CONFIG",
+                    !row.details.contains("CGROK_CONFIG"),
+                    "{} must not claim CGROK_CONFIG",
                     row.key
                 );
             }

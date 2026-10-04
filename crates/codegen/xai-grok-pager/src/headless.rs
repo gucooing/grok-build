@@ -418,7 +418,7 @@ fn auth_required_message(interactive: bool) -> String {
     } else {
         "Not signed in. To authenticate without a browser, run:\n  \
          grok login --device-code\n\n\
-         Alternatively, set the XAI_API_KEY environment variable \
+         Alternatively, set the CGROK_API_KEY environment variable \
          or run `grok login` on a machine with a browser."
             .to_string()
     }
@@ -1075,7 +1075,7 @@ pub async fn run_single_turn(
         session_id = %session_id.0,
         "headless: open_session complete"
     );
-    let track_active = std::env::var("GROK_TRACK_HEADLESS").is_ok();
+    let track_active = std::env::var("CGROK_TRACK_HEADLESS").is_ok();
     if track_active {
         let _ = xai_grok_active_sessions::register(xai_grok_active_sessions::ActiveSession {
             session_id: session_id.clone(),

@@ -88,7 +88,7 @@ mod tests {
                 description: "touches ci".into(),
                 when_to_use: None,
                 source: "user".into(),
-                path: Some("/home/u/.grok/workflows/alpha-wf.rhai".into()),
+                path: Some("/home/u/.cgrok/workflows/alpha-wf.rhai".into()),
             },
             WorkflowInfo {
                 name: "beta-wf".into(),
@@ -105,7 +105,7 @@ mod tests {
             Some(
                 [(
                     "path".to_string(),
-                    "/home/u/.grok/workflows/alpha-wf.rhai".to_string()
+                    "/home/u/.cgrok/workflows/alpha-wf.rhai".to_string()
                 )]
                 .as_slice()
             )

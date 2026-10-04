@@ -185,7 +185,7 @@ pub(crate) fn minimal_mode_active() -> bool {
 pub(crate) fn set_minimal_mode_active_for_test(on: bool) {
     MINIMAL_MODE_ACTIVE.store(on, Ordering::Release);
 }
-/// Whether the opt-in mouse-reporting toggle feature is enabled (`[ui] mouse_reporting_toggle` / `GROK_MOUSE_REPORTING_TOGGLE`).
+/// Whether the opt-in mouse-reporting toggle feature is enabled (`[ui] mouse_reporting_toggle` / `CGROK_MOUSE_REPORTING_TOGGLE`).
 /// Seeded once at startup; gates both the `Ctrl+R` shortcut registration and the `/toggle-mouse-reporting` slash command's visibility/execution.
 pub(crate) static MOUSE_REPORTING_TOGGLE_ENABLED: AtomicBool = AtomicBool::new(false);
 /// Read the cached opt-in mouse-reporting toggle flag (see [`MOUSE_REPORTING_TOGGLE_ENABLED`]).
@@ -210,12 +210,12 @@ pub(crate) fn dock_requirement_pin() -> Option<bool> {
 pub(crate) fn dock_config_value() -> Option<bool> {
     dock_flag_in(&xai_grok_shell::config::load_effective_config().ok()?)
 }
-/// Registry precedence: pin, `GROK_DOCK` / `GROK_DOCK_V2`, config, remote `dock_enabled`, default off.
+/// Registry precedence: pin, `CGROK_DOCK` / `CGROK_DOCK_V2`, config, remote `dock_enabled`, default off.
 pub(crate) fn resolve_dock_enabled(remote: Option<bool>) -> bool {
     use xai_grok_shell::agent::config::{Feature, FeatureSources};
     let mut sources = FeatureSources::from_process_env(Feature::Dock);
     if sources.env.is_none() {
-        sources.env = xai_grok_config::env_bool("GROK_DOCK_V2");
+        sources.env = xai_grok_config::env_bool("CGROK_DOCK_V2");
     }
     sources.pin = dock_requirement_pin();
     sources.config = dock_config_value();
@@ -236,7 +236,7 @@ fn terminal_theme_requirement_pin() -> Option<bool> {
 fn terminal_theme_config_value() -> Option<bool> {
     terminal_theme_flag_in(&xai_grok_shell::config::load_effective_config().ok()?)
 }
-/// Registry precedence: pin, `GROK_TERMINAL_THEME`, config, remote `terminal_theme_enabled`, default off.
+/// Registry precedence: pin, `CGROK_TERMINAL_THEME`, config, remote `terminal_theme_enabled`, default off.
 pub(crate) fn resolve_terminal_theme_enabled(remote: Option<bool>) -> bool {
     use xai_grok_shell::agent::config::{Feature, FeatureSources};
     let mut sources = FeatureSources::from_process_env(Feature::TerminalTheme);
@@ -715,9 +715,9 @@ pub async fn run(
     let startup_start = std::time::Instant::now();
     let raw_config = xai_grok_shell::config::load_effective_config()
         .map_err(|e| anyhow::anyhow!("Failed to load config: {e}"))?;
-    let (grok_com_config, proxy_base_url) =
+    let (cgrok_com_config, proxy_base_url) =
         match xai_grok_shell::agent::config::Config::new_from_toml_cfg(&raw_config) {
-            Ok(c) => (c.grok_com_config, c.endpoints.proxy_url()),
+            Ok(c) => (c.cgrok_com_config, c.endpoints.proxy_url()),
             Err(e) => {
                 tracing::warn!(error = %e, "failed to parse config for auth refresh, using defaults");
                 (
@@ -728,7 +728,7 @@ pub async fn run(
         };
     if let xai_grok_login::PreTuiLoginOutcome::SignedIn(auth) =
         xai_grok_login::maybe_run_pre_tui_external_login(
-            &grok_com_config,
+            &cgrok_com_config,
             proxy_base_url.clone(),
             args.force_login,
             io::stdin().is_terminal(),
@@ -741,13 +741,13 @@ pub async fn run(
     xai_tty_utils::redirect_native_stderr();
     let refreshed_auth = tokio::time::timeout(
         xai_grok_shell::http::STARTUP_AUTH_REFRESH_TIMEOUT,
-        xai_grok_login::try_ensure_fresh_auth(&grok_com_config, proxy_base_url),
+        xai_grok_login::try_ensure_fresh_auth(&cgrok_com_config, proxy_base_url),
     )
     .await
     .unwrap_or(None);
     let settings_query = xai_grok_shell::agent::remote_config::settings_get::SettingsQuery::resolve(
         refreshed_auth,
-        Some(grok_com_config.clone()),
+        Some(cgrok_com_config.clone()),
     );
     let had_prefetch =
         xai_grok_shell::agent::remote_config::settings_get::is_eligible(&settings_query);
@@ -780,7 +780,7 @@ pub async fn run(
         let settings = xai_grok_shell::agent::remote_config::settings_get::consume_wait(
             wait,
             warmed_auth.as_ref(),
-            &grok_com_config,
+            &cgrok_com_config,
         );
         xai_grok_telemetry::startup::record_prefetch_wait(prefetch_wait_started.elapsed());
         settings
@@ -913,7 +913,7 @@ pub async fn run(
         } => original_cwd.clone(),
         _ => None,
     };
-    let env_hunk_tracker_mode = std::env::var("GROK_HUNK_TRACKER").ok();
+    let env_hunk_tracker_mode = std::env::var("CGROK_HUNK_TRACKER").ok();
     let config_hunk_tracker_mode = raw_config
         .get("ui")
         .and_then(|ui| ui.get("hunk_tracker_mode"))
@@ -2291,7 +2291,7 @@ mod tests {
     #[test]
     fn cli_command_name_is_grok() {
         use clap::CommandFactory;
-        assert_eq!(PagerArgs::command().get_name(), "grok");
+        assert_eq!(PagerArgs::command().get_name(), "cgrok");
     }
     #[test]
     fn cli_help_output_header() {
@@ -2301,9 +2301,9 @@ mod tests {
         assert_eq!(
             first_5,
             vec![
-                "Grok Build TUI",
+                "cgrok — Grok Build client for a configured service",
                 "",
-                "Usage: grok [OPTIONS] [PROMPT] [COMMAND]",
+                "Usage: cgrok [OPTIONS] [PROMPT] [COMMAND]",
                 "",
                 "Arguments:",
             ]

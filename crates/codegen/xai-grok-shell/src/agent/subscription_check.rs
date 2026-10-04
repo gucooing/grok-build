@@ -43,7 +43,7 @@ async fn fetch_user_info(
         .header("Authorization", format!("Bearer {}", auth.key))
         .header(
             "X-XAI-Token-Auth",
-            auth_manager.grok_com_config().token_header.as_str(),
+            auth_manager.cgrok_com_config().token_header.as_str(),
         )
         .header("x-grok-client-version", xai_grok_version::VERSION)
         .header(

@@ -537,8 +537,8 @@ fn protected_edit_reason(path: &Path) -> Option<ProtectedEditReason> {
 }
 
 /// Grok config files that alter permissions or sandbox restrictions; a silent edit would let the agent loosen its own guardrails.
-/// Matched directly inside any `.grok` dir (user-global default and workspace overlays) and directly under a custom `$GROK_HOME`.
-/// A custom home has no `.grok` component, so the component match alone cannot see it.
+/// Matched directly inside any `.cgrok` dir (user-global default and workspace overlays) and directly under a custom `$CGROK_HOME`.
+/// A custom home has no `.cgrok` component, so the component match alone cannot see it.
 fn protected_grok_config_file(path: &Path, components: &[&str]) -> Option<ProtectedEditReason> {
     protected_grok_config_file_with_home(
         path,
@@ -559,7 +559,7 @@ fn protected_grok_config_file_with_home(
         && components.get(components.len() - 3) == Some(&"sessions")
     {
         let n = components.len();
-        let in_dot_grok = n >= 4 && components.get(n - 4) == Some(&".grok");
+        let in_dot_grok = n >= 4 && components.get(n - 4) == Some(&".cgrok");
         let in_grok_home = grok_home_matches(user_grok_home, |home| {
             path.parent()
                 .and_then(Path::parent)
@@ -577,7 +577,7 @@ fn protected_grok_config_file_with_home(
         _ => return None,
     };
     let in_dot_grok =
-        components.len() >= 2 && components.get(components.len() - 2) == Some(&".grok");
+        components.len() >= 2 && components.get(components.len() - 2) == Some(&".cgrok");
     let in_grok_home = || grok_home_matches(user_grok_home, |home| path.parent() == Some(home));
     (in_dot_grok || in_grok_home()).then_some(reason)
 }
@@ -598,8 +598,10 @@ fn path_is_under_user_grok_hook_root(path: &Path, grok_home: &Path) -> bool {
 }
 
 fn protected_grok_hook_root(path: &Path, components: &[&str]) -> bool {
-    components.windows(2).any(|pair| pair == [".grok", "hooks"])
-        || components.ends_with(&[".grok", "hooks-paths"])
+    components
+        .windows(2)
+        .any(|pair| pair == [".cgrok", "hooks"])
+        || components.ends_with(&[".cgrok", "hooks-paths"])
         || grok_home_matches(xai_grok_config::user_grok_home().as_deref(), |home| {
             path_is_under_user_grok_hook_root(path, home)
         })
@@ -1443,8 +1445,8 @@ mod tests {
             "/etc",
             "/etc/grok-test",
             "/work/subdir/../.git/hooks/pre-commit",
-            "/home/user/.grok/sandbox.toml",
-            "/work/project/.grok/sandbox.toml",
+            "/home/user/.cgrok/sandbox.toml",
+            "/work/project/.cgrok/sandbox.toml",
         ] {
             assert!(
                 edit_target_protection(Path::new(path)).is_some(),
@@ -1453,7 +1455,7 @@ mod tests {
         }
         for path in [
             "/work/src/main.rs",
-            "/work/project/.grok/config.toml/backup",
+            "/work/project/.cgrok/config.toml/backup",
             "/work/project/sandbox.toml",
             "/work/project/requirements.toml",
             "/work/project/managed_config.toml",
@@ -1498,7 +1500,7 @@ mod tests {
         let _home = isolated_home();
         let cases = [
             (
-                "/home/user/.grok/hooks/evil.json",
+                "/home/user/.cgrok/hooks/evil.json",
                 ProtectedEditReason::HookRoot,
             ),
             ("/work/.git/hooks/pre-commit", ProtectedEditReason::GitHooks),
@@ -1506,28 +1508,31 @@ mod tests {
             ("/home/user/.zshrc", ProtectedEditReason::StartupFile),
             ("/etc/hosts", ProtectedEditReason::Etc),
             (
-                "/home/user/.grok/config.toml",
+                "/home/user/.cgrok/config.toml",
                 ProtectedEditReason::GrokConfig,
             ),
             (
-                "/home/user/.grok/sandbox.toml",
+                "/home/user/.cgrok/sandbox.toml",
                 ProtectedEditReason::GrokSandbox,
             ),
             (
-                "/work/project/.grok/sandbox.toml",
+                "/work/project/.cgrok/sandbox.toml",
                 ProtectedEditReason::GrokSandbox,
             ),
             (
-                "/home/user/.grok/managed_config.toml",
+                "/home/user/.cgrok/managed_config.toml",
                 ProtectedEditReason::GrokConfig,
             ),
             (
-                "/home/user/.grok/requirements.toml",
+                "/home/user/.cgrok/requirements.toml",
                 ProtectedEditReason::GrokConfig,
             ),
-            ("/home/user/.grok/mcp.json", ProtectedEditReason::GrokConfig),
             (
-                "/work/project/.grok/lsp.json",
+                "/home/user/.cgrok/mcp.json",
+                ProtectedEditReason::GrokConfig,
+            ),
+            (
+                "/work/project/.cgrok/lsp.json",
                 ProtectedEditReason::GrokConfig,
             ),
             (
@@ -1548,12 +1553,12 @@ mod tests {
             assert!(reason.description().is_some(), "{path}");
         }
         let grant_client = std::path::PathBuf::from("/home/user")
-            .join(".grok")
+            .join(".cgrok")
             .join("sessions")
             .join("ws")
             .join("permission_grok-pager.toml");
         let grant_default = std::path::PathBuf::from("/home/user")
-            .join(".grok")
+            .join(".cgrok")
             .join("sessions")
             .join("ws")
             .join("permission.toml");
@@ -1582,14 +1587,14 @@ mod tests {
     fn sensitive_edit_targets_include_hook_roots() {
         let _home = isolated_home();
         for path in [
-            "/home/user/.grok/hooks/evil.json",
-            "/home/user/.grok/hooks/nested/deep.json",
-            "/home/user/.grok/hooks-paths",
+            "/home/user/.cgrok/hooks/evil.json",
+            "/home/user/.cgrok/hooks/nested/deep.json",
+            "/home/user/.cgrok/hooks-paths",
             "/home/user/.claude/settings.json",
             "/home/user/.claude/settings.local.json",
             "/home/user/.cursor/hooks.json",
-            "/work/project/.grok/hooks/local.json",
-            "/work/project/.grok/hooks-paths",
+            "/work/project/.cgrok/hooks/local.json",
+            "/work/project/.cgrok/hooks-paths",
         ] {
             assert!(
                 edit_target_protection(Path::new(path)).is_some(),
@@ -1597,8 +1602,8 @@ mod tests {
             );
         }
         for path in [
-            "/home/user/.grok/hooks-disabled/note.json",
-            "/home/user/.grok/hooks-evil/note.json",
+            "/home/user/.cgrok/hooks-disabled/note.json",
+            "/home/user/.cgrok/hooks-evil/note.json",
             "/home/user/project/src/hooks.json",
             "/home/user/.claude/other.json",
             "/home/user/.cursor/settings.json",
@@ -1660,7 +1665,7 @@ mod tests {
             ws.path().join("module-hooks-link"),
         )
         .unwrap();
-        let grok_hook = outside.path().join(".grok/hooks/evil.json");
+        let grok_hook = outside.path().join(".cgrok/hooks/evil.json");
         std::fs::create_dir_all(grok_hook.parent().unwrap()).unwrap();
         std::fs::write(&grok_hook, b"{}").unwrap();
         symlink(&grok_hook, ws.path().join("grok-hook-link")).unwrap();
@@ -1679,7 +1684,7 @@ mod tests {
         }
     }
 
-    /// A custom `$GROK_HOME` has no `.grok` path component, so the live `config.toml` / `sandbox.toml` must be caught by the home-prefix branch.
+    /// A custom `$CGROK_HOME` has no `.cgrok` path component, so the live `config.toml` / `sandbox.toml` must be caught by the home-prefix branch.
     #[test]
     fn grok_config_files_under_custom_grok_home_are_protected() {
         let home = tempfile::tempdir().unwrap();
@@ -1707,7 +1712,7 @@ mod tests {
             assert_eq!(
                 protected_grok_config_file_with_home(&path, &components, Some(home_path)),
                 Some(reason),
-                "{file} directly under $GROK_HOME must be protected"
+                "{file} directly under $CGROK_HOME must be protected"
             );
         }
         let grant = home_path
@@ -1721,7 +1726,7 @@ mod tests {
                 Some(home_path)
             ),
             Some(ProtectedEditReason::GrokConfig),
-            "per-client grant store under $GROK_HOME/sessions must be protected"
+            "per-client grant store under $CGROK_HOME/sessions must be protected"
         );
         // Same file names elsewhere (or with no resolvable home) stay ordinary.
         let elsewhere = home_path
@@ -1746,7 +1751,7 @@ mod tests {
     }
 
     /// The resolved-symlink arm of the grok-home match must decide.
-    /// `$GROK_HOME` points at a symlink while the edit targets the physical home directory, so the lexical parent-equality arm cannot fire.
+    /// `$CGROK_HOME` points at a symlink while the edit targets the physical home directory, so the lexical parent-equality arm cannot fire.
     #[test]
     #[cfg(unix)]
     fn grok_config_under_symlinked_grok_home_is_protected() {

@@ -41,7 +41,7 @@ fn sign_in(
     };
 
     let login_config = GrokComConfig::from_effective_config(writer_config)
-        .expect("writer config has a readable [grok_com_config]");
+        .expect("writer config has a readable [cgrok_com_config]");
     std::fs::write(
         xai_grok_login::auth_json_path(grok_home),
         serde_json::to_vec(&AuthStore::from([(

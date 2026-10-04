@@ -254,11 +254,11 @@ pub(crate) fn boot_auth_manager(
 ) -> std::sync::Arc<AuthManager> {
     let auth_manager = std::sync::Arc::new(AuthManager::new_with_proxy_base_url(
         home,
-        agent_config.grok_com_config.clone(),
+        agent_config.cgrok_com_config.clone(),
         agent_config.endpoints.proxy_url(),
     ));
     auth_manager.configure_refresher(
-        agent_config.grok_com_config.auth_provider_command.clone(),
+        agent_config.cgrok_com_config.auth_provider_command.clone(),
         None,
     );
     auth_manager
@@ -287,7 +287,7 @@ pub async fn spawn_grok_shell(
     // guard cancels the prewarm and the refresh loop instead.
     let cancel_auth_tasks_unless_spawned = agent_cancel.clone().drop_guard();
 
-    xai_grok_shell::agent::app::apply_otel_config(&auth_manager, &agent_config.grok_com_config);
+    xai_grok_shell::agent::app::apply_otel_config(&auth_manager, &agent_config.cgrok_com_config);
 
     // Policy repair must finish before any authenticated settings load.
     xai_grok_cloud_config::managed_config::ensure_managed_policy_present(&auth_manager).await;

@@ -23,7 +23,7 @@ pub(crate) fn resolve_max_retries_with_env(
 }
 
 pub fn resolve_max_retries(model_max_retries: Option<u32>) -> u32 {
-    let env_override = std::env::var("GROK_MAX_RETRIES").ok();
+    let env_override = std::env::var("CGROK_MAX_RETRIES").ok();
     resolve_max_retries_with_env(env_override.as_deref(), model_max_retries)
 }
 

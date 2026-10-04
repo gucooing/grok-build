@@ -170,7 +170,7 @@ pub fn bootstrap_with_cancel(
                 Some(resolved) => resolved,
                 None => crate::agent::remote_config::fetch_initial_models_blocking(
                     cancel,
-                    Some(cfg.grok_com_config.clone()),
+                    Some(cfg.cgrok_com_config.clone()),
                     warmed_auth.clone(),
                 ),
             },
@@ -216,7 +216,7 @@ pub async fn resolve_boot_startup_settings(
     let models_load = if start_models_prefetch {
         crate::agent::remote_config::start_initial_models_load(
             cancel.clone(),
-            Some(cfg.grok_com_config.clone()),
+            Some(cfg.cgrok_com_config.clone()),
             warmed_auth.clone(),
         )
     } else {
@@ -227,7 +227,10 @@ pub async fn resolve_boot_startup_settings(
     let started = std::time::Instant::now();
     let need_settings = cfg.remote_settings.is_none();
     let query = need_settings.then(|| {
-        settings_get::SettingsQuery::resolve(warmed_auth.clone(), Some(cfg.grok_com_config.clone()))
+        settings_get::SettingsQuery::resolve(
+            warmed_auth.clone(),
+            Some(cfg.cgrok_com_config.clone()),
+        )
     });
     let (wait, models) = tokio::join!(
         async {
@@ -308,7 +311,7 @@ fn install_allowed(
     warmed_auth: Option<&GrokAuth>,
 ) -> bool {
     outcome.install_allowed(
-        &cfg.grok_com_config,
+        &cfg.cgrok_com_config,
         warmed_auth,
         xai_grok_cloud_config::managed_config::policy_repair_pending,
     )
@@ -342,7 +345,7 @@ fn ensure_remote_settings_side_effects(
         let started = std::time::Instant::now();
         let query = settings_get::SettingsQuery::resolve(
             warmed_auth.cloned(),
-            Some(cfg.grok_com_config.clone()),
+            Some(cfg.cgrok_com_config.clone()),
         );
         let wait = settings_get::block_on_startup_settings(query, deadline, cancel);
         if matches!(wait, settings_get::SettingsWait::Cancelled) {
@@ -502,7 +505,7 @@ fn init_process(cfg: &AgentConfig, auth_manager: &AuthManager) {
 pub fn update_telemetry_config(config: &AgentConfig, auth_manager: &AuthManager) {
     let user_agent = crate::http::process_user_agent_string();
     if reqwest::header::HeaderValue::from_str(&user_agent).is_err() {
-        tracing::warn!("telemetry init skipped: GROK_CLIENT_NAME yields an invalid user agent");
+        tracing::warn!("telemetry init skipped: CGROK_CLIENT_NAME yields an invalid user agent");
         return;
     }
     let grok_auth = auth_manager.current().filter(|a| a.is_xai_auth());
@@ -574,11 +577,11 @@ pub async fn apply_post_login_config(
 }
 /// `grok logout` CLI subcommand: clear the cached session and, when one was cleared, drop any orphaned synced files.
 /// The orphan cleanup runs here in shell so auth stays out of managed config.
-pub fn run_cli_logout(grok_com_config: &xai_grok_login::GrokComConfig) -> anyhow::Result<()> {
+pub fn run_cli_logout(cgrok_com_config: &xai_grok_login::GrokComConfig) -> anyhow::Result<()> {
     let grok_home = xai_grok_shell_base::util::grok_home::grok_home();
     let auth_manager = xai_grok_login::AuthManager::new_with_proxy_base_url(
         &grok_home,
-        grok_com_config.clone(),
+        cgrok_com_config.clone(),
         crate::agent::config::EndpointsConfig::from_effective_config().proxy_url(),
     );
     let result = xai_grok_login::perform_logout(
@@ -590,7 +593,7 @@ pub fn run_cli_logout(grok_com_config: &xai_grok_login::GrokComConfig) -> anyhow
     if !result.was_logged_in {
         eprintln!("No cached session to log out of.");
         if result.api_key_still_set {
-            eprintln!("You are authenticated via XAI_API_KEY (environment variable).");
+            eprintln!("You are authenticated via CGROK_API_KEY (environment variable).");
         }
         return Ok(());
     }
@@ -600,7 +603,7 @@ pub fn run_cli_logout(grok_com_config: &xai_grok_login::GrokComConfig) -> anyhow
         eprintln!("Logged out");
     }
     if result.api_key_still_set {
-        eprintln!("XAI_API_KEY is still set and will be used for authentication.");
+        eprintln!("CGROK_API_KEY is still set and will be used for authentication.");
     }
     Ok(())
 }

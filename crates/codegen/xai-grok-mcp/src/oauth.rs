@@ -13,7 +13,7 @@ use crate::rmcp::transport::auth::{
 const MCP_OAUTH_CLIENT_NAME: &str = "Grok";
 
 #[cfg(debug_assertions)]
-const CONSENT_URL_FILE_ENV: &str = "GROK_TEST_MCP_CONSENT_URL_FILE";
+const CONSENT_URL_FILE_ENV: &str = "CGROK_TEST_MCP_CONSENT_URL_FILE";
 
 const CREDENTIAL_POLL_INTERVAL: std::time::Duration = std::time::Duration::from_secs(2);
 

@@ -34,7 +34,7 @@ async fn handle_set(agent: &MvpAgent, args: &acp::ExtRequest) -> ExtResult {
 
     let proxy_url = agent.cfg.borrow().endpoints.proxy_url();
     let url = format!("{proxy_url}/privacy/coding-data-retention");
-    let token_header = agent.auth_manager.grok_com_config().token_header.clone();
+    let token_header = agent.auth_manager.cgrok_com_config().token_header.clone();
 
     let body = serde_json::json!({
         "codingDataRetentionOptOut": params.coding_data_retention_opt_out,

@@ -751,10 +751,10 @@ pub const VALIDATE_TYPE_TIMEOUT: std::time::Duration = std::time::Duration::from
 pub const DESCRIBE_TYPE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(2);
 
 /// Env-var override for [`VALIDATE_TYPE_TIMEOUT`] (positive milliseconds).
-pub const VALIDATE_TYPE_TIMEOUT_ENV_VAR: &str = "XAI_VALIDATE_TYPE_TIMEOUT_MS";
+pub const VALIDATE_TYPE_TIMEOUT_ENV_VAR: &str = "CGROK_VALIDATE_TYPE_TIMEOUT_MS";
 
 /// Env-var override for [`DESCRIBE_TYPE_TIMEOUT`] (positive milliseconds).
-pub const DESCRIBE_TYPE_TIMEOUT_ENV_VAR: &str = "XAI_DESCRIBE_TYPE_TIMEOUT_MS";
+pub const DESCRIBE_TYPE_TIMEOUT_ENV_VAR: &str = "CGROK_DESCRIBE_TYPE_TIMEOUT_MS";
 
 /// Validation timeout, honoring the env-var override.
 pub fn validate_type_timeout() -> std::time::Duration {

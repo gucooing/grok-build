@@ -62,7 +62,7 @@ pub fn load_config_with_cached_remote(inputs: CachedConfigInputs<'_>) -> ConfigW
             .inspect_err(|error| {
                 tracing::warn!(
                     %error,
-                    "cached remote settings skipped: [grok_com_config] unreadable"
+                    "cached remote settings skipped: [cgrok_com_config] unreadable"
                 );
             })
             .ok()?;

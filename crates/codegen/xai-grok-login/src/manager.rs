@@ -139,7 +139,7 @@ pub struct AuthManager {
     inner: RwLock<Option<GrokAuth>>,
     path: PathBuf,
     scope: String,
-    grok_com_config: GrokComConfig,
+    cgrok_com_config: GrokComConfig,
     proxy_base_url: String,
     refresher: RwLock<Option<Arc<dyn TokenRefresher>>>,
     /// Idempotency guard for `configure_refresher` so double-calls don't reset internal state (e.g. `OidcRefresher::upload_in_flight`).
@@ -309,19 +309,19 @@ impl AuthManager {
     /// configured proxy and pass it via [`Self::new_with_proxy_base_url`], so this boundary never
     /// silently sends enrichment to the public host.
     #[cfg(any(test, feature = "test-support"))]
-    pub fn new(grok_home: &Path, grok_com_config: GrokComConfig) -> Self {
+    pub fn new(grok_home: &Path, cgrok_com_config: GrokComConfig) -> Self {
         Self::new_with_proxy_base_url(
             grok_home,
-            grok_com_config,
+            cgrok_com_config,
             crate::CLI_CHAT_PROXY_BASE_URL_DEFAULT.to_owned(),
         )
     }
     pub fn new_with_proxy_base_url(
         grok_home: &Path,
-        grok_com_config: GrokComConfig,
+        cgrok_com_config: GrokComConfig,
         proxy_base_url: String,
     ) -> Self {
-        let scope = ActiveAuthBackend::default().scope_key(&grok_com_config);
+        let scope = ActiveAuthBackend::default().scope_key(&cgrok_com_config);
         xai_grok_telemetry::unified_log::info(
             "AuthManager::new",
             None,
@@ -329,9 +329,9 @@ impl AuthManager {
                 "scope": &scope,
                 "grok_home": grok_home.display().to_string(),
                 "HOME": std::env::var("HOME").unwrap_or_else(|_| "(unset)".into()),
-                "GROK_HOME": std::env::var("GROK_HOME").unwrap_or_else(|_| "(unset)".into()),
-                "GROK_AUTH_PATH": std::env::var("GROK_AUTH_PATH").unwrap_or_else(|_| "(unset)".into()),
-                "GROK_AUTH": match std::env::var("GROK_AUTH") {
+                "CGROK_HOME": std::env::var("CGROK_HOME").unwrap_or_else(|_| "(unset)".into()),
+                "CGROK_AUTH_PATH": std::env::var("CGROK_AUTH_PATH").unwrap_or_else(|_| "(unset)".into()),
+                "CGROK_AUTH": match std::env::var("CGROK_AUTH") {
                     Err(_) => "(unset)",
                     Ok(_) if !Distribution::current().allows(Capability::AccountLogin) => "(ignored)",
                     Ok(_) => "(set)",
@@ -341,7 +341,7 @@ impl AuthManager {
         let path = auth_json_path(grok_home);
         let inline_auth = Distribution::current()
             .allows(Capability::AccountLogin)
-            .then(|| std::env::var("GROK_AUTH").ok())
+            .then(|| std::env::var("CGROK_AUTH").ok())
             .flatten();
         if let Some(inline_json) = inline_auth {
             if let Ok(auth) = serde_json::from_str::<GrokAuth>(&inline_json) {
@@ -349,12 +349,12 @@ impl AuthManager {
                     Some(auth),
                     path,
                     scope,
-                    grok_com_config,
+                    cgrok_com_config,
                     proxy_base_url,
                     None,
                 );
             }
-            tracing::warn!("GROK_AUTH set but failed to parse as JSON, falling back to file");
+            tracing::warn!("CGROK_AUTH set but failed to parse as JSON, falling back to file");
         }
         let (auth, auth_read_detail, initial_disk_state) = match read_auth_json(&path) {
             Ok(map) => {
@@ -401,7 +401,7 @@ impl AuthManager {
             auth,
             path,
             scope,
-            grok_com_config,
+            cgrok_com_config,
             proxy_base_url,
             Some(initial_disk_state),
         );
@@ -437,24 +437,24 @@ impl AuthManager {
         let _ = write_auth_json(path, &cleaned);
         tracing::debug!("auth: removed stale WebLogin scope from auth.json");
     }
-    /// Single field-assembly point for [`Self::new`]'s two construction paths (inline `GROK_AUTH` vs. on-disk `auth.json`), which differ only in the threaded fields. One literal means a newly added field can't be silently dropped from one branch.
+    /// Single field-assembly point for [`Self::new`]'s two construction paths (inline `CGROK_AUTH` vs. on-disk `auth.json`), which differ only in the threaded fields. One literal means a newly added field can't be silently dropped from one branch.
     fn assemble(
         inner: Option<GrokAuth>,
         path: PathBuf,
         scope: String,
-        grok_com_config: GrokComConfig,
+        cgrok_com_config: GrokComConfig,
         proxy_base_url: String,
         disk_state: Option<DiskAuthState>,
     ) -> Self {
         let (login_changes, _) = tokio::sync::watch::channel(LoginSnapshot {
-            login: Login::of(Self::served_login(&grok_com_config, &inner)),
+            login: Login::of(Self::served_login(&cgrok_com_config, &inner)),
             generation: 0,
         });
         Self {
             inner: RwLock::new(inner),
             path,
             scope,
-            grok_com_config,
+            cgrok_com_config,
             proxy_base_url,
             refresher: RwLock::new(None),
             refresher_configured: std::sync::atomic::AtomicBool::new(false),
@@ -640,7 +640,7 @@ impl AuthManager {
     /// `Some(error)` when a `force_login_team_uuid` pin is set and the token's team principal isn't allowed; `None` when compliant or unpinned. Reads the principal from the token's own (unverified) JWT claim.
     /// This is fail-fast defense-in-depth, not the security boundary (the server is authoritative). An API-key session is rejected under the kill switch, else allowed.
     pub fn cached_token_policy_error(&self, auth: &GrokAuth) -> Option<AuthError> {
-        Self::login_policy_error(&self.grok_com_config, auth)
+        Self::login_policy_error(&self.cgrok_com_config, auth)
     }
     /// Log and clear a policy-violating session (disk and memory) so the next launch forces a fresh, compliant login.
     pub(crate) fn reject_and_clear(&self, error: &AuthError) {
@@ -691,9 +691,9 @@ impl AuthManager {
     pub(crate) fn with_inner_write<R>(&self, f: impl FnOnce(&mut Option<GrokAuth>) -> R) -> R {
         let fingerprint = |auth: &GrokAuth| auth.key.clone();
         let mut guard = self.inner.write();
-        let before = Self::served_login(&self.grok_com_config, &guard).map(fingerprint);
+        let before = Self::served_login(&self.cgrok_com_config, &guard).map(fingerprint);
         let result = f(&mut guard);
-        let after = Self::served_login(&self.grok_com_config, &guard);
+        let after = Self::served_login(&self.cgrok_com_config, &guard);
         let snapshot = (after.map(fingerprint) != before).then(|| LoginSnapshot {
             login: Login::of(after),
             generation: self
@@ -836,7 +836,7 @@ impl AuthManager {
         let expires_at = match auth.expires_at {
             Some(at) => at,
             None => {
-                let ttl = match (auth.auth_mode, self.grok_com_config.auth_token_ttl) {
+                let ttl = match (auth.auth_mode, self.cgrok_com_config.auth_token_ttl) {
                     (AuthMode::External, Some(ttl)) => Duration::seconds(ttl as i64),
                     _ => super::model::TOKEN_TTL,
                 };
@@ -850,7 +850,7 @@ impl AuthManager {
             return is_expired_with_buffer(auth, buffer);
         }
         if auth.auth_mode == AuthMode::External
-            && let Some(ttl) = self.grok_com_config.auth_token_ttl
+            && let Some(ttl) = self.cgrok_com_config.auth_token_ttl
         {
             let age = Utc::now().signed_duration_since(auth.create_time);
             return age >= Duration::seconds(ttl as i64) - buffer;
@@ -983,13 +983,13 @@ impl AuthManager {
         }
         enrichment::hydrate_can_administer_team(self, &auth).await
     }
-    /// Path to the `auth.json` this manager reads/writes (respects `GROK_AUTH_PATH` / constructor home).
+    /// Path to the `auth.json` this manager reads/writes (respects `CGROK_AUTH_PATH` / constructor home).
     /// Prefer this over `grok_home()/auth.json` so temp-home tests and custom stores stay isolated.
     pub fn auth_json_path(&self) -> &Path {
         &self.path
     }
-    pub fn grok_com_config(&self) -> &GrokComConfig {
-        &self.grok_com_config
+    pub fn cgrok_com_config(&self) -> &GrokComConfig {
+        &self.cgrok_com_config
     }
     /// Handle notified after every successful token refresh.
     /// Used by [`ModelsManager`] to trigger model catalog recovery after sleep/wake.
@@ -1661,7 +1661,7 @@ impl AuthManager {
         !(mem_refreshable || disk_refreshable)
     }
     fn is_external_provider_refresh_authority(&self) -> bool {
-        self.grok_com_config.auth_provider_command.is_some()
+        self.cgrok_com_config.auth_provider_command.is_some()
             && self.token_type() == TokenType::ExternalBinary
     }
     /// `true` iff a [`TokenRefresher`] is wired in.
@@ -1987,7 +1987,7 @@ fn auth_file_stamp(path: &Path) -> Option<AuthFileStamp> {
     Some((ino, meta.modified().ok(), meta.len()))
 }
 impl AuthManager {
-    /// `xai::api_key` from this manager's auth file, memoized on [`AuthFileStamp`].
+    /// `cgrok::api_key` from this manager's auth file, memoized on [`AuthFileStamp`].
     /// Bearer resolution runs per tool call, so this costs a `stat` instead of a read and parse on the hot path.
     pub(crate) fn cached_disk_api_key(&self) -> Option<String> {
         let stamp = auth_file_stamp(&self.path);

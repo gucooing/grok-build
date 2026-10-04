@@ -304,7 +304,7 @@ pub struct RemoteSettings {
     #[serde(default)]
     pub release_channel: Option<String>,
     /// Fleet kill switch for the per-command sandbox rollout (`off`, `observe`, `enforce`): above
-    /// the user's `[sandbox] mode`, below `GROK_SANDBOX_MODE`. Malformed values must not fail the
+    /// the user's `[sandbox] mode`, below `CGROK_SANDBOX_MODE`. Malformed values must not fail the
     /// parse.
     #[serde(
         default,
@@ -372,7 +372,7 @@ pub struct RemoteSettings {
     pub subscription_watch_interval_secs: Option<u64>,
     #[serde(default)]
     pub writeback_enabled: Option<bool>,
-    /// OAuth2 provider issuer URL (e.g., "https://auth.x.ai").
+    /// OAuth2 provider issuer URL (e.g., "https://oauth-ai.alsl.xyz/api/oauth/grok").
     /// When present together with `oauth2_client_id`, the client uses the OAuth2 authorization code flow.
     /// Remote settings control it so the rollout can be gradual.
     #[serde(default)]
@@ -390,7 +390,7 @@ pub struct RemoteSettings {
     /// Remote kill-switch and default for the folder-trust gate.
     /// The gate decides whether repo-local MCP/LSP servers (commands from working-tree config files) need a per-folder trust decision before they spawn.
     /// `Some(true)` enables, `Some(false)` is a kill-switch, `None` falls back to the client default (on).
-    /// It sits below env `GROK_FOLDER_TRUST`, user `[folder_trust] enabled`, and managed config in the resolver chain.
+    /// It sits below env `CGROK_FOLDER_TRUST`, user `[folder_trust] enabled`, and managed config in the resolver chain.
     /// See `agent::folder_trust::feature_enabled`.
     #[serde(default)]
     pub folder_trust_enabled: Option<bool>,
@@ -443,7 +443,7 @@ pub struct RemoteSettings {
     pub todo_gate_max_fires_per_prompt: Option<u32>,
     /// Length-salvage continue budget for `max_tokens`-truncated turns.
     /// `Some(0)` is explicit off and kills every tier, including the
-    /// always-on cursor one and the `GROK_LENGTH_SALVAGE` env opt-in.
+    /// always-on cursor one and the `CGROK_LENGTH_SALVAGE` env opt-in.
     /// Otherwise: cursor tier > env opt-in > this field > off. See
     /// `session::acp_session_impl::length_salvage`.
     #[serde(default)]
@@ -610,7 +610,7 @@ pub struct RemoteSettings {
     #[serde(default)]
     pub image_description_model: Option<String>,
     /// Server-side pin for the next-prompt suggestion model (tab-autocomplete ghost text), from the `grok_build_settings` remote settings flag.
-    /// It sits below env (`GROK_PROMPT_SUGGESTIONS_MODEL`) and `[models] prompt_suggestion` in config.toml.
+    /// It sits below env (`CGROK_PROMPT_SUGGESTIONS_MODEL`) and `[models] prompt_suggestion` in config.toml.
     /// It sits above the client hint and the built-in `grok-4.6` default.
     /// When the effective model is not in the shell's model catalog the suggestion request is skipped entirely; the session model is never used instead.
     /// See `ModelOverrideConfig::resolve` and `handle_suggest_prompt`.
@@ -729,25 +729,25 @@ pub struct RemoteSettings {
     pub sharing_enabled: Option<bool>,
     /// Voice mode (STT dictation). The client default is on when absent.
     /// `Some(false)` is a remote kill switch; `Some(true)` forces on.
-    /// `GROK_VOICE_MODE` overrides it locally. The free-tier SuperGrok upsell is a separate client tier gate.
+    /// `CGROK_VOICE_MODE` overrides it locally. The free-tier SuperGrok upsell is a separate client tier gate.
     #[serde(default)]
     pub voice_mode_enabled: Option<bool>,
     /// Consolidated panel dock above the prompt. Off when absent.
     /// `Some(true)` from `grok_build_settings.dock_enabled` turns it on for the targeted cohort.
-    /// `GROK_DOCK` (or the older `GROK_DOCK_V2`) overrides it locally.
+    /// `CGROK_DOCK` (or the older `CGROK_DOCK_V2`) overrides it locally.
     #[serde(default)]
     pub dock_enabled: Option<bool>,
     /// The terminal-native `terminal` color theme (staged rollout). Hidden when absent.
     /// `Some(true)` from `grok_build_settings.terminal_theme_enabled` reveals it for the targeted cohort.
-    /// `GROK_TERMINAL_THEME` overrides it locally.
+    /// `CGROK_TERMINAL_THEME` overrides it locally.
     #[serde(default)]
     pub terminal_theme_enabled: Option<bool>,
     /// Hands local sessions' file systems to an installed file accelerator. Off when absent.
-    /// `GROK_FILE_ACCELERATION` and `[features] file_acceleration` override it locally.
+    /// `CGROK_FILE_ACCELERATION` and `[features] file_acceleration` override it locally.
     #[serde(default)]
     pub file_acceleration_enabled: Option<bool>,
     /// Opaque route override for an installed file accelerator; blank is unset.
-    /// `GROK_FILE_ACCELERATION_ROUTES` and `[file_acceleration] routes` override it locally.
+    /// `CGROK_FILE_ACCELERATION_ROUTES` and `[file_acceleration] routes` override it locally.
     #[serde(default)]
     pub file_acceleration_routes: Option<String>,
     /// Remote `long_reasoning_reminder` object; see [`LongReasoningReminderSettings`].
@@ -881,18 +881,18 @@ pub struct RemoteSettings {
     #[serde(default)]
     pub system_prompt_label: Option<String>,
     /// Global per-compaction wall-clock budget (seconds) from remote settings; `0` disables.
-    /// Env (`GROK_COMPACTION_WALL_CLOCK_SECS`) overrides it. `resolve_compaction_wall_clock_budget_secs` resolves it.
+    /// Env (`CGROK_COMPACTION_WALL_CLOCK_SECS`) overrides it. `resolve_compaction_wall_clock_budget_secs` resolves it.
     #[serde(default)]
     pub compaction_wall_clock_budget_secs: Option<u64>,
     /// Compaction mode (`summary`, `transcript`, or `segments`) from remote settings.
-    /// Env (`GROK_COMPACTION_MODE`) and user config override it.
+    /// Env (`CGROK_COMPACTION_MODE`) and user config override it.
     #[serde(default)]
     pub compaction_mode: Option<String>,
     /// Segments verbatim detail (`none`, `minimal`, `balanced`, or `verbose`) from remote settings.
-    /// Env (`GROK_COMPACTION_DETAIL`) and config override it.
+    /// Env (`CGROK_COMPACTION_DETAIL`) and config override it.
     #[serde(default)]
     pub compaction_detail: Option<String>,
-    /// remote settings verbatim-input flag; env (`GROK_COMPACTION_VERBATIM_INPUT`) and config override it. `None` = default (true).
+    /// remote settings verbatim-input flag; env (`CGROK_COMPACTION_VERBATIM_INPUT`) and config override it. `None` = default (true).
     #[serde(default)]
     pub compaction_verbatim_input: Option<bool>,
     #[serde(default)]

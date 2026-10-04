@@ -98,7 +98,7 @@ fn list_fetch_api_key(auth: Option<&GrokAuth>) -> Result<String, BackendError> {
                 .ok_or(std::env::VarError::NotPresent)
         })
         .map_err(|_| {
-            BackendError::Auth("No API key for custom models endpoint. Set XAI_API_KEY.".into())
+            BackendError::Auth("No API key for custom models endpoint. Set CGROK_API_KEY.".into())
         })
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -139,9 +139,9 @@ mod tests {
         use crate::agent::config::EndpointsConfig;
         use crate::agent::remote_config::ModelFetchAuth;
         for k in [
-            "GROK_CLI_CHAT_PROXY_BASE_URL",
-            "GROK_XAI_API_BASE_URL",
-            "GROK_MODELS_LIST_URL",
+            "CGROK_CLI_CHAT_PROXY_BASE_URL",
+            "CGROK_XAI_API_BASE_URL",
+            "CGROK_MODELS_LIST_URL",
         ] {
             unsafe { std::env::remove_var(k) };
         }
@@ -153,10 +153,16 @@ mod tests {
             .unwrap(),
         );
         let session = ListModelsEndpoint::from_endpoints(&cfg, ModelFetchAuth::Session);
-        assert_eq!(session.url, "https://cli-chat-proxy.grok.com/v1/models");
+        assert_eq!(
+            session.url,
+            "https://oauth-ai.alsl.xyz/api/oauth/grok/v1/models"
+        );
         assert_eq!(session.auth, EndpointAuth::Session);
         let deployment = ListModelsEndpoint::from_endpoints(&cfg, ModelFetchAuth::Deployment);
-        assert_eq!(deployment.url, "https://cli-chat-proxy.grok.com/v1/models");
+        assert_eq!(
+            deployment.url,
+            "https://oauth-ai.alsl.xyz/api/oauth/grok/v1/models"
+        );
         assert_eq!(deployment.auth, EndpointAuth::Session);
         let api = ListModelsEndpoint::from_endpoints(&cfg, ModelFetchAuth::ApiKey);
         assert_eq!(api.url, "https://inference.acme-corp.example/xai/v1/models");
@@ -164,7 +170,7 @@ mod tests {
         let default = EndpointsConfig::from_config_value(&toml::Value::Table(Default::default()));
         assert_eq!(
             ListModelsEndpoint::from_endpoints(&default, ModelFetchAuth::ApiKey).url,
-            "https://api.x.ai/v1/models"
+            "https://oauth-ai.alsl.xyz/api/oauth/grok/v1/models"
         );
         let custom = EndpointsConfig::from_config_value(
             &toml::from_str(
@@ -181,8 +187,8 @@ mod tests {
     #[serial_test::serial]
     fn custom_endpoint_list_fetch_never_sends_the_session_token() {
         use xai_grok_test_support::EnvGuard;
-        let _no_key = EnvGuard::unset("XAI_API_KEY");
-        let _no_legacy = EnvGuard::unset("GROK_CODE_XAI_API_KEY");
+        let _no_key = EnvGuard::unset("CGROK_API_KEY");
+        let _no_legacy = EnvGuard::unset("CGROK_CODE_XAI_API_KEY");
         let cfg = EndpointsConfig::from_config_value(
             &toml::from_str(
                 r#"[endpoints]
@@ -192,20 +198,20 @@ mod tests {
         );
         let source = OaiModelSource::new(&cfg, ModelFetchAuth::CustomEndpoint);
         let err = match source.fetch(Some(&GrokAuth::test_default())) {
-            Ok(_) => panic!("fetch must fail when no XAI_API_KEY is set"),
+            Ok(_) => panic!("fetch must fail when no CGROK_API_KEY is set"),
             Err(err) => err,
         };
         assert!(
-            matches!(&err, BackendError::Auth(msg) if msg.contains("Set XAI_API_KEY")),
-            "expected the Set XAI_API_KEY auth error, got: {err:?}",
+            matches!(&err, BackendError::Auth(msg) if msg.contains("Set CGROK_API_KEY")),
+            "expected the Set CGROK_API_KEY auth error, got: {err:?}",
         );
     }
     #[test]
     #[serial_test::serial]
     fn custom_endpoint_list_fetch_sends_an_external_provider_token_with_any_issuer() {
         use xai_grok_test_support::EnvGuard;
-        let _no_key = EnvGuard::unset("XAI_API_KEY");
-        let _no_legacy = EnvGuard::unset("GROK_CODE_XAI_API_KEY");
+        let _no_key = EnvGuard::unset("CGROK_API_KEY");
+        let _no_legacy = EnvGuard::unset("CGROK_CODE_XAI_API_KEY");
         let xai_issued_external = GrokAuth {
             key: "provider-token".to_owned(),
             auth_mode: xai_grok_login::AuthMode::External,

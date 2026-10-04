@@ -1,5 +1,7 @@
 # Grok Build User Guide
 
+This fork uses `cgrok`, `~/.cgrok`, and `https://oauth-ai.alsl.xyz/api/oauth/grok`. The repository README describes service configuration and distribution.
+
 Learn how to install, configure, and extend Grok Build, the terminal-based AI coding assistant from SpaceXAI.
 
 ---
@@ -41,7 +43,7 @@ Automate, script, and integrate Grok Build with other systems.
 
 | # | Document | Description |
 |---|----------|-------------|
-| 14 | [Headless Mode and Scripting](14-headless-mode.md) | `grok -p`, output formats, CI/CD integration, and piping |
+| 14 | [Headless Mode and Scripting](14-headless-mode.md) | `cgrok -p`, output formats, CI/CD integration, and piping |
 | 15 | [Agent Mode and IDE Integration](15-agent-mode.md) | ACP stdio transport, WebSocket relay, and SDK integration |
 | 16 | [Subagents and Personas](16-subagents.md) | Parallel child sessions, agent types, personas, and capability modes |
 | 17 | [Session Management](17-sessions.md) | Save, load, resume, rewind, compact, and the session persistence format |

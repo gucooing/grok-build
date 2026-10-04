@@ -696,9 +696,9 @@ async fn the_protected_target_floor_prompts_whatever_the_grants_say() {
     settle_at_cwd(&session, "search_replace", "c3", &edit, Some(&allow_edits))
         .await
         .expect("edits approved for the session");
-    let lsp = session.cwd().join(".grok/lsp.json");
+    let lsp = session.cwd().join(".cgrok/lsp.json");
     let grant_store = Path::new("/home/user")
-        .join(".grok")
+        .join(".cgrok")
         .join("sessions")
         .join("ws")
         .join("permission.toml");
@@ -706,7 +706,7 @@ async fn the_protected_target_floor_prompts_whatever_the_grants_say() {
         hook.as_str(),
         "/home/user/.zshrc",
         grant_store.to_str().expect("utf-8 path"),
-        "/home/user/.grok/mcp.json",
+        "/home/user/.cgrok/mcp.json",
         lsp.to_str().expect("utf-8 tempdir"),
     ] {
         let edit = json!({"file_path": path, "old_string": "a", "new_string": "b"});

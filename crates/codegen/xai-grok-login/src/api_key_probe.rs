@@ -2,7 +2,7 @@
 //! BYOK keys are never probed.
 //!
 //! The base URL is the caller's effective `endpoints.xai_api_base_url`, so the probe hits the same host turn traffic uses.
-//! That value comes from `GROK_XAI_API_BASE_URL` or `[endpoints] xai_api_base_url`.
+//! That value comes from `CGROK_XAI_API_BASE_URL` or `[endpoints] xai_api_base_url`.
 //!
 //! Unusable (an auth error, or a 200 with a blocked, disabled, or team_blocked flag) means the key is not advertised.
 //! Unknown (a timeout, a network error, or exhausted retries) fails open and the key is still advertised.
@@ -194,7 +194,7 @@ async fn probe_xai_api_key_at_url(key: &str, url: &str, timeout: Duration) -> Ap
 
 /// Probes the env key when one is set; without an env key this returns false and the caller combines the result with BYOK.
 /// `api_base_url` is the caller's effective `endpoints.xai_api_base_url`, so the probe follows the same endpoint as turn traffic.
-/// In tests that is the mock server the fixtures already set via `GROK_XAI_API_BASE_URL`.
+/// In tests that is the mock server the fixtures already set via `CGROK_XAI_API_BASE_URL`.
 pub async fn first_party_env_key_allows_advertise(api_base_url: &str, timeout: Duration) -> bool {
     let Ok(key) = crate::auth_method::read_xai_api_key_env() else {
         return false;
@@ -224,12 +224,12 @@ mod tests {
     #[test]
     fn joins_api_key_path_onto_base() {
         assert_eq!(
-            api_key_info_url("https://api.x.ai/v1"),
-            "https://api.x.ai/v1/api-key"
+            api_key_info_url("https://oauth-ai.alsl.xyz/api/oauth/grok/v1"),
+            "https://oauth-ai.alsl.xyz/api/oauth/grok/v1/api-key"
         );
         assert_eq!(
-            api_key_info_url("https://api.x.ai/v1/"),
-            "https://api.x.ai/v1/api-key"
+            api_key_info_url("https://oauth-ai.alsl.xyz/api/oauth/grok/v1/"),
+            "https://oauth-ai.alsl.xyz/api/oauth/grok/v1/api-key"
         );
         assert_eq!(
             api_key_info_url("https://enterprise-api.acme.com/v1"),

@@ -1,0 +1,23 @@
+{
+    "name": "@gucooing/cgrok-linux-x64",
+    "version": "1.0.45",
+    "description": "linux-x64 binary for @gucooing/cgrok. Do not install directly; install @gucooing/cgrok instead.",
+    "license": "Apache-2.0",
+    "files": [
+        "bin/",
+        "THIRD_PARTY_NOTICES.md"
+    ],
+    "os": [
+        "linux"
+    ],
+    "cpu": [
+        "x64"
+    ],
+    "publishConfig": {
+        "access": "public"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/gucooing/grok-build.git"
+    }
+}

@@ -407,18 +407,18 @@ mod tests {
         jset(
             &mut placeholders,
             "memory_global_path",
-            serde_json::json!("/home/test/.grok/memory-v2/global"),
+            serde_json::json!("/home/test/.cgrok/memory-v2/global"),
         );
         jset(
             &mut placeholders,
             "memory_workspace_path",
-            serde_json::json!("/home/test/.grok/memory-v2/workspaces/project"),
+            serde_json::json!("/home/test/.cgrok/memory-v2/workspaces/project"),
         );
 
         let prompt = render_base(&default_renderer(), &placeholders);
         assert!(prompt.contains("<memory>"));
-        assert!(prompt.contains("/home/test/.grok/memory-v2/global"));
-        assert!(prompt.contains("/home/test/.grok/memory-v2/workspaces/project"));
+        assert!(prompt.contains("/home/test/.cgrok/memory-v2/global"));
+        assert!(prompt.contains("/home/test/.cgrok/memory-v2/workspaces/project"));
         assert!(prompt.contains("topics/"));
         assert!(prompt.contains("observations/_inbox/"));
         assert!(prompt.contains("NEVER edit it directly"));

@@ -3,11 +3,11 @@
 //!
 //! Merge order (lowest to highest priority):
 //! 1. `/etc/grok/managed_config.toml`
-//! 2. `$GROK_HOME/managed_config.toml`
-//! 3. `$GROK_HOME/config.toml`
-//! 4. `$GROK_HOME/requirements.toml` (cloud cache; Ed25519-signed at rest once a key is embedded, see [`signed_policy`])
+//! 2. `$CGROK_HOME/managed_config.toml`
+//! 3. `$CGROK_HOME/config.toml`
+//! 4. `$CGROK_HOME/requirements.toml` (cloud cache; Ed25519-signed at rest once a key is embedded, see [`signed_policy`])
 //! 5. `/etc/grok/requirements.toml`
-//! 6. macOS MDM managed preferences (`ai.x.grok`, admin-forced), macOS only
+//! 6. macOS MDM managed preferences (`io.github.gucooing.cgrok`, admin-forced), macOS only
 //!
 //! Each layer applies its own [`[[version_overrides]]`](version_overrides) before merge.
 //! Requirements layers (#4 through #6) may opt into fail-closed startup; see [`validate_requirements`].
@@ -71,7 +71,7 @@ pub use display_refresh::DisplayRefreshSettings;
 pub use distribution::{Capability, Distribution};
 pub use endpoints::{CLI_CHAT_PROXY_BASE_URL_DEFAULT, EndpointsConfig};
 pub use env_overlay::{
-    GROK_CONFIG_ENV, GROK_CONFIG_PATH_ENV, OverlaySource, ResolvedOverlay, resolved_env_overlay,
+    CGROK_CONFIG_ENV, CGROK_CONFIG_PATH_ENV, OverlaySource, ResolvedOverlay, resolved_env_overlay,
 };
 
 #[cfg(unix)]

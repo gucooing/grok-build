@@ -131,7 +131,7 @@ async fn make_actor_with_auth_and_credentials(
 
 /// Pin the ACP `auth_method_id` and credential `auth_type` independently.
 /// The gate keys off the stable `auth_method_id`, so this reproduces the regression.
-/// In the regression, a session-token cache miss with `XAI_API_KEY` set transiently collapsed a session method's `creds.auth_type` to `ApiKey`.
+/// In the regression, a session-token cache miss with `CGROK_API_KEY` set transiently collapsed a session method's `creds.auth_type` to `ApiKey`.
 async fn make_actor_with_method_and_credentials(
     auth_manager: Option<Arc<AuthManager>>,
     auth_method_id: &str,
@@ -564,7 +564,7 @@ async fn credential_less_401_with_permanent_failure_stays_terminal() {
         .await;
 }
 
-/// Regression: sampler 401 with API-key auth (BYOK `env_key` / `XAI_API_KEY`) must NOT attempt an OIDC session-token refresh.
+/// Regression: sampler 401 with API-key auth (BYOK `env_key` / `CGROK_API_KEY`) must NOT attempt an OIDC session-token refresh.
 /// The bearer on the wire is the static API key, so refreshing the session token reports success but the retry re-sends the same rejected key.
 /// Recovery is skipped and the 401 surfaces as a terminal error.
 #[tokio::test(flavor = "current_thread")]
@@ -960,7 +960,7 @@ async fn legacy_auth_hint_on_404_model_not_found() {
 fn unauthorized_401_error() -> xai_grok_sampler::SamplingErrorInfo {
     xai_grok_sampler::SamplingErrorInfo {
             kind: xai_grok_sampler::SamplingErrorKind::Api,
-            message: "Unauthorized (401) from https://cli-chat-proxy.grok.com/v1/responses: {\"error\":\"Invalid or expired credentials (auth_kind=bearer, x_xai_token_auth=xai-grok-cli, upstream=Unauthenticated, reason=no auth context)\"}".into(),
+            message: "Unauthorized (401) from https://oauth-ai.alsl.xyz/api/oauth/grok/v1/responses: {\"error\":\"Invalid or expired credentials (auth_kind=bearer, x_xai_token_auth=xai-grok-cli, upstream=Unauthenticated, reason=no auth context)\"}".into(),
             status_code: Some(401),
             is_retryable: false,
             retry_after_secs: None,
@@ -1627,7 +1627,7 @@ async fn switch_to_first_party_model_drops_minted_provider_token() {
 
             let cfg = xai_grok_sampler::SamplerConfig {
                 api_key: Some("session-jwt".to_string()),
-                base_url: "https://api.x.ai/v1".to_string(),
+                base_url: "https://oauth-ai.alsl.xyz/api/oauth/grok/v1".to_string(),
                 model,
                 context_window: 256_000,
                 ..Default::default()

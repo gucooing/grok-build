@@ -143,14 +143,14 @@ pub struct UploadRetryPolicy {
     pub max_age: Duration,
     /// Minimum wall time between wire probe attempts while parked for auth recovery.
     /// Fallback for 401s that heal server-side without a client credential rotation.
-    /// Env override: `GROK_UPLOAD_QUEUE_AUTH_PROBE_SECS`.
+    /// Env override: `CGROK_UPLOAD_QUEUE_AUTH_PROBE_SECS`.
     pub auth_park_probe_interval: Duration,
 }
 pub const DEFAULT_AUTH_PARK_PROBE_INTERVAL: Duration = Duration::from_secs(300);
-/// Smallest probe interval a `GROK_UPLOAD_QUEUE_AUTH_PROBE_SECS` override may set.
+/// Smallest probe interval a `CGROK_UPLOAD_QUEUE_AUTH_PROBE_SECS` override may set.
 /// Rejects the degenerate `0` (probes cannot fire faster than `AUTH_PARK_WAIT_INTERVAL` anyway).
 const MIN_AUTH_PARK_PROBE_INTERVAL: Duration = Duration::from_secs(1);
-/// Resolve a `GROK_UPLOAD_QUEUE_AUTH_PROBE_SECS` override into a probe interval.
+/// Resolve a `CGROK_UPLOAD_QUEUE_AUTH_PROBE_SECS` override into a probe interval.
 /// `0` is rejected so a misconfiguration cannot turn every parked upload into a per-slice retry storm.
 /// Other values are floored at [`MIN_AUTH_PARK_PROBE_INTERVAL`].
 fn auth_park_probe_override(secs: u64) -> Option<Duration> {
@@ -531,7 +531,7 @@ impl UploadQueue {
         if let Err(e) = std::fs::create_dir_all(&queue_dir) {
             tracing::warn!(error = %e, "Failed to create upload queue dir");
         }
-        if let Some(raw_secs) = std::env::var("GROK_UPLOAD_QUEUE_AUTH_PROBE_SECS")
+        if let Some(raw_secs) = std::env::var("CGROK_UPLOAD_QUEUE_AUTH_PROBE_SECS")
             .ok()
             .and_then(|s| s.parse::<u64>().ok())
         {
@@ -539,7 +539,7 @@ impl UploadQueue {
                 Some(interval) => retry_policy.auth_park_probe_interval = interval,
                 None => {
                     tracing::warn!(
-                        "Ignoring GROK_UPLOAD_QUEUE_AUTH_PROBE_SECS={raw_secs}: a zero probe \
+                        "Ignoring CGROK_UPLOAD_QUEUE_AUTH_PROBE_SECS={raw_secs}: a zero probe \
                      interval would re-attempt every parked upload on every wait slice. \
                      Keeping the {}s default.",
                         DEFAULT_AUTH_PARK_PROBE_INTERVAL.as_secs(),
@@ -547,7 +547,7 @@ impl UploadQueue {
                 }
             }
         }
-        let max_queue_bytes = std::env::var("GROK_UPLOAD_QUEUE_MAX_BYTES")
+        let max_queue_bytes = std::env::var("CGROK_UPLOAD_QUEUE_MAX_BYTES")
             .ok()
             .and_then(|s| s.parse().ok())
             .unwrap_or(DEFAULT_MAX_QUEUE_BYTES);

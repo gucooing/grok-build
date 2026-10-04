@@ -235,9 +235,9 @@ pub async fn run_stdio_agent(
         &grok_home::grok_home(),
         xai_file_utils::queue::DEFAULT_MAX_AGE,
     );
-    if let Ok(version) = std::env::var("GROK_CLIENT_VERSION") {
+    if let Ok(version) = std::env::var("CGROK_CLIENT_VERSION") {
         crate::unified_log::info(
-            "GROK_CLIENT_VERSION",
+            "CGROK_CLIENT_VERSION",
             None,
             Some(serde_json::json!({ "version": version })),
         );
@@ -288,7 +288,7 @@ pub async fn run_stdio_agent(
                 auth_manager.current(),
             )
             .await?;
-            apply_otel_config(&auth_manager, &agent_config.grok_com_config);
+            apply_otel_config(&auth_manager, &agent_config.cgrok_com_config);
             let handle_io = spawn_agent_local(
                 agent_config,
                 auth_manager,
@@ -329,7 +329,7 @@ pub async fn run_headless(
     );
     let mut agent_config = agent_config.clone();
     agent_config.mode = crate::agent::config::AgentMode::Headless;
-    let ctx = &agent_config.grok_com_config;
+    let ctx = &agent_config.cgrok_com_config;
     let (mut auth, did_browser_flow) = if reauthenticate {
         let auth_manager = Arc::new(AuthManager::new_with_proxy_base_url(
             &grok_home::grok_home(),
@@ -567,7 +567,7 @@ fn relay_config_for_session(
     }
     crate::agent::relay::RelayConfig::for_session(
         session,
-        &agent_config.grok_com_config,
+        &agent_config.cgrok_com_config,
         agent_config.endpoints.alpha_test_key.clone(),
         Some(shared_auth_manager.clone()),
     )
@@ -623,7 +623,7 @@ struct DeferredRelayArm {
     cancel: tokio_util::sync::CancellationToken,
     /// Shared with [`run_leader`]'s shutdown path, which drains it to stop the relay explicitly.
     slot: Rc<std::cell::RefCell<Option<crate::agent::relay::RelayHandle>>>,
-    grok_com_config: xai_grok_login::GrokComConfig,
+    cgrok_com_config: xai_grok_login::GrokComConfig,
     alpha_test_key: Option<String>,
 }
 impl DeferredRelayArm {
@@ -633,7 +633,7 @@ impl DeferredRelayArm {
     fn arm_if_eligible(self, session: &GrokAuth, auth_manager: &Arc<AuthManager>) -> Option<Self> {
         let Some(relay_config) = crate::agent::relay::RelayConfig::for_session(
             session,
-            &self.grok_com_config,
+            &self.cgrok_com_config,
             self.alpha_test_key.clone(),
             Some(auth_manager.clone()),
         ) else {
@@ -658,13 +658,13 @@ pub fn suppress_otel() {
 }
 /// Startup external-OTEL gate for an in-process (embedded) agent.
 /// Mirrors the leader startup gate so the pager process is fail-closed by construction at the agent boundary.
-pub fn apply_otel_config(auth_manager: &AuthManager, grok_com_config: &GrokComConfig) {
+pub fn apply_otel_config(auth_manager: &AuthManager, cgrok_com_config: &GrokComConfig) {
     suppress_otel();
     let has_session = auth_manager.current().is_some() || auth_manager.read_disk_auth().is_some();
     if crate::agent::otel_gate::should_open_at_startup(crate::agent::otel_gate::StartupGate {
         channel: crate::agent::otel_gate::resolved_policy_channel(),
         has_session,
-        session_pending: crate::agent::otel_gate::is_session_pending(has_session, grok_com_config),
+        session_pending: crate::agent::otel_gate::is_session_pending(has_session, cgrok_com_config),
     }) {
         crate::agent::otel_gate::open_at_startup();
     }
@@ -683,7 +683,7 @@ pub struct LeaderRunOptions {
 }
 /// Another process is wedged inside its own open+flock of the leader lock (stalled grok home). Only `tracing`
 /// here: a socket probe, pid read, or log open under the grok home could wedge this process too. Best effort: a
-/// client-spawned leader's stderr is `$GROK_HOME/leader.log`, so even this line can park in `write(2)` there.
+/// client-spawned leader's stderr is `$CGROK_HOME/leader.log`, so even this line can park in `write(2)` there.
 fn refuse_in_flight_leader_lock(e: crate::leader::LockError) -> anyhow::Error {
     tracing::error!(
         error = %e,
@@ -717,7 +717,7 @@ pub async fn run_leader(
     xai_grok_telemetry::unified_log::set_version(xai_grok_version::VERSION);
     let mut agent_config = agent_config.clone();
     agent_config.mode = crate::agent::config::AgentMode::Leader;
-    let ws_url = &agent_config.grok_com_config.grok_ws_url;
+    let ws_url = &agent_config.cgrok_com_config.grok_ws_url;
     let mut lock = LeaderLock::new(ws_url);
     let socket_path = lock.socket_path().clone();
     match lock.try_acquire() {
@@ -846,7 +846,7 @@ pub async fn run_leader(
     }
     debug!("IPC socket created");
     let _lock = lock;
-    let ctx = &agent_config.grok_com_config;
+    let ctx = &agent_config.cgrok_com_config;
     suppress_otel();
     let auth: Option<GrokAuth> =
         xai_grok_login::try_noninteractive_auth_no_mint(ctx, agent_config.endpoints.proxy_url())
@@ -857,7 +857,7 @@ pub async fn run_leader(
             .read_disk_auth()
             .is_some();
     let session_pending =
-        crate::agent::otel_gate::is_session_pending(has_session, &agent_config.grok_com_config);
+        crate::agent::otel_gate::is_session_pending(has_session, &agent_config.cgrok_com_config);
     let policy_channel =
         crate::agent::otel_gate::policy_channel_for(&agent_config.endpoints.proxy_url());
     if crate::agent::otel_gate::should_open_at_startup(crate::agent::otel_gate::StartupGate {
@@ -1095,7 +1095,7 @@ pub async fn run_leader(
                     agent_to_ws_tx: agent_to_ws_tx.clone(),
                     cancel: cancel_clone.clone(),
                     slot: relay_handle_slot.clone(),
-                    grok_com_config: agent_config.grok_com_config.clone(),
+                    cgrok_com_config: agent_config.cgrok_com_config.clone(),
                     alpha_test_key: agent_config.endpoints.alpha_test_key.clone(),
                 });
             }
@@ -1128,7 +1128,7 @@ pub async fn run_leader(
             if let Some(home) = xai_dirs::home_dir() {
                 watch_paths.push(home.join(".claude.json"));
             }
-            let auth_scope = agent_config.grok_com_config.auth_scope();
+            let auth_scope = agent_config.cgrok_com_config.auth_scope();
             let initial_auth_key_hash = xai_grok_config::user_grok_home()
                 .map(|g| g.join("auth.json"))
                 .and_then(|auth_path| xai_grok_login::read_auth_json(&auth_path).ok())
@@ -1504,7 +1504,7 @@ mod tests {
                 mark_external_otel_settings_resolved();
             }
         }
-        const PROXY_ENV_VAR: &str = "GROK_CLI_CHAT_PROXY_BASE_URL";
+        const PROXY_ENV_VAR: &str = "CGROK_CLI_CHAT_PROXY_BASE_URL";
         let _restore = Restore {
             key: std::env::var_os(XAI_API_KEY_ENV_VAR),
             legacy: std::env::var_os(LEGACY_XAI_API_KEY_ENV_VAR),
@@ -1635,13 +1635,13 @@ mod tests {
             Rc::new(Mutex::new(None));
         let (_demand_tx, demand_rx) = watch::channel(false);
         let slot = Rc::new(std::cell::RefCell::new(None));
-        let grok_com_config = xai_grok_login::GrokComConfig {
+        let cgrok_com_config = xai_grok_login::GrokComConfig {
             grok_ws_url: format!("ws://{addr}"),
             grok_ws_origin: format!("http://{addr}"),
             ..Default::default()
         };
         let tmp = tempfile::tempdir().unwrap();
-        let auth_manager = Arc::new(AuthManager::new(tmp.path(), grok_com_config.clone()));
+        let auth_manager = Arc::new(AuthManager::new(tmp.path(), cgrok_com_config.clone()));
         let arm = DeferredRelayArm {
             relay_on_demand: false,
             relay_demand_rx: demand_rx,
@@ -1649,7 +1649,7 @@ mod tests {
             agent_to_ws_tx: agent_to_ws_tx.clone(),
             cancel: cancel.clone(),
             slot: slot.clone(),
-            grok_com_config,
+            cgrok_com_config,
             alpha_test_key: None,
         };
         let local = tokio::task::LocalSet::new();
@@ -1694,7 +1694,7 @@ mod tests {
     async fn cold_mint_auth_write_arms_deferred_relay() {
         use crate::config::reloader::{ConfigReloader, ConfigUpdate, hash_auth_key};
         let (addr, _count) = spawn_mock_relay_server().await;
-        let grok_com_config = xai_grok_login::GrokComConfig {
+        let cgrok_com_config = xai_grok_login::GrokComConfig {
             grok_ws_url: format!("ws://{addr}"),
             grok_ws_origin: format!("http://{addr}"),
             ..Default::default()
@@ -1730,7 +1730,7 @@ mod tests {
         else {
             panic!("expected ConfigUpdate::Auth");
         };
-        let auth_manager = Arc::new(AuthManager::new(tmp.path(), grok_com_config.clone()));
+        let auth_manager = Arc::new(AuthManager::new(tmp.path(), cgrok_com_config.clone()));
         let (ws_to_agent_tx, _ws_to_agent_rx) = mpsc::unbounded_channel();
         let agent_to_ws_tx: Rc<Mutex<Option<mpsc::UnboundedSender<String>>>> =
             Rc::new(Mutex::new(None));
@@ -1745,7 +1745,7 @@ mod tests {
             agent_to_ws_tx,
             cancel: cancel.clone(),
             slot: slot.clone(),
-            grok_com_config,
+            cgrok_com_config,
             alpha_test_key: None,
         };
         let local = tokio::task::LocalSet::new();

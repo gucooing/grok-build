@@ -250,7 +250,7 @@
 
 - **Tab navigation** in the pager now cycles cleanly among prompt, scrollback, and the entire dock instead of stopping at every dock section.
 - **Ctrl+G** now hides or shows the dock in the pager; focus returns to scrollback when hiding.
-- **Multiple concurrent `grok agent stdio`** processes against the same GROK_HOME no longer crash at startup.
+- **Multiple concurrent `grok agent stdio`** processes against the same CGROK_HOME no longer crash at startup.
 - **MCP server connections** no longer fail against modern 2026-07-28 servers.
 - **Fixed startup crash** on Windows when the Client-ProjFS optional feature is disabled.
 
@@ -425,7 +425,7 @@
 - **MCP server list** in minimal mode now correctly shows policy-blocked servers.
 - URLs that wrap across multiple lines inside quotes or lists are now fully clickable.
 - **The welcome screen** composer now grows taller when you paste multi-line text.
-- **Enterprise policy files** are no longer deleted on startup when your team login is stored at a custom `GROK_AUTH_PATH`.
+- **Enterprise policy files** are no longer deleted on startup when your team login is stored at a custom `CGROK_AUTH_PATH`.
 - **/feedback** now drops unsupported images with a notice (matching the modal) and never loses your report text on save errors.
 - **Feedback drafts** keep their paragraph breaks when updated, and the modal no longer switches tabs unexpectedly.
 - **Turn summary lines** no longer lose their spacing after background tasks finish.
@@ -547,7 +547,7 @@
 - **Subagent sessions** no longer leak threads or file descriptors when the parent is busy.
 - **Cold startup** no longer performs duplicate remote settings fetches.
 - **Compaction failures** due to context size now degrade input instead of retrying identically.
-- **--sandbox strict** now restricts writes to ~/.grok/sessions only.
+- **--sandbox strict** now restricts writes to ~/.cgrok/sessions only.
 - **Subagent spawning** now waits longer on a busy coordinator and shows clearer retry guidance instead of "unreachable".
 - **Failed task and todo tool calls** now appear in the transcript instead of disappearing without a trace.
 - **Composer status row** no longer collapses or flashes when using double-Enter to send now.
@@ -580,7 +580,7 @@
 ## Bug Fixes
 
 - **Transient inference failures** (stalls, drops, 5xx) now retry automatically instead of ending the turn.
-- **Windows users** can now correctly open ~/.grok and worktree sessions.
+- **Windows users** can now correctly open ~/.cgrok and worktree sessions.
 - **Session data** is now more reliably saved after prompts and on power loss.
 - **Compaction failures** now show the actual error instead of a generic message.
 - **Truncation error messages** now show the right guidance instead of suggesting an unhelpful retry.
@@ -733,7 +733,7 @@
 
 ## Features
 
-- Users hitting startup timeouts can now raise the connect budget with the `GROK_CONNECT_UI_TIMEOUT_SECS` environment variable.
+- Users hitting startup timeouts can now raise the connect budget with the `CGROK_CONNECT_UI_TIMEOUT_SECS` environment variable.
 - Permission prompts now show "Always allow" and "Never allow" options by default.
 - Users can now delete scheduled background loops directly from the tray.
 - **Status line command** scripts can now run on a timer via refresh_interval in config.toml.
@@ -780,14 +780,14 @@
 
 ## Features
 
-- **GROK_CONFIG** and **GROK_CONFIG_PATH** environment variables now let launchers override selected config settings without editing config.toml.
-- **Worktrees** under ~/.grok/worktrees are now automatically reclaimed when safe, with strong safeguards that never delete a user's last copy.
+- **CGROK_CONFIG** and **CGROK_CONFIG_PATH** environment variables now let launchers override selected config settings without editing config.toml.
+- **Worktrees** under ~/.cgrok/worktrees are now automatically reclaimed when safe, with strong safeguards that never delete a user's last copy.
 - **Hook policy blocks** now correctly report "Turn blocked by a hook" instead of "Turn cancelled by user."
 - **Image and video generation** now limits how many calls the model can request in one step to avoid overload.
 - **Arabic and Persian text** can now be reordered correctly in the terminal UI. Turn on in /settings.
 - **Reasoning effort** can now be supplied when an ACP client opens or resumes a session.
 - **Session titles** now refresh early in the conversation and stay stable; /resume shows a recap and last-turn summary when available.
-- **GROK_FORCE_LOGIN_TEAM_ID** environment variable now lets launchers restrict interactive login to one or more teams.
+- **CGROK_FORCE_LOGIN_TEAM_ID** environment variable now lets launchers restrict interactive login to one or more teams.
 - **Preparing spinner** now shows readable labels such as "Writing file…" and "Writing edit…" for common tools.
 
 ## Bug Fixes
@@ -806,11 +806,11 @@
 - **New StopCancelled hook event** now reports when a turn ends without completing (interrupt, permission reject, max turns, etc.).
 - **Recurring /loop tasks** now show a one-line expiry notice in the transcript when they auto-expire after 7 days.
 - **Web search** can now be restricted to allowed or excluded domains via [toolset.web_search] in config.toml.
-- **Session search index** can now be disabled via GROK_SESSION_SEARCH or [features] session_search for hosts sharing $GROK_HOME.
+- **Session search index** can now be disabled via CGROK_SESSION_SEARCH or [features] session_search for hosts sharing $CGROK_HOME.
 - **Drag to select and copy** values on the /session-info tab; c and y shortcuts also work.
 - **Double-click now selects a word** by default and triple-click selects the whole paragraph.
 - **New follow-up behavior setting** lets queued messages send immediately as interjections instead of waiting for the turn to finish.
-- Tool commands and MCP servers now receive a GROK_SESSION_ID environment variable matching the current session.
+- Tool commands and MCP servers now receive a CGROK_SESSION_ID environment variable matching the current session.
 - Relative markdown links can now open existing files in your current working directory when no matching generated media is found.
 - PreToolUse hooks can now rewrite a tool's input before it runs instead of only allowing or denying the call.
 
@@ -878,7 +878,7 @@
 ## Features
 
 - **Subagent spawning** is now bounded; wide fan-outs queue instead of exhausting file descriptors.
-- New `grok du` command shows disk usage of ~/.grok including worktrees and sessions.
+- New `grok du` command shows disk usage of ~/.cgrok including worktrees and sessions.
 - **Tools** now report whether they only read data, enabling safer restricted agents and subagents.
 - **Sandbox workspace** sessions can now limit which bundled skills are advertised via caller config.
 - **Renaming a session** from the dashboard now starts with the current title prefilled for easy editing.
@@ -891,7 +891,7 @@
 ## Bug Fixes
 
 - **Sandbox config** entries ending in /** now correctly grant the parent directory instead of creating a literal ** subdirectory.
-- **Failed alpha/enterprise updates** now suggest the matching GROK_CHANNEL reinstall command.
+- **Failed alpha/enterprise updates** now suggest the matching CGROK_CHANNEL reinstall command.
 - **On Apple Silicon**, grok now installs the native arm64 build even from a Rosetta shell or x86_64 updater.
 - **Skills** that share names with built-in commands now appear alongside them in the slash menu with qualified names.
 - **Notebook** permission rules imported from Claude configs are now ignored with a warning instead of applying broadly.
@@ -1025,7 +1025,7 @@
 
 ## Features
 
-- **GROK_EXTRA_CA_BUNDLE** env var allows adding custom TLS root certificates.
+- **CGROK_EXTRA_CA_BUNDLE** env var allows adding custom TLS root certificates.
 
 ## Bug Fixes
 
@@ -1183,7 +1183,7 @@
 
 - **Plugin subagents** now inherit the parent session’s connected MCP servers (default `mcpInheritance: all`), so `search_tool` / `use_tool` work the same as for local agents. Plugin agents still cannot declare their own MCP servers, hooks, or elevated permission modes.
 - **`!cmd` commands** now allow up to one hour before timing out.
-- **npm package** now installs the native binary under `$GROK_HOME/bin` (honoring the same override as the Rust CLI).
+- **npm package** now installs the native binary under `$CGROK_HOME/bin` (honoring the same override as the Rust CLI).
 - **Startup warnings** now point to `/doctor` for details and fixes.
 - **Dashboard hover and clicks** no longer miss the gaps between items in wide mode.
 - **Shift/Alt+Enter** now inserts a newline while editing a queued prompt.
@@ -1276,7 +1276,7 @@
 
 ## Features
 
-- **Added GROK_CLIPBOARD_NO_OSC52** env var to stop clipboard sequences from appearing as garbage in unsupported terminals.
+- **Added CGROK_CLIPBOARD_NO_OSC52** env var to stop clipboard sequences from appearing as garbage in unsupported terminals.
 - **Scheduled tasks** can now be updated in place; one-time tasks are retired in favor of background commands.
 
 ## Bug Fixes
@@ -1298,7 +1298,7 @@
 
 - **Local shell tools** now see the same environment variables, aliases, and functions as your login shell.
 - **Syntax highlighting** in diffs and the file viewer no longer miscolors strings or comments that span multiple lines.
-- **Global rules** from ~/.grok/rules and compatible vendor homes are now discovered correctly.
+- **Global rules** from ~/.cgrok/rules and compatible vendor homes are now discovered correctly.
 - **Background tasks** that finish after you press Ctrl+C no longer automatically resume the model.
 - **Ctrl+\** out of the dashboard now returns you to the agent you came from.
 - **MCP OAuth logins** now succeed against servers that require the RFC 9207 issuer parameter in the callback.
@@ -1515,7 +1515,7 @@
 - **Dashboard shortcuts** now advertise ? instead of Ctrl+. on terminals that cannot deliver the latter.
 - **Double-clicking** scrollback while Text selection is fold/nav now shows a tip offering Ctrl+Y to enable Word select.
 - **`grok worktree ls`** now works as a short alias for `grok worktree list`.
-- **MCP tool output truncation** can now be set per-repo in `.grok/config.toml`.
+- **MCP tool output truncation** can now be set per-repo in `.cgrok/config.toml`.
 - **Auto-send of queued follow-ups** during task waits can now be enabled fleet-wide via remote settings.
 - **Welcome screen** now offers one-click resume of a recent Claude Code session via ctrl+u.
 
@@ -1556,7 +1556,7 @@
 - **IME text input in Otty** no longer attaches unrelated clipboard images on every character.
 - **Rewind** now fully removes the selected turn from both scrollback and the model's conversation history.
 - **Queued prompts** now abort long blocking waits instead of waiting for the full timeout.
-- **File links and media** now work for worktree sessions under ~/.grok/worktrees/.
+- **File links and media** now work for worktree sessions under ~/.cgrok/worktrees/.
 - **Collapsed Read/Edit tool rows** now show only the filename instead of long absolute paths.
 - **Clipboard copies on Wayland** now succeed even when the terminal loses focus mid-copy.
 - **User messages queued** behind an auto-wake turn are no longer lost when the user presses Ctrl+C.
@@ -1694,7 +1694,7 @@
 - **Try Again** on the free-usage paywall now correctly resubmits after rate-limit retries.
 - **Cursor** now respects your terminal's default blink style instead of always blinking.
 - **Skill commands** in scrollback now highlight only the command name, not the arguments.
-- **Plan files** now default to .grok/plan.md to match Grok conventions.
+- **Plan files** now default to .cgrok/plan.md to match Grok conventions.
 - **LaTeX math** renders correctly for display equations and complex subscripts.
 - **Queue hint** in the terminal no longer shows incorrect bold text on part of the message.
 
@@ -2032,7 +2032,7 @@
 ## Features
 
 - **MCP servers** from host integrations can now be added, replaced, or removed without restarting the session.
-- **Agent-run terminal commands** now set `GROK_AGENT=1` so host tools can tell them apart from interactive shells.
+- **Agent-run terminal commands** now set `CGROK_AGENT=1` so host tools can tell them apart from interactive shells.
 
 ## Bug Fixes
 
@@ -2073,7 +2073,7 @@
 ## Bug Fixes
 
 - **Local MCP servers** now auto-recover after disconnects or session expiry.
-- **OIDC sessions** with XAI_API_KEY present no longer lose refresh on idle.
+- **OIDC sessions** with CGROK_API_KEY present no longer lose refresh on idle.
 - **Inline video previews** now show an install command only when the package manager is on PATH.
 - **list_dir** now reliably shows all immediate child directories even inside large monorepos.
 - **Clicking a model** in the dashboard /model dropdown no longer opens the wrong session.
@@ -2267,7 +2267,7 @@
 
 ## Features
 
-- **Added option** to fully disable the hunk tracker via --hunk-tracker-mode, GROK_HUNK_TRACKER, or config.
+- **Added option** to fully disable the hunk tracker via --hunk-tracker-mode, CGROK_HUNK_TRACKER, or config.
 
 ## Bug Fixes
 
@@ -2512,7 +2512,7 @@
 
 ## Features
 
-- **`grok --debug`** now produces per-session log files under ~/.grok/debug/ even with a leader process.
+- **`grok --debug`** now produces per-session log files under ~/.cgrok/debug/ even with a leader process.
 
 ## Bug Fixes
 
@@ -2750,7 +2750,7 @@
 
 - **Image and video generation** tools now emit structured paths so the pager renders media without regex scraping.
 - **Compaction summaries** now use a more detailed structure that improves recovery after context reset.
-- **image_gen** can now be enabled via the harness model using [features] in config.toml or the GROK_IMAGE_GEN_HARNESS env var.
+- **image_gen** can now be enabled via the harness model using [features] in config.toml or the CGROK_IMAGE_GEN_HARNESS env var.
 - **Improved config refresh** on new sessions from the shell.
 
 ## Bug Fixes
@@ -2765,7 +2765,7 @@
 - **New segments compaction mode** writes per-segment markdown files that the model can read to recover pre-compaction detail.
 - **Claude and Cursor compatibility scanning** (skills, rules, AGENTS.md) can now be toggled individually via env vars or config.toml.
 - **grok inspect** now shows the resolved on/off state and source for every Claude/Cursor compatibility toggle.
-- **Cursor MCP servers and hooks** are now discovered and can be disabled independently via GROK_CURSOR_MCPS_ENABLED / GROK_CURSOR_HOOKS_ENABLED.
+- **Cursor MCP servers and hooks** are now discovered and can be disabled independently via CGROK_CURSOR_MCPS_ENABLED / CGROK_CURSOR_HOOKS_ENABLED.
 
 ## Bug Fixes
 

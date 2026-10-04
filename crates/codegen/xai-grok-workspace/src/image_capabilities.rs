@@ -11,7 +11,7 @@ use tracing::{info, warn};
 /// Default in-image declaration directory (image content tier, matching `/usr/share/grok/bundled-skills`).
 pub const DEFAULT_CAPABILITIES_DIR: &str = "/usr/share/grok/capabilities.d";
 /// Override for tests / local dev / non-Linux hosts.
-pub const CAPABILITIES_DIR_ENV: &str = "GROK_IMAGE_CAPABILITIES_DIR";
+pub const CAPABILITIES_DIR_ENV: &str = "CGROK_IMAGE_CAPABILITIES_DIR";
 /// Re-exported so the reader and the bind reply that carries its output cannot drift on the spelling.
 pub use xai_tool_protocol::IMAGE_CAPABILITIES_V1;
 // The gate and the caps live beside the wire field they bound: every hop that validates the set must apply identical rules

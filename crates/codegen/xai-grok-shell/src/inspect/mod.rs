@@ -220,13 +220,13 @@ pub(crate) struct SkippedRule {
     pub reason: String,
 }
 
-/// Enterprise login-hardening policy resolved from `[grok_com_config]` (TOML and env).
+/// Enterprise login-hardening policy resolved from `[cgrok_com_config]` (TOML and env).
 /// Shown so admins can verify the deployment loaded it.
 /// The team pin is admin policy, not a secret, so it is shown verbatim.
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct LoginPolicyReport {
-    /// Raw `disable_api_key_auth` knob (env `GROK_DISABLE_API_KEY_AUTH`).
+    /// Raw `disable_api_key_auth` knob (env `CGROK_DISABLE_API_KEY_AUTH`).
     pub disable_api_key_auth: Option<bool>,
     /// Configured team pin: single string, list, or null when unset.
     pub force_login_team_uuid: Option<ForceLoginTeam>,
@@ -550,7 +550,7 @@ fn instruction_file_type(file_path: &str, grok_home: &Path, claude_imported: boo
     if path
         .parent()
         .is_some_and(|parent| parent == grok_home.join("rules"))
-        || has_rules_directory(file_path, ".grok")
+        || has_rules_directory(file_path, ".cgrok")
         || has_rules_directory(file_path, ".cursor")
         || (!claude_imported && has_rules_directory(file_path, ".claude"))
     {
@@ -798,16 +798,16 @@ fn permission_policy_report(
     }
 }
 
-/// Resolves the enterprise login-hardening knobs from the merged config (`[grok_com_config]`, the `[auth]` alias, and env overrides).
+/// Resolves the enterprise login-hardening knobs from the merged config (`[cgrok_com_config]`, the `[auth]` alias, and env overrides).
 /// Admins use this to confirm the deployment's auth policy actually loaded.
 fn login_policy_report(config: Option<&crate::agent::config::Config>) -> LoginPolicyReport {
-    let grok_com_config = config
-        .map(|c| c.grok_com_config.clone())
+    let cgrok_com_config = config
+        .map(|c| c.cgrok_com_config.clone())
         .unwrap_or_default();
     LoginPolicyReport {
-        api_key_auth_disabled: grok_com_config.api_key_auth_disabled(),
-        disable_api_key_auth: grok_com_config.disable_api_key_auth,
-        force_login_team_uuid: grok_com_config.force_login_team_uuid,
+        api_key_auth_disabled: cgrok_com_config.api_key_auth_disabled(),
+        disable_api_key_auth: cgrok_com_config.disable_api_key_auth,
+        force_login_team_uuid: cgrok_com_config.force_login_team_uuid,
     }
 }
 
@@ -1229,8 +1229,8 @@ fn list_config_sources(cwd: &Path) -> ConfigSources {
         }
     }
 
-    let inline_env = crate::config::GROK_CONFIG_ENV;
-    let path_env = crate::config::GROK_CONFIG_PATH_ENV;
+    let inline_env = crate::config::CGROK_CONFIG_ENV;
+    let path_env = crate::config::CGROK_CONFIG_PATH_ENV;
     if let Some(overlay) = crate::config::resolved_env_overlay() {
         if !overlay.sections.is_empty() {
             let path = match overlay.source {
@@ -2014,7 +2014,7 @@ mod tests {
             ("claude", "/repo/.claude/rules/team.md"),
             ("claude", r"C:\repo\.claude\rules\team.md"),
         ] {
-            let file_type = instruction_file_type(path, Path::new("/home/user/.grok"), false);
+            let file_type = instruction_file_type(path, Path::new("/home/user/.cgrok"), false);
             assert_eq!(file_type, "rules");
             assert_eq!(
                 instruction_compat_status(&Some(vendor.to_owned()), file_type, &report),
@@ -2022,9 +2022,12 @@ mod tests {
             );
         }
 
-        for path in ["/repo/.grok/rules/team.md", r"C:\repo\.grok\rules\team.md"] {
+        for path in [
+            "/repo/.cgrok/rules/team.md",
+            r"C:\repo\.cgrok\rules\team.md",
+        ] {
             assert_eq!(
-                instruction_file_type(path, Path::new("/home/user/.grok"), false),
+                instruction_file_type(path, Path::new("/home/user/.cgrok"), false),
                 "rules"
             );
         }
@@ -2033,7 +2036,7 @@ mod tests {
             r"C:\repo\.cursor\rules\team.md",
         ] {
             assert_eq!(
-                instruction_file_type(path, Path::new("/home/user/.grok"), true),
+                instruction_file_type(path, Path::new("/home/user/.cgrok"), true),
                 "rules"
             );
         }
@@ -2041,7 +2044,7 @@ mod tests {
             "/repo/.claude/rules/team.md",
             r"C:\repo\.claude\rules\team.md",
         ] {
-            let file_type = instruction_file_type(path, Path::new("/home/user/.grok"), true);
+            let file_type = instruction_file_type(path, Path::new("/home/user/.cgrok"), true);
             assert_eq!(file_type, "agents_md");
             assert_eq!(
                 instruction_compat_status(&Some("claude".to_owned()), file_type, &report),
@@ -2053,7 +2056,7 @@ mod tests {
             r"C:\repo\.cursor\ruleset\team.md",
         ] {
             assert_eq!(
-                instruction_file_type(path, Path::new("/home/user/.grok"), false),
+                instruction_file_type(path, Path::new("/home/user/.cgrok"), false),
                 "agents_md"
             );
         }
@@ -2070,7 +2073,7 @@ mod tests {
             ));
         }
         for path in [
-            "/repo/config/.grok/rules/project.md",
+            "/repo/config/.cgrok/rules/project.md",
             "/repo/config/src/AGENTS.md",
         ] {
             assert!(matches!(
@@ -2185,7 +2188,7 @@ mod tests {
     #[test]
     fn requirements_layer_contributes_requires_non_empty_post_strip_table() {
         // A `fail_closed`-only file is kept by the loader but with an empty post-strip table, so it must not count as contributing
-        let path = "/home/u/.grok/requirements.toml";
+        let path = "/home/u/.cgrok/requirements.toml";
         let layer = |v| crate::config::RequirementsLayer {
             value: v,
             source: crate::config::RequirementsSource::File(std::path::PathBuf::from(path)),
@@ -2412,7 +2415,7 @@ mod tests {
             ownership: PolicyLayerOwnership::Admin,
         };
         ms.non_managed_hooks = PolicyPin::Disabled {
-            source: "/Users/me/.grok/requirements.toml".into(),
+            source: "/Users/me/.cgrok/requirements.toml".into(),
             ownership: PolicyLayerOwnership::User,
         };
         let PermissionPolicyReport { enforced, .. } = permission_policy_report(&ms, None);
@@ -2432,7 +2435,7 @@ mod tests {
                 {
                     "setting": "nonManagedHooks",
                     "enabled": false,
-                    "source": "/Users/me/.grok/requirements.toml",
+                    "source": "/Users/me/.cgrok/requirements.toml",
                 },
             ])
         );
@@ -2551,24 +2554,24 @@ mod tests {
 
     #[test]
     fn skill_entry_source_maps_scopes() {
-        let s = skill_fixture("a", "/repo/.grok/skills/a/SKILL.md", SkillScope::Local);
+        let s = skill_fixture("a", "/repo/.cgrok/skills/a/SKILL.md", SkillScope::Local);
         assert!(matches!(
             skill_entry_source(&s),
             ConfigSource::Project { .. }
         ));
 
-        let s = skill_fixture("b", "/repo/.grok/skills/b/SKILL.md", SkillScope::Repo);
+        let s = skill_fixture("b", "/repo/.cgrok/skills/b/SKILL.md", SkillScope::Repo);
         assert!(matches!(
             skill_entry_source(&s),
             ConfigSource::Project { .. }
         ));
 
-        let s = skill_fixture("c", "/home/u/.grok/skills/c/SKILL.md", SkillScope::User);
+        let s = skill_fixture("c", "/home/u/.cgrok/skills/c/SKILL.md", SkillScope::User);
         assert!(matches!(skill_entry_source(&s), ConfigSource::User { .. }));
 
         let s = skill_fixture(
             "d",
-            "/home/u/.grok/server-skills/d/SKILL.md",
+            "/home/u/.cgrok/server-skills/d/SKILL.md",
             SkillScope::Server,
         );
         assert!(matches!(
@@ -2576,7 +2579,11 @@ mod tests {
             ConfigSource::Server { .. }
         ));
 
-        let s = skill_fixture("e", "/home/u/.grok/bundled/e/SKILL.md", SkillScope::Bundled);
+        let s = skill_fixture(
+            "e",
+            "/home/u/.cgrok/bundled/e/SKILL.md",
+            SkillScope::Bundled,
+        );
         assert!(matches!(
             skill_entry_source(&s),
             ConfigSource::Bundled { .. }
@@ -2686,7 +2693,7 @@ mod tests {
             )
             .unwrap();
         };
-        // Test-unique names: discovery also reads this machine's real ~/.grok dirs.
+        // Test-unique names: discovery also reads this machine's real ~/.cgrok dirs.
         let extra = tempfile::tempdir().unwrap();
         write(&extra.path().join("inspect-cfg-extra"), "inspect-cfg-extra");
         write(

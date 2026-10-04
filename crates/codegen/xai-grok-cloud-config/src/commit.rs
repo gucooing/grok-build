@@ -61,11 +61,11 @@ fn identity_still_current(
     }
 }
 
-pub fn resolve_disk_auth(grok_com_config: Option<GrokComConfig>) -> Option<GrokAuth> {
+pub fn resolve_disk_auth(cgrok_com_config: Option<GrokComConfig>) -> Option<GrokAuth> {
     let grok_home = xai_grok_config::grok_home();
     AuthManager::new_with_proxy_base_url(
         &grok_home,
-        grok_com_config.unwrap_or_default(),
+        cgrok_com_config.unwrap_or_default(),
         xai_grok_config::EndpointsConfig::from_effective_config().proxy_url(),
     )
     .current()

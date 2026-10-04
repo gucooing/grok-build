@@ -66,12 +66,12 @@ pub(crate) fn should_open_at_startup(gate: StartupGate) -> bool {
 /// Returns whether a session-less startup is about to mint a grok.com session
 pub(crate) fn is_session_pending(
     has_session: bool,
-    grok_com_config: &xai_grok_login::GrokComConfig,
+    cgrok_com_config: &xai_grok_login::GrokComConfig,
 ) -> bool {
     if has_session {
         return false;
     }
-    grok_com_config.auth_provider_command.is_some()
+    cgrok_com_config.auth_provider_command.is_some()
 }
 /// Opens the gate at startup once [`should_open_at_startup`] holds; a later session re-resolves via [`OtelGate::resolve`].
 pub(crate) fn open_at_startup() {

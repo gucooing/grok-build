@@ -80,7 +80,7 @@ pub(crate) enum PromptGate {
 
 /// Pre-release stopgap: the daemon runs every hub tool call unasked (no permission cards) until
 /// sandboxing lands. The sandbox guest keeps the opt-in its plane already uses
-/// (`GROK_HITL_PERMISSION_LIVE`).
+/// (`CGROK_HITL_PERMISSION_LIVE`).
 pub fn approval_gate_for(host_kind: WorkspaceHostKind) -> ToolApprovalGate {
     resolve_gate(host_kind, hitl_permission_live_enabled())
 }

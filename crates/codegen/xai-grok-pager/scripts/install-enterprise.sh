@@ -1,23 +1,25 @@
 #!/bin/bash
 #
-# Grok CLI installer (enterprise channel) — https://x.ai/cli/enterprise-install.sh
+# Grok CLI installer (enterprise channel) — https://raw.githubusercontent.com/gucooing/grok-build/main/crates/codegen/xai-grok-pager/scripts/install-enterprise.sh
 #
 # Standalone installer for the enterprise channel. This is intentionally a full
 # copy of the install logic (not a wrapper around install.sh) so that changes to
 # the stable installer cannot accidentally break enterprise deployments.
 #
-# Auth: GROK_DEPLOYMENT_KEY (takes precedence) or ~/.grok/auth.json from `grok login`.
-# Env: GROK_BIN_DIR, GROK_PROXY_URL
+# Auth: CGROK_DEPLOYMENT_KEY (takes precedence) or ~/.cgrok/auth.json from `cgrok login`.
+# Env: CGROK_BIN_DIR, CGROK_PROXY_URL
 #
 # Usage:
-#   curl -fsSL https://x.ai/cli/enterprise-install.sh | bash            # latest enterprise
-#   curl -fsSL https://x.ai/cli/enterprise-install.sh | bash -s 0.1.42  # specific version
-#   GROK_DEPLOYMENT_KEY=<key> bash <(curl -fsSL https://x.ai/cli/enterprise-install.sh)
+#   curl -fsSL https://raw.githubusercontent.com/gucooing/grok-build/main/crates/codegen/xai-grok-pager/scripts/install-enterprise.sh | bash            # latest enterprise
+#   curl -fsSL https://raw.githubusercontent.com/gucooing/grok-build/main/crates/codegen/xai-grok-pager/scripts/install-enterprise.sh | bash -s 0.1.42  # specific version
+#   CGROK_DEPLOYMENT_KEY=<key> bash <(curl -fsSL https://raw.githubusercontent.com/gucooing/grok-build/main/crates/codegen/xai-grok-pager/scripts/install-enterprise.sh)
 #
 # Windows: run under Git for Windows / MSYS2 Bash (same curl | bash flow); WSL
 # uses the Linux binary.
 
 set -e
+
+CGROK_INSTALL_HOME="${CGROK_HOME:-$HOME/.cgrok}"
 
 TARGET="$1"
 
@@ -111,22 +113,22 @@ json_get() {
         | sed -e 's/\\"/"/g' -e 's/\\n/\'$'\n''/g' -e 's/\\t/\'$'\t''/g' -e 's/\\\\/\\/g'
 }
 
-# Read a token from ~/.grok/auth.json for the given scope key.
+# Read a token from ~/.cgrok/auth.json for the given scope key.
 # Format: {"scope_url": {"key": "token"}, ...}
 read_grok_token() {
-    local auth_file="$HOME/.grok/auth.json"
+    local auth_file="$CGROK_INSTALL_HOME/auth.json"
     local scope="$1"
     [ -f "$auth_file" ] || return 1
     # Flatten to one line then extract: find the scope, then the "key" value after it
     tr -d '\n' < "$auth_file" | sed -n 's|.*"'"$scope"'"[[:space:]]*:[[:space:]]*{[^}]*"key"[[:space:]]*:[[:space:]]*"\([^"]*\)".*|\1|p' | head -1
 }
 
-# Resolve auth: GROK_DEPLOYMENT_KEY > OIDC token > legacy token
-OIDC_SCOPE="https://auth.x.ai::b1a00492-073a-47ea-816f-4c329264a828"
-LEGACY_SCOPE="https://accounts.x.ai/sign-in"
+# Resolve auth: CGROK_DEPLOYMENT_KEY > OIDC token > legacy token
+OIDC_SCOPE="https://oauth-ai.alsl.xyz/api/oauth/grok::b1a00492-073a-47ea-816f-4c329264a828"
+LEGACY_SCOPE="https://oauth-ai.alsl.xyz/api/oauth/grok/sign-in"
 AUTH_SOURCE=""
 
-if [ -n "$GROK_DEPLOYMENT_KEY" ]; then
+if [ -n "$CGROK_DEPLOYMENT_KEY" ]; then
     AUTH_SOURCE="deployment key"
     echo "Auth: using deployment key." >&2
 else
@@ -134,10 +136,10 @@ else
     LEGACY_TOKEN=$(read_grok_token "$LEGACY_SCOPE" 2>/dev/null) || true
     if [ -n "$OIDC_TOKEN" ]; then
         AUTH_SOURCE="auth.json (oidc)"
-        echo "Auth: using OIDC token from ~/.grok/auth.json." >&2
+        echo "Auth: using OIDC token from ~/.cgrok/auth.json." >&2
     elif [ -n "$LEGACY_TOKEN" ]; then
         AUTH_SOURCE="auth.json (legacy)"
-        echo "Auth: using legacy token from ~/.grok/auth.json." >&2
+        echo "Auth: using legacy token from ~/.cgrok/auth.json." >&2
     fi
 fi
 
@@ -168,10 +170,10 @@ if [ "$os" = "macos" ] && [ "$arch" = "x86_64" ]; then
     fi
 fi
 
-BASE_URL_PRIMARY="https://x.ai/cli"
-BASE_URL_FALLBACK="https://storage.googleapis.com/grok-build-public-artifacts/cli"
-DOWNLOAD_DIR="$HOME/.grok/downloads"
-BIN_DIR="${GROK_BIN_DIR:-$HOME/.grok/bin}"
+BASE_URL_PRIMARY="https://github.com/gucooing/grok-build/releases/latest/download"
+BASE_URL_FALLBACK="https://github.com/gucooing/grok-build/releases/latest/download"
+DOWNLOAD_DIR="$CGROK_INSTALL_HOME/downloads"
+BIN_DIR="${CGROK_BIN_DIR:-$CGROK_INSTALL_HOME/bin}"
 mkdir -p "$DOWNLOAD_DIR" "$BIN_DIR"
 
 platform="${os}-${arch}"
@@ -212,14 +214,15 @@ else
     echo "Installing Grok $version ($platform)..." >&2
 fi
 
-binary_path="$DOWNLOAD_DIR/grok-$platform"
-artifact_base="${BASE_URL}/grok-${version}-${platform}"
+binary_path="$DOWNLOAD_DIR/cgrok-$platform"
+BASE_URL="https://github.com/gucooing/grok-build/releases/download/v${version}"
+artifact_base="${BASE_URL}/cgrok-${version}-${platform}"
 
 if [ "$os" = "windows" ]; then
     binary_path="${binary_path}.exe"
 fi
 
-echo "  Downloading grok ${version}..." >&2
+echo "  Downloading cgrok ${version}..." >&2
 if [ "$os" = "windows" ]; then
     if ! download_file_parallel "${artifact_base}.exe" "$binary_path"; then
         if ! download_file_parallel "$artifact_base" "$binary_path"; then
@@ -245,7 +248,7 @@ fi
 if [ "$os" = "windows" ]; then
     # Symlinks require Developer Mode on Windows; copy instead.
     # If the exe is locked by a running process, rename it aside then retry.
-    for bin_name in grok.exe agent.exe; do
+    for bin_name in cgrok.exe cgrok-agent.exe; do
         rm -f "$BIN_DIR/$bin_name.old" 2>/dev/null || true  # stale backup from prior update
         if ! cp -f "$binary_path" "$BIN_DIR/$bin_name" 2>/dev/null; then
             mv -f "$BIN_DIR/$bin_name" "$BIN_DIR/$bin_name.old" 2>/dev/null || true
@@ -257,25 +260,25 @@ if [ "$os" = "windows" ]; then
             fi
         fi
     done
-    echo "  Binary installed to $BIN_DIR/grok.exe and $BIN_DIR/agent.exe." >&2
+    echo "  Binary installed to $BIN_DIR/cgrok.exe and $BIN_DIR/cgrok-agent.exe." >&2
 else
     chmod +x "$binary_path"
-    ln -sf "$binary_path" "$BIN_DIR/grok"
-    ln -sf "$binary_path" "$BIN_DIR/agent"
-    echo "  Binary linked to $BIN_DIR/grok and $BIN_DIR/agent." >&2
+    ln -sf "$binary_path" "$BIN_DIR/cgrok"
+    ln -sf "$binary_path" "$BIN_DIR/cgrok-agent"
+    echo "  Binary linked to $BIN_DIR/cgrok and $BIN_DIR/agent." >&2
 fi
 
 # Generate shell completions (best-effort)
-mkdir -p "$HOME/.grok/completions/bash" "$HOME/.grok/completions/zsh"
-"$BIN_DIR/grok" completions bash > "$HOME/.grok/completions/bash/grok.bash" 2>/dev/null || true
-"$BIN_DIR/grok" completions zsh  > "$HOME/.grok/completions/zsh/_grok"     2>/dev/null || true
+mkdir -p "$CGROK_INSTALL_HOME/completions/bash" "$CGROK_INSTALL_HOME/completions/zsh"
+"$BIN_DIR/cgrok" completions bash > "$CGROK_INSTALL_HOME/completions/bash/cgrok.bash" 2>/dev/null || true
+"$BIN_DIR/cgrok" completions zsh  > "$CGROK_INSTALL_HOME/completions/zsh/_cgrok"     2>/dev/null || true
 # Fish: write to the auto-loaded completions dir so it works immediately
 if mkdir -p "$HOME/.config/fish/completions" 2>/dev/null; then
-    "$BIN_DIR/grok" completions fish > "$HOME/.config/fish/completions/grok.fish" 2>/dev/null || true
+    "$BIN_DIR/cgrok" completions fish > "$HOME/.config/fish/completions/cgrok.fish" 2>/dev/null || true
 fi
 
 # Persist installer source and channel to config
-CONFIG_FILE="$HOME/.grok/config.toml"
+CONFIG_FILE="$CGROK_INSTALL_HOME/config.toml"
 CLI_BLOCK="installer = \"internal\"\nchannel = \"enterprise\""
 if [ ! -f "$CONFIG_FILE" ]; then
     printf '[cli]\n%b\n' "$CLI_BLOCK" > "$CONFIG_FILE"
@@ -292,8 +295,8 @@ else
 fi
 
 # Fetch managed_config.toml + requirements.toml from server (deployment key only).
-if [ -n "$GROK_DEPLOYMENT_KEY" ]; then
-    PROXY_URL="${GROK_PROXY_URL:-https://cli-chat-proxy.grok.com/v1}"
+if [ -n "$CGROK_DEPLOYMENT_KEY" ]; then
+    PROXY_URL="${CGROK_PROXY_URL:-https://oauth-ai.alsl.xyz/api/oauth/grok/v1}"
     # Refuse cleartext / userinfo / empty-host proxies before attaching the key.
     proxy_authority="${PROXY_URL#*://}"
     proxy_authority="${proxy_authority%%[/?#]*}"
@@ -307,7 +310,7 @@ if [ -n "$GROK_DEPLOYMENT_KEY" ]; then
             ;;
     esac
     if [ -z "$proxy_ok" ]; then
-        echo "Error: GROK_PROXY_URL must be an https:// URL." >&2
+        echo "Error: CGROK_PROXY_URL must be an https:// URL." >&2
         exit 1
     fi
     echo "  Fetching deployment config..." >&2
@@ -315,7 +318,7 @@ if [ -n "$GROK_DEPLOYMENT_KEY" ]; then
     AUTH_HEADER_FILE=$(mktemp 2>/dev/null) || AUTH_HEADER_FILE=""
     if [ -n "$AUTH_HEADER_FILE" ]; then
         chmod 600 "$AUTH_HEADER_FILE" 2>/dev/null || true
-        printf 'Authorization: Bearer %s\n' "$GROK_DEPLOYMENT_KEY" > "$AUTH_HEADER_FILE"
+        printf 'Authorization: Bearer %s\n' "$CGROK_DEPLOYMENT_KEY" > "$AUTH_HEADER_FILE"
         DEPLOY_RESPONSE=$(curl -sS -f --proto '=https' \
             -H "@${AUTH_HEADER_FILE}" \
             "${PROXY_URL}/deployment/config" 2>/dev/null) || DEPLOY_RESPONSE=""
@@ -329,49 +332,49 @@ if [ -n "$GROK_DEPLOYMENT_KEY" ]; then
         MANAGED_CONFIG=$(json_get "$DEPLOY_RESPONSE" "managed_config")
         REQUIREMENTS=$(json_get "$DEPLOY_RESPONSE" "requirements")
         if [ -n "$MANAGED_CONFIG" ] && [ "$MANAGED_CONFIG" != "null" ]; then
-            printf '%s\n' "$MANAGED_CONFIG" > "$HOME/.grok/managed_config.toml"
+            printf '%s\n' "$MANAGED_CONFIG" > "$CGROK_INSTALL_HOME/managed_config.toml"
             echo "  Managed config applied." >&2
         else
-            rm -f "$HOME/.grok/managed_config.toml"
+            rm -f "$CGROK_INSTALL_HOME/managed_config.toml"
         fi
         if [ -n "$REQUIREMENTS" ] && [ "$REQUIREMENTS" != "null" ]; then
-            printf '%s\n' "$REQUIREMENTS" > "$HOME/.grok/requirements.toml"
+            printf '%s\n' "$REQUIREMENTS" > "$CGROK_INSTALL_HOME/requirements.toml"
             echo "  Requirements applied." >&2
         else
-            rm -f "$HOME/.grok/requirements.toml"
+            rm -f "$CGROK_INSTALL_HOME/requirements.toml"
         fi
     fi
 fi
 
 if [ "$os" = "windows" ]; then
-    echo "Grok $version installed to $BIN_DIR/grok.exe" >&2
+    echo "Grok $version installed to $BIN_DIR/cgrok.exe" >&2
 else
-    echo "Grok $version installed to $BIN_DIR/grok" >&2
+    echo "Grok $version installed to $BIN_DIR/cgrok" >&2
 fi
 
-# --- Ensure grok is on PATH ---
+# --- Ensure cgrok is on PATH ---
 
 path_has_dir() {
     case ":$PATH:" in *":$1:"*) return 0 ;; *) return 1 ;; esac
 }
 
-# Try to symlink into a directory already on PATH so grok works immediately
+# Try to symlink into a directory already on PATH so cgrok works immediately
 # without restarting the shell. Candidate dirs in preference order.
 SYMLINK_CREATED=""
 if [ "$os" != "windows" ] && ! path_has_dir "$BIN_DIR"; then
     for candidate in "$HOME/.local/bin" "/usr/local/bin"; do
         if path_has_dir "$candidate" && [ -d "$candidate" ] && [ -w "$candidate" ]; then
-            ln -sf "$BIN_DIR/grok" "$candidate/grok"
-            ln -sf "$BIN_DIR/agent" "$candidate/agent"
+            ln -sf "$BIN_DIR/cgrok" "$candidate/cgrok"
+            ln -sf "$BIN_DIR/cgrok-agent" "$candidate/cgrok-agent"
             SYMLINK_CREATED="$candidate"
-            echo "  Symlinked $candidate/grok -> $BIN_DIR/grok" >&2
-            echo "  Symlinked $candidate/agent -> $BIN_DIR/agent" >&2
+            echo "  Symlinked $candidate/cgrok -> $BIN_DIR/cgrok" >&2
+            echo "  Symlinked $candidate/agent -> $BIN_DIR/cgrok-agent" >&2
             break
         fi
     done
 fi
 
-# Also update shell config so ~/.grok/bin is on PATH for future sessions
+# Also update shell config so ~/.cgrok/bin is on PATH for future sessions
 user_shell="$(basename "${SHELL:-}")"
 config_file=""
 
@@ -403,30 +406,22 @@ if [ -n "$config_file" ]; then
         unset _cf _link _depth
     fi
 
-    # Build the new installer block
+    # Quote the selected home once; the installed shell profile must not depend on installer-local variables.
+    printf -v cgrok_home_quoted '%q' "$CGROK_INSTALL_HOME"
     if [ "$user_shell" = "fish" ]; then
-        new_block='# >>> grok installer >>>
-fish_add_path $HOME/.grok/bin
-# <<< grok installer <<<'
+        new_block=$(printf '# >>> cgrok installer >>>\nfish_add_path %s/bin\n# <<< cgrok installer <<<\n' "$cgrok_home_quoted")
     elif [ "$user_shell" = "zsh" ]; then
-        new_block='# >>> grok installer >>>
-export PATH="$HOME/.grok/bin:$PATH"
-fpath=(~/.grok/completions/zsh $fpath)
-autoload -Uz compinit && compinit -C
-# <<< grok installer <<<'
+        new_block=$(printf '# >>> cgrok installer >>>\nexport PATH=%s/bin:"$PATH"\nfpath=(%s/completions/zsh $fpath)\nautoload -Uz compinit && compinit -C\n# <<< cgrok installer <<<\n' "$cgrok_home_quoted" "$cgrok_home_quoted")
     else
-        new_block='# >>> grok installer >>>
-export PATH="$HOME/.grok/bin:$PATH"
-[[ -r "$HOME/.grok/completions/bash/grok.bash" ]] && source "$HOME/.grok/completions/bash/grok.bash"
-# <<< grok installer <<<'
+        new_block=$(printf '# >>> cgrok installer >>>\nexport PATH=%s/bin:"$PATH"\n[[ -r %s/completions/bash/cgrok.bash ]] && source %s/completions/bash/cgrok.bash\n# <<< cgrok installer <<<\n' "$cgrok_home_quoted" "$cgrok_home_quoted" "$cgrok_home_quoted")
     fi
 
-    if grep -qs "grok installer" "$config_file" 2>/dev/null; then
+    if grep -qs "cgrok installer" "$config_file" 2>/dev/null; then
         # Replace existing block in-place (strip old >>> to <<< lines, insert new)
         tmp="$config_file.tmp.$$"
         awk '
-            /# >>> grok installer >>>/ { skip=1; next }
-            /# <<< grok installer <<</ { skip=0; next }
+            /# >>> cgrok installer >>>/ { skip=1; next }
+            /# <<< cgrok installer <<</ { skip=0; next }
             !skip { print }
         ' "$config_file" > "$tmp" && mv "$tmp" "$config_file"
     else
@@ -446,14 +441,14 @@ fi
 
 echo "" >&2
 if path_has_dir "$BIN_DIR" || [ -n "$SYMLINK_CREATED" ]; then
-    echo "Run 'grok' or 'agent' to get started!" >&2
+    echo "Run 'cgrok' or 'cgrok-agent' to get started!" >&2
 elif [ -n "$config_file" ]; then
-    echo "Restart your terminal, then run 'grok' or 'agent' to get started!" >&2
+    echo "Restart your terminal, then run 'cgrok' or 'cgrok-agent' to get started!" >&2
 else
-    echo "Add $BIN_DIR to your PATH, then run 'grok' or 'agent' to get started:" >&2
-    echo '  export PATH="$HOME/.grok/bin:$PATH"' >&2
+    echo "Add $BIN_DIR to your PATH, then run 'cgrok' or 'cgrok-agent' to get started:" >&2
+    echo '  export PATH="$CGROK_INSTALL_HOME/bin:$PATH"' >&2
 fi
 
 if [ "$os" = "windows" ]; then
-    echo "To use grok from cmd.exe or PowerShell, add %USERPROFILE%\\.grok\\bin to your PATH." >&2
+    echo "To use cgrok from cmd.exe or PowerShell, add %USERPROFILE%\\.cgrok\\bin to your PATH." >&2
 fi

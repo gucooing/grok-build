@@ -326,16 +326,16 @@ impl acp::Agent for MvpAgent {
             }),
             ),
         );
-        if !self.cfg.borrow().grok_com_config.api_key_auth_disabled()
+        if !self.cfg.borrow().cgrok_com_config.api_key_auth_disabled()
             && auth_method::read_xai_api_key_env().is_err()
             && let Some(api_key) = xai_grok_login::read_api_key(
                 &crate::util::grok_home::grok_home(),
             )
         {
             xai_grok_login::auth_method::set_runtime_xai_api_key(&api_key);
-            tracing::info!("auth: loaded API key from auth.json (xai::api_key scope)");
+            tracing::info!("auth: loaded API key from auth.json (cgrok::api_key scope)");
             xai_grok_telemetry::unified_log::info(
-                "auth: loaded API key from auth.json (xai::api_key scope)",
+                "auth: loaded API key from auth.json (cgrok::api_key scope)",
                 None,
                 None,
             );
@@ -343,11 +343,11 @@ impl acp::Agent for MvpAgent {
         let disable_api_key_auth = self
             .cfg
             .borrow()
-            .grok_com_config
+            .cgrok_com_config
             .api_key_auth_disabled();
         {
             let cfg = self.cfg.borrow();
-            let gc = &cfg.grok_com_config;
+            let gc = &cfg.cgrok_com_config;
             if disable_api_key_auth || gc.force_login_team_uuid.is_some() {
                 xai_grok_telemetry::unified_log::info(
                     "auth: enterprise login policy active",
@@ -362,7 +362,7 @@ impl acp::Agent for MvpAgent {
                 );
             }
         }
-        let preferred_method_early = self.cfg.borrow().grok_com_config.preferred_method;
+        let preferred_method_early = self.cfg.borrow().cgrok_com_config.preferred_method;
         let xai_api_base_url = self.cfg.borrow().endpoints.xai_api_base_url.clone();
         let has_byok = self
             .models_manager
@@ -420,11 +420,11 @@ impl acp::Agent for MvpAgent {
             enterprise_oidc_issuer,
         ) = {
             let cfg = self.cfg.borrow();
-            let issuer = cfg.grok_com_config.oidc.as_ref().map(|o| o.issuer.clone());
+            let issuer = cfg.cgrok_com_config.oidc.as_ref().map(|o| o.issuer.clone());
             (
-                cfg.grok_com_config.auth_provider_label.clone(),
-                cfg.grok_com_config.auth_provider_command.is_some(),
-                cfg.grok_com_config.oidc.is_some(),
+                cfg.cgrok_com_config.auth_provider_label.clone(),
+                cfg.cgrok_com_config.auth_provider_command.is_some(),
+                cfg.cgrok_com_config.oidc.is_some(),
                 issuer,
             )
         };
@@ -594,7 +594,7 @@ impl acp::Agent for MvpAgent {
                 .auth_methods(auth_methods)
                 .meta({
                     let metadata = crate::util::parse_json_object_env(
-                        "GROK_AGENT_METADATA",
+                        "CGROK_AGENT_METADATA",
                     );
                     serde_json::json!({
                     "grokShell": true,
@@ -642,7 +642,7 @@ impl acp::Agent for MvpAgent {
             None,
             Some(serde_json::json!({"method": arguments.method_id.0.as_ref()})),
         );
-        if let Some(preferred) = self.cfg.borrow().grok_com_config.preferred_method {
+        if let Some(preferred) = self.cfg.borrow().cgrok_com_config.preferred_method {
             let kind = auth_method::AuthMethodKind::from_id(&arguments.method_id);
             let allowed = match preferred {
                 xai_grok_login::PreferredAuthMethod::ApiKey => kind.is_api_key(),
@@ -668,7 +668,7 @@ impl acp::Agent for MvpAgent {
         }
         match arguments.method_id.0.as_ref() {
             auth_method::XAI_API_KEY_METHOD_ID => {
-                if self.cfg.borrow().grok_com_config.api_key_auth_disabled() {
+                if self.cfg.borrow().cgrok_com_config.api_key_auth_disabled() {
                     emit_login_span(false, "api_key", None, Some("disabled_by_admin"));
                     return Err(
                         acp::Error::auth_required()
@@ -700,7 +700,7 @@ impl acp::Agent for MvpAgent {
                         return Err(
                             acp::Error::auth_required()
                                 .data(
-                                    "Set XAI_API_KEY or add api_key/env_key to config.toml.",
+                                    "Set CGROK_API_KEY or add api_key/env_key to config.toml.",
                                 ),
                         );
                     }
@@ -824,8 +824,8 @@ impl acp::Agent for MvpAgent {
                 self.spawn_post_auth_settings(auth_for_settings);
                 Ok(self.auth_response_with_meta())
             }
-            auth_method::GROK_COM_METHOD_ID | auth_method::OIDC_METHOD_ID => {
-                let grok_ctx = self.auth_manager.grok_com_config();
+            auth_method::CGROK_COM_METHOD_ID | auth_method::OIDC_METHOD_ID => {
+                let grok_ctx = self.auth_manager.cgrok_com_config();
                 let auth_meta = AuthRequestMeta::from_json(arguments.meta.as_ref());
                 tracing::info!(
                     method = arguments.method_id.0.as_ref(),

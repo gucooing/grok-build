@@ -302,7 +302,7 @@ pub async fn connect_via_leader(
         .client_identifier
         .as_deref()
         .unwrap_or(HEADLESS_CLIENT_TYPE);
-    let env_urls = xai_grok_shell::leader::LeaderEnvUrls::from(&agent_config.grok_com_config);
+    let env_urls = xai_grok_shell::leader::LeaderEnvUrls::from(&agent_config.cgrok_com_config);
     let capabilities = ClientCapabilities {
         yolo_mode: flags.default_yolo_mode,
         auto_mode: flags.default_auto_mode && !flags.default_yolo_mode,
@@ -342,7 +342,7 @@ pub async fn connect_via_leader(
     )?;
     let auth_manager = std::sync::Arc::new(xai_grok_login::AuthManager::new_with_proxy_base_url(
         &xai_grok_shell::util::grok_home::grok_home(),
-        agent_config.grok_com_config.clone(),
+        agent_config.cgrok_com_config.clone(),
         agent_config.endpoints.proxy_url(),
     ));
     set_identity(ProcessIdentity {
@@ -902,9 +902,9 @@ mod tests {
     /// on a meaningful new code path.
     #[test]
     fn startup_auth_xai_api_key_not_first_still_requires_login() {
-        use xai_grok_shell::agent::auth_method::{GROK_COM_METHOD_ID, XAI_API_KEY_METHOD_ID};
+        use xai_grok_shell::agent::auth_method::{CGROK_COM_METHOD_ID, XAI_API_KEY_METHOD_ID};
         let methods = vec![
-            make_auth_method(GROK_COM_METHOD_ID, "Grok", None),
+            make_auth_method(CGROK_COM_METHOD_ID, "Grok", None),
             make_auth_method(XAI_API_KEY_METHOD_ID, "xai.api_key", None),
         ];
         let (needs, _, _, _) = startup_auth_metadata(&methods);

@@ -17,10 +17,10 @@ use crate::error::VoiceError;
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum VoiceAuthError {
     #[error(
-        "voice needs an xAI credential for this account: sign in with an xAI login or set XAI_API_KEY"
+        "voice needs an xAI credential for this account: sign in with an xAI login or set CGROK_API_KEY"
     )]
     ForeignSession,
-    #[error("not signed in — run `grok login`, set XAI_API_KEY, or set a model api_key/env_key")]
+    #[error("not signed in — run `grok login`, set CGROK_API_KEY, or set a model api_key/env_key")]
     NotSignedIn,
 }
 
@@ -39,7 +39,7 @@ pub(crate) async fn require_bearer(auth: &SharedVoiceAuth) -> Result<String, Voi
 }
 
 /// A fixed bearer that never refreshes.
-/// Used by the standalone `voice-probe` binary and tests, where there is no `AuthManager`, only a raw `XAI_API_KEY`.
+/// Used by the standalone `voice-probe` binary and tests, where there is no `AuthManager`, only a raw `CGROK_API_KEY`.
 pub struct StaticVoiceAuth(pub String);
 
 impl std::fmt::Debug for StaticVoiceAuth {

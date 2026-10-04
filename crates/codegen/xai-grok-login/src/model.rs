@@ -9,10 +9,10 @@ pub const TOKEN_TTL: Duration = Duration::days(30);
 const DEFAULT_EARLY_INVALIDATION_SECS: u64 = 300; // 5 minutes
 
 /// Legacy auth.json scope key. Fallback for old devbox auth files.
-pub(super) const LEGACY_SCOPE: &str = "https://accounts.x.ai/sign-in";
+pub(super) const LEGACY_SCOPE: &str = "https://oauth-ai.alsl.xyz/api/oauth/grok/sign-in";
 
 /// auth.json scope key for plain API key auth (desktop login, `grok login --api-key`).
-pub(super) const API_KEY_SCOPE: &str = "xai::api_key";
+pub(super) const API_KEY_SCOPE: &str = "cgrok::api_key";
 
 const BLOCKED_REASON_NO_LOGS: &str = "BLOCKED_REASON_NO_LOGS";
 const BLOCKED_REASON_NO_LOGS_MODERATED: &str = "BLOCKED_REASON_NO_LOGS_MODERATED";
@@ -150,7 +150,7 @@ impl GrokAuth {
             .num_seconds()
     }
 
-    /// `true` when the token comes from a first-party xAI account. That is either an OIDC login against https://auth.x.ai (or the local-dev equivalent), or an external auth provider declaring an xAI issuer.
+    /// `true` when the token comes from a first-party xAI account. That is either an OIDC login against https://oauth-ai.alsl.xyz/api/oauth/grok (or the local-dev equivalent), or an external auth provider declaring an xAI issuer.
     /// The issuer is a client-side hint, not a trust assertion. Everything it unlocks still authenticates the actual token server-side, and it never influences endpoints.
     pub fn is_xai_auth(&self) -> bool {
         match self.auth_mode {
@@ -331,9 +331,9 @@ fn inherited_lookup(map: &AuthStore, scope: &str) -> Option<GrokAuth> {
 }
 
 /// Early-invalidation buffer.
-/// Override with `GROK_AUTH_EARLY_INVALIDATION_SECS` for testing (e.g. `=5` to shrink the buffer to 5 seconds).
+/// Override with `CGROK_AUTH_EARLY_INVALIDATION_SECS` for testing (e.g. `=5` to shrink the buffer to 5 seconds).
 pub(super) fn early_invalidation() -> Duration {
-    std::env::var("GROK_AUTH_EARLY_INVALIDATION_SECS")
+    std::env::var("CGROK_AUTH_EARLY_INVALIDATION_SECS")
         .ok()
         .and_then(|v| v.parse::<u64>().ok())
         .map(|s| Duration::seconds(s as i64))

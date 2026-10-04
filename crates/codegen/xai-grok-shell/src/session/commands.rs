@@ -516,7 +516,7 @@ pub enum SessionCommand {
     ReloadPlugins {
         registry: Option<std::sync::Arc<xai_grok_agent::plugins::PluginRegistry>>,
     },
-    /// Re-discover the session's own project hooks (`.grok/hooks`, `.cursor/hooks.json`, …) mid-session, re-evaluating folder trust.
+    /// Re-discover the session's own project hooks (`.cgrok/hooks`, `.cursor/hooks.json`, …) mid-session, re-evaluating folder trust.
     /// Used by the interactive folder-trust grant so a granted folder's repo-local hooks start without a session restart.
     /// Plugin-contributed hooks are handled by `ReloadPlugins`; this covers the non-plugin project hook registry.
     ReloadHooks,

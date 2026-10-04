@@ -15,17 +15,17 @@ const FOREIGN: PolicySubjectOrigin = PolicySubjectOrigin::Foreign;
 const NATIVE: PolicySubjectOrigin = PolicySubjectOrigin::GrokNative;
 const CLAUDE_PATH: &str = "/test/managed-settings.json";
 const SYS_REQ: &str = "/etc/grok/requirements.toml";
-const USER_REQ: &str = "/home/u/.grok/requirements.toml";
+const USER_REQ: &str = "/home/u/.cgrok/requirements.toml";
 const SYS_MANAGED: &str = "/etc/grok/managed_config.toml";
-const USER_MANAGED: &str = "/home/u/.grok/managed_config.toml";
-const MDM_REQ: &str = "ai.x.grok:requirements_toml_base64";
+const USER_MANAGED: &str = "/home/u/.cgrok/managed_config.toml";
+const MDM_REQ: &str = "io.github.gucooing.cgrok:requirements_toml_base64";
 /// Every admin-owned TOML tier with its path label.
 const ADMIN_TIERS: [(PolicyLayerTier, &str); 3] = [
     (PolicyLayerTier::Mdm, MDM_REQ),
     (PolicyLayerTier::SystemRequirements, SYS_REQ),
     (PolicyLayerTier::SystemManaged, SYS_MANAGED),
 ];
-/// Every user-owned tier: both are the server-synced `$GROK_HOME` files.
+/// Every user-owned tier: both are the server-synced `$CGROK_HOME` files.
 const USER_TIERS: [(PolicyLayerTier, &str); 2] = [
     (PolicyLayerTier::UserRequirements, USER_REQ),
     (PolicyLayerTier::UserManaged, USER_MANAGED),

@@ -1,10 +1,10 @@
 //! AGENTS.md / Claude.md / rules directory discovery and loading.
 //!
-//! Searches from cwd to repo root, plus `~/.grok/`. Also discovers
-//! `*.md` files in rules directories: vendor-prefixed `.grok/rules/`,
+//! Searches from cwd to repo root, plus `~/.cgrok/`. Also discovers
+//! `*.md` files in rules directories: vendor-prefixed `.cgrok/rules/`,
 //! `.claude/rules/`, and `.cursor/rules/` in project directories, a
 //! plain `rules/` directly under the vendor-qualified home-scope roots
-//! (`~/.grok/rules/`, `~/.claude/rules/`, `~/.cursor/rules/`), and any
+//! (`~/.cgrok/rules/`, `~/.claude/rules/`, `~/.cursor/rules/`), and any
 //! user-configured `[paths] extra_rule_dirs` (scanned as home-scope rules).
 
 use std::path::{Path, PathBuf};
@@ -32,7 +32,7 @@ pub struct AgentConfigFile {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum InstructionSource {
-    /// `$GROK_HOME` and the vendor homes.
+    /// `$CGROK_HOME` and the vendor homes.
     Home,
     /// `[paths] extra_rule_dirs`: user-listed, so neither trust-gated nor gitignore-filtered.
     Configured,
@@ -165,7 +165,7 @@ fn add_discovered_candidate(
     });
 }
 
-/// Read Agents.md from ~/.grok/, git repo root, and session cwd.
+/// Read Agents.md from ~/.cgrok/, git repo root, and session cwd.
 /// `compat` gates which vendor directories are scanned. `CompatConfig::default()` preserves all-vendors behavior.
 /// `project_trusted` omits project-scope files when false.
 /// Each `[paths] extra_rule_dirs` entry is scanned for direct `*.md` rules at home scope, after the built-in home
@@ -704,7 +704,7 @@ mod tests {
         fs::create_dir_all(grok_home.join("rules")).unwrap();
         fs::create_dir_all(home.join(".claude/rules")).unwrap();
         fs::create_dir_all(home.join(".cursor/rules")).unwrap();
-        fs::create_dir_all(repo.join(".grok/rules")).unwrap();
+        fs::create_dir_all(repo.join(".cgrok/rules")).unwrap();
         fs::create_dir_all(repo.join(".claude/rules")).unwrap();
         fs::create_dir_all(repo.join(".cursor/rules")).unwrap();
         init_git_repo(&repo);
@@ -715,14 +715,14 @@ mod tests {
             (home.join(".claude/rules/a.md"), "claude-a"),
             (home.join(".cursor/rules/a.md"), "cursor-a"),
             (repo.join("AGENTS.md"), "repo-named"),
-            (repo.join(".grok/rules/a.md"), "repo-grok"),
+            (repo.join(".cgrok/rules/a.md"), "repo-grok"),
             (repo.join(".claude/rules/a.md"), "repo-claude"),
             (repo.join(".cursor/rules/a.md"), "repo-cursor"),
         ] {
             fs::write(path, content).unwrap();
         }
         for path in [
-            grok_home.join(".grok/rules/doubled.md"),
+            grok_home.join(".cgrok/rules/doubled.md"),
             home.join(".claude/.claude/rules/doubled.md"),
             home.join(".cursor/.cursor/rules/doubled.md"),
         ] {
@@ -838,12 +838,16 @@ mod tests {
         let repo = tmp.path().join("repo");
         let nested = repo.join("nested");
         fs::create_dir_all(nested.join("rules")).unwrap();
-        fs::create_dir_all(nested.join(".grok/rules")).unwrap();
+        fs::create_dir_all(nested.join(".cgrok/rules")).unwrap();
         init_git_repo(&repo);
         fs::write(nested.join("rules/home.md"), "nested-home-rule").unwrap();
         fs::write(repo.join("AGENTS.md"), "repo-named").unwrap();
         fs::write(nested.join("AGENTS.md"), "nested-named").unwrap();
-        fs::write(nested.join(".grok/rules/project.md"), "nested-project-rule").unwrap();
+        fs::write(
+            nested.join(".cgrok/rules/project.md"),
+            "nested-project-rule",
+        )
+        .unwrap();
 
         let configs = read_agents_config_with_roots(
             nested.to_str().unwrap(),
@@ -874,14 +878,14 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         let repo = tmp.path().join("repo");
         fs::create_dir_all(repo.join("rules")).unwrap();
-        fs::create_dir_all(repo.join(".grok/rules")).unwrap();
+        fs::create_dir_all(repo.join(".cgrok/rules")).unwrap();
         fs::create_dir_all(repo.join(".claude/rules")).unwrap();
         init_git_repo(&repo);
         fs::write(repo.join("rules/home.md"), "home-rule").unwrap();
-        fs::write(repo.join(".grok/rules/project.md"), "project-grok-rule").unwrap();
+        fs::write(repo.join(".cgrok/rules/project.md"), "project-grok-rule").unwrap();
         fs::write(repo.join(".claude/rules/project.md"), "project-claude-rule").unwrap();
-        fs::create_dir_all(repo.join(".grok/.grok/rules")).unwrap();
-        fs::write(repo.join(".grok/.grok/rules/doubled.md"), "doubled").unwrap();
+        fs::create_dir_all(repo.join(".cgrok/.cgrok/rules")).unwrap();
+        fs::write(repo.join(".cgrok/.cgrok/rules/doubled.md"), "doubled").unwrap();
 
         let configs = read_agents_config_with_roots(
             repo.to_str().unwrap(),
@@ -987,7 +991,7 @@ mod tests {
         fs::create_dir_all(grok_home.join("rules")).unwrap();
         fs::create_dir_all(home.join(".claude/rules")).unwrap();
         fs::create_dir_all(extra.join("nested")).unwrap();
-        fs::create_dir_all(repo.join(".grok/rules")).unwrap();
+        fs::create_dir_all(repo.join(".cgrok/rules")).unwrap();
         init_git_repo(&repo);
         for (path, content) in [
             (grok_home.join("rules/a.md"), "grok-home-rule"),
@@ -998,7 +1002,7 @@ mod tests {
             (extra.join("nested/deep.md"), "not-scanned-recursively"),
             (extra.join("AGENTS.md"), "extra-named"),
             (repo.join("AGENTS.md"), "repo-named"),
-            (repo.join(".grok/rules/p.md"), "project-rule"),
+            (repo.join(".cgrok/rules/p.md"), "project-rule"),
         ] {
             fs::write(path, content).unwrap();
         }
@@ -1052,11 +1056,11 @@ mod tests {
         let repo = tmp.path().join("repo");
         let extra = repo.join("vendor-rules");
         fs::create_dir_all(&grok_home).unwrap();
-        fs::create_dir_all(repo.join(".grok/rules")).unwrap();
+        fs::create_dir_all(repo.join(".cgrok/rules")).unwrap();
         fs::create_dir_all(&extra).unwrap();
         init_git_repo(&repo);
         fs::write(repo.join(".gitignore"), "vendor-rules/\n").unwrap();
-        fs::write(repo.join(".grok/rules/p.md"), "project-rule").unwrap();
+        fs::write(repo.join(".cgrok/rules/p.md"), "project-rule").unwrap();
         fs::write(extra.join("r.md"), "configured-rule").unwrap();
 
         // Untrusted: project roots are dropped, but a user-listed dir under the repo is a user surface and stays.
@@ -1086,10 +1090,10 @@ mod tests {
         let shared = repo.join(".claude/rules");
         fs::create_dir_all(&grok_home).unwrap();
         fs::create_dir_all(&shared).unwrap();
-        fs::create_dir_all(repo.join(".grok/rules")).unwrap();
+        fs::create_dir_all(repo.join(".cgrok/rules")).unwrap();
         init_git_repo(&repo);
         fs::write(shared.join("team.md"), "shared-rule").unwrap();
-        fs::write(repo.join(".grok/rules/p.md"), "project-rule").unwrap();
+        fs::write(repo.join(".cgrok/rules/p.md"), "project-rule").unwrap();
         fs::write(repo.join("AGENTS.md"), "repo-named").unwrap();
 
         let configs = read_agents_config_with_roots(
@@ -1168,7 +1172,7 @@ mod tests {
         fs::create_dir_all(grok_home.join("rules")).unwrap();
         fs::create_dir_all(home.join(".claude/rules")).unwrap();
         fs::create_dir_all(home.join(".cursor/rules")).unwrap();
-        fs::create_dir_all(repo.join(".grok/rules")).unwrap();
+        fs::create_dir_all(repo.join(".cgrok/rules")).unwrap();
         fs::create_dir_all(repo.join(".claude/rules")).unwrap();
         fs::create_dir_all(repo.join(".cursor/rules")).unwrap();
         init_git_repo(&repo);
@@ -1178,7 +1182,7 @@ mod tests {
             (grok_home.join("rules/global.md"), "custom-home-body"),
             (home.join(".claude/rules/global.md"), "claude-body"),
             (home.join(".cursor/rules/global.md"), "cursor-body"),
-            (repo.join(".grok/rules/project.md"), "grok-project-body"),
+            (repo.join(".cgrok/rules/project.md"), "grok-project-body"),
             (repo.join(".claude/rules/project.md"), "claude-project-body"),
             (repo.join(".cursor/rules/project.md"), "cursor-project-body"),
         ] {

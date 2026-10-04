@@ -1,4 +1,15 @@
+// Credential variables removed from tool subprocesses. Official variables are scrubbed,
+// never read as cgrok authentication inputs.
 pub const FIRST_PARTY_CREDENTIAL_ENV_VARS: &[&str] = &[
+    "CGROK_AUTH",
+    "CGROK_AUTH_PATH",
+    "CGROK_API_KEY",
+    "CGROK_DEPLOYMENT_KEY",
+    "CGROK_CODE_XAI_API_KEY",
+    "CGROK_EXTRA_AUTH_KEY",
+    "CGROK_TRACE_UPLOAD_CREDENTIALS_FILE",
+    "CGROK_INTERNAL_OTLP_HEADERS",
+    "OTEL_EXPORTER_OTLP_HEADERS",
     "GROK_AUTH",
     "GROK_AUTH_PATH",
     "XAI_API_KEY",
@@ -6,7 +17,6 @@ pub const FIRST_PARTY_CREDENTIAL_ENV_VARS: &[&str] = &[
     "GROK_CODE_XAI_API_KEY",
     "GROK_EXTRA_AUTH_KEY",
     "GROK_TRACE_UPLOAD_CREDENTIALS_FILE",
-    "OTEL_EXPORTER_OTLP_HEADERS",
     "GROK_INTERNAL_OTLP_HEADERS",
 ];
 
@@ -52,9 +62,9 @@ mod tests {
 
     #[test]
     fn env_string_trims_and_treats_blank_as_unset() {
-        let guard = EnvVarGuard::set("GROK_TEST_ENV_STRING", "  hi  ");
-        assert_eq!(env_string("GROK_TEST_ENV_STRING"), Some("hi".to_string()));
+        let guard = EnvVarGuard::set("CGROK_TEST_ENV_STRING", "  hi  ");
+        assert_eq!(env_string("CGROK_TEST_ENV_STRING"), Some("hi".to_string()));
         guard.set_value("   ");
-        assert_eq!(env_string("GROK_TEST_ENV_STRING"), None);
+        assert_eq!(env_string("CGROK_TEST_ENV_STRING"), None);
     }
 }

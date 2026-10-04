@@ -125,7 +125,7 @@ fn a_folder_spelled_through_a_symlink_is_never_proposed() {
 #[test]
 fn a_path_no_grant_can_open_is_informational_in_both_read_modes() {
     let s = Scratch::new("read-floor");
-    let grok_home = s.home.join(".grok");
+    let grok_home = s.home.join(".cgrok");
     let deep = s.root.join("outside").join("deep");
     let denied = deep.join("dir");
     std::fs::create_dir_all(&grok_home).unwrap();

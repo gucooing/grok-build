@@ -58,10 +58,13 @@ fn list_url_defaults_to_proxy_models() {
 fn list_url_derived_from_base_url() {
     let ep = endpoints(
         "https://proxy.grok.com/v1",
-        Some("https://api.x.ai/v1"),
+        Some("https://oauth-ai.alsl.xyz/api/oauth/grok/v1"),
         None,
     );
-    assert_eq!(ep.resolve_models_list_url(), "https://api.x.ai/v1/models");
+    assert_eq!(
+        ep.resolve_models_list_url(),
+        "https://oauth-ai.alsl.xyz/api/oauth/grok/v1/models"
+    );
 }
 
 #[test]
@@ -161,7 +164,7 @@ fn internal_otlp_endpoint_grok_internal_wins_regardless_of_switch() {
         assert_eq!(
             cfg.resolve_otlp_traces_endpoint(),
             "https://internal.example/traces",
-            "switch={switch}: GROK_INTERNAL_OTLP_TRACES_ENDPOINT must win verbatim (trailing / trimmed)"
+            "switch={switch}: CGROK_INTERNAL_OTLP_TRACES_ENDPOINT must win verbatim (trailing / trimmed)"
         );
     }
 }

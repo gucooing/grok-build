@@ -87,7 +87,7 @@ pub(crate) fn fallback_model_id(cfg: &config::Config, preferred: Option<&str>) -
 
 impl CatalogSource {
     pub(crate) fn for_config(cfg: &config::Config) -> Self {
-        if cfg.grok_com_config.auth_provider_command.is_some()
+        if cfg.cgrok_com_config.auth_provider_command.is_some()
             && cfg.endpoints.has_custom_endpoint()
         {
             CatalogSource::ModelsEndpoint
@@ -146,7 +146,7 @@ pub(crate) fn resolve_default_model(
 
     let model_pref = config::resolve_string_flag(
         cfg.default_model_override.as_deref(),
-        "GROK_DEFAULT_MODEL",
+        "CGROK_DEFAULT_MODEL",
         cfg.models.default.as_deref(),
         cfg.remote_settings
             .as_ref()

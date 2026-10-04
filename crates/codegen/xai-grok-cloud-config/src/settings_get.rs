@@ -54,14 +54,14 @@ impl SettingsQuery {
         self.auth.as_ref()
     }
 
-    /// `auth` takes priority over the on-disk session for `grok_com_config`.
-    pub fn resolve(auth: Option<GrokAuth>, grok_com_config: Option<GrokComConfig>) -> Self {
+    /// `auth` takes priority over the on-disk session for `cgrok_com_config`.
+    pub fn resolve(auth: Option<GrokAuth>, cgrok_com_config: Option<GrokComConfig>) -> Self {
         let endpoint = SettingsEndpoint::from(&EndpointsConfig::from_effective_config());
-        let auth = auth.or_else(|| crate::resolve_disk_auth(grok_com_config.clone()));
+        let auth = auth.or_else(|| crate::resolve_disk_auth(cgrok_com_config.clone()));
         Self {
             auth,
             endpoint,
-            auth_config: grok_com_config,
+            auth_config: cgrok_com_config,
         }
     }
 }
@@ -102,16 +102,16 @@ impl SettingsOutcome {
         }
     }
 
-    /// Whether this outcome may still be installed under `grok_com_config`.
+    /// Whether this outcome may still be installed under `cgrok_com_config`.
     /// A repair between warm and consume can change the origin or identity.
     pub fn install_allowed(
         &self,
-        grok_com_config: &GrokComConfig,
+        cgrok_com_config: &GrokComConfig,
         warmed_auth: Option<&GrokAuth>,
         policy_repair_pending: PolicyRepairPending,
     ) -> bool {
         self.scope_matches(
-            &SettingsQuery::resolve(warmed_auth.cloned(), Some(grok_com_config.clone())),
+            &SettingsQuery::resolve(warmed_auth.cloned(), Some(cgrok_com_config.clone())),
             policy_repair_pending,
         )
     }
@@ -337,12 +337,12 @@ pub async fn await_startup_settings(
 pub fn consume_wait(
     wait: SettingsWait,
     auth: Option<&GrokAuth>,
-    grok_com_config: &GrokComConfig,
+    cgrok_com_config: &GrokComConfig,
     policy_repair_pending: PolicyRepairPending,
 ) -> Option<RemoteSettings> {
     match wait {
         SettingsWait::Ready(outcome) => {
-            if outcome.install_allowed(grok_com_config, auth, policy_repair_pending) {
+            if outcome.install_allowed(cgrok_com_config, auth, policy_repair_pending) {
                 outcome.settings
             } else {
                 tracing::info!("startup settings discarded at consume: policy or identity changed");

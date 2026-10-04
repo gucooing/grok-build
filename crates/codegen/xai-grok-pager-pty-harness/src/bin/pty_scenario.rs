@@ -10,7 +10,7 @@ use xai_grok_pager_pty_harness::{
 #[derive(ClapParser, Debug)]
 #[command(
     name = "pty-scenario",
-    about = "Run declarative TUI regression scenarios against xai-grok-pager",
+    about = "Run declarative TUI regression scenarios against cgrok",
     long_about = None,
 )]
 struct Cli {
@@ -19,7 +19,7 @@ struct Cli {
     scenario: PathBuf,
 
     /// Pager binary.
-    /// Defaults to PAGER_BINARY, CARGO_BIN_EXE_xai-grok-pager, or a locally-built debug binary.
+    /// Defaults to PAGER_BINARY, CARGO_BIN_EXE_cgrok, or a locally-built debug binary.
     #[arg(long, value_name = "PATH")]
     binary: Option<PathBuf>,
 

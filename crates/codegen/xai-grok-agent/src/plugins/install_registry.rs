@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 
-/// Default install directory name under `~/.grok/`.
+/// Default install directory name under `~/.cgrok/`.
 const DEFAULT_INSTALL_DIR_NAME: &str = "installed-plugins";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -157,7 +157,7 @@ impl InstallRegistry {
         let content = serde_json::to_string_pretty(self).map_err(|e| InstallError::Json {
             detail: e.to_string(),
         })?;
-        if std::env::var_os("XAI_GROK_TEST_FAIL_REGISTRY_SAVE_AFTER_SERIALIZE").is_some() {
+        if std::env::var_os("CGROK_TEST_GROK_TEST_FAIL_REGISTRY_SAVE_AFTER_SERIALIZE").is_some() {
             return Err(InstallError::InstallFailed {
                 detail: "test-injected registry save failure".into(),
             });
@@ -239,7 +239,7 @@ impl InstallRegistry {
 
     /// Resolution order:
     /// 1. `[plugins].install_dir` from effective config (requirements > config > managed)
-    /// 2. Default: `~/.grok/installed-plugins/`
+    /// 2. Default: `~/.cgrok/installed-plugins/`
     pub fn resolve_install_dir() -> PathBuf {
         if let Some(dir) = Self::read_install_dir_from_config() {
             return dir;
@@ -383,7 +383,7 @@ pub enum InstallError {
 
     #[error(
         "refusing unpinned remote plugin code for '{plugin}' from {url}: \
-         marketplace.require_sha / GROK_MARKETPLACE_REQUIRE_SHA is enabled and \
+         marketplace.require_sha / CGROK_MARKETPLACE_REQUIRE_SHA is enabled and \
          no full commit sha (40/64 hex) is pinned"
     )]
     UnpinnedRemoteRefused { plugin: String, url: String },

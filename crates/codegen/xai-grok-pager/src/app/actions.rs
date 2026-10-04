@@ -329,11 +329,11 @@ pub enum Action {
     /// Disabling it lets the terminal handle native click-drag text selection and copy-paste; re-enabling restores in-app mouse handling.
     /// Bound to Ctrl+R while the scrollback pane is focused.
     ToggleMouseCapture,
-    /// Toggle the scroll-diagnostics HUD (`/debug scroll`; `GROK_SCROLL_DEBUG=1` enables it from startup).
+    /// Toggle the scroll-diagnostics HUD (`/debug scroll`; `CGROK_SCROLL_DEBUG=1` enables it from startup).
     ToggleScrollDebugHud,
     /// Toggle the release-safe FPS HUD (`/debug fps`).
     ToggleFpsHud,
-    /// Toggle the scroll flight recorder at runtime (`/debug log`; `GROK_SCROLL_LOG=1` enables it from startup).
+    /// Toggle the scroll flight recorder at runtime (`/debug log`; `CGROK_SCROLL_LOG=1` enables it from startup).
     ToggleScrollLog,
     /// Print the `/debug` toggles and their on/off state to the transcript.
     ShowDebugStatus,
@@ -973,7 +973,7 @@ pub struct SharedQueueTarget {
     pub expected_version: u64,
 }
 /// Persist-and-notify behavior for [`Effect::PersistPermissionMode`].
-/// Both variants write to `~/.grok/config.toml` and route ACP
+/// Both variants write to `~/.cgrok/config.toml` and route ACP
 /// `x.ai/yolo_mode_changed` notifications.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PermissionModePersist {
@@ -1648,7 +1648,7 @@ pub enum Effect {
     RecordConsentUpstream { notice_id: String, version: i32 },
     /// Persist memory modal fullscreen preference to `[hints]` in config.toml.
     PersistMemoryFullscreen { fullscreen: bool },
-    /// Persist the dashboard's `[dashboard]` configuration to `~/.grok/config.toml`.
+    /// Persist the dashboard's `[dashboard]` configuration to `~/.cgrok/config.toml`.
     /// Multi-pager safe via `config_toml_edit::read_config_document_for_edit`, which loads, modifies, then writes the whole document.
     /// Concurrent pagers may produce last-writer-wins behaviour but never corrupt the file.
     PersistDashboard(crate::views::dashboard::PersistedDashboard),
@@ -1671,7 +1671,7 @@ pub enum Effect {
         session_id: Option<acp::SessionId>,
         persist: PermissionModePersist,
     },
-    /// Persist a typed setting to `~/.grok/config.toml`. On failure,
+    /// Persist a typed setting to `~/.cgrok/config.toml`. On failure,
     /// rolls the in-memory cache back to `rollback_value`.
     PersistSetting {
         key: crate::settings::SettingKey,
@@ -2098,7 +2098,7 @@ pub enum Effect {
     /// Clear the auth copy feedback after a delay if its generation is still current.
     ScheduleClearAuthCopyFeedback { generation: u64 },
     /// Register the current session in the active-session registry
-    /// (`~/.grok/active_sessions.json`).
+    /// (`~/.cgrok/active_sessions.json`).
     RegisterActiveSession {
         session_id: acp::SessionId,
         cwd: String,

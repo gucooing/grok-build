@@ -1,4 +1,4 @@
-//! Agent definition types, parsed from `.grok/agents/*.md` files.
+//! Agent definition types, parsed from `.cgrok/agents/*.md` files.
 use crate::error::AgentBuildError;
 use crate::prompt::context::TemplateOverride;
 use crate::prompt::user_message::UserMessageTemplate;
@@ -689,7 +689,7 @@ impl BuiltinAgentName {
         &[Self::GeneralPurpose, Self::Explore, Self::Plan]
     }
 }
-/// Portable agent identity, parsed from .grok/agents/*.md. Usable as a top-level agent or a subagent.
+/// Portable agent identity, parsed from .cgrok/agents/*.md. Usable as a top-level agent or a subagent.
 /// Does not contain session-level policies; those are provided by the AgentBuilder at build time.
 #[derive(Debug, Clone, Deserialize, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -839,11 +839,11 @@ fn default_prompt_mode() -> PromptMode {
 /// Where the agent definition was discovered.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum AgentScope {
-    /// .grok/agents/ (project-level, highest priority)
+    /// .cgrok/agents/ (project-level, highest priority)
     Project,
-    /// ~/.grok/agents/ (user-level)
+    /// ~/.cgrok/agents/ (user-level)
     User,
-    /// ~/.grok/bundled/agents/ (lowest-priority bundled cache)
+    /// ~/.cgrok/bundled/agents/ (lowest-priority bundled cache)
     Bundled,
     /// Built-in agent (e.g., default_grok_build(), browser_use()).
     #[default]
@@ -1058,11 +1058,11 @@ where
 #[serde(rename_all = "lowercase")]
 #[strum(serialize_all = "lowercase")]
 pub enum MemoryScope {
-    /// `~/.grok/agent-memory/<name>/`
+    /// `~/.cgrok/agent-memory/<name>/`
     User,
-    /// `<project>/.grok/agent-memory/<name>/`
+    /// `<project>/.cgrok/agent-memory/<name>/`
     Project,
-    /// `<project>/.grok/agent-memory-local/<name>/`
+    /// `<project>/.cgrok/agent-memory-local/<name>/`
     Local,
 }
 impl MemoryScope {
@@ -1085,12 +1085,12 @@ impl MemoryScope {
                 is_project_scoped: false,
             },
             Self::Project => ResolvedMemoryDir {
-                path: project_cwd.join(".grok/agent-memory").join(agent_name),
+                path: project_cwd.join(".cgrok/agent-memory").join(agent_name),
                 is_project_scoped: true,
             },
             Self::Local => ResolvedMemoryDir {
                 path: project_cwd
-                    .join(".grok/agent-memory-local")
+                    .join(".cgrok/agent-memory-local")
                     .join(agent_name),
                 is_project_scoped: true,
             },
@@ -1302,11 +1302,11 @@ impl AgentDefinition {
                 return scope;
             }
         }
-        if path_str.contains(".grok/agents/") || path_str.contains(".grok\\agents\\") {
+        if path_str.contains(".cgrok/agents/") || path_str.contains(".cgrok\\agents\\") {
             return AgentScope::Project;
         }
-        if path_str.contains(".grok/bundled/agents/")
-            || path_str.contains(".grok\\bundled\\agents\\")
+        if path_str.contains(".cgrok/bundled/agents/")
+            || path_str.contains(".cgrok\\bundled\\agents\\")
         {
             return AgentScope::Bundled;
         }
@@ -2112,13 +2112,13 @@ description: Minimal agent
         let proj = MemoryScope::Project.resolve_dir("a", cwd);
         assert_eq!(
             proj.path,
-            std::path::PathBuf::from("/project/.grok/agent-memory/a")
+            std::path::PathBuf::from("/project/.cgrok/agent-memory/a")
         );
         assert!(proj.is_project_scoped);
         let local = MemoryScope::Local.resolve_dir("a", cwd);
         assert_eq!(
             local.path,
-            std::path::PathBuf::from("/project/.grok/agent-memory-local/a")
+            std::path::PathBuf::from("/project/.cgrok/agent-memory-local/a")
         );
         assert!(local.is_project_scoped);
     }
@@ -2306,7 +2306,7 @@ description: Test default tool config
         let bundled = tmp
             .path()
             .join("nested")
-            .join(".grok")
+            .join(".cgrok")
             .join("bundled")
             .join("agents")
             .join("bundled-agent.md");

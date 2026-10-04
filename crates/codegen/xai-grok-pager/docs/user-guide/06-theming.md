@@ -32,7 +32,7 @@ theme = "terminal"
 
 Contrast is only as good as your terminal profile: a profile with a very dark bright-black slot will render faint dividers, since Grok derives everything from your palette rather than hard-coding colors.
 
-The theme is rolling out gradually. Until the rollout reaches your account it is hidden from `/theme` and `/settings`, its names do not parse, and a configured `theme = "terminal"` falls back to the default theme. Set `GROK_TERMINAL_THEME=1` (or `[features] terminal_theme = true` in `config.toml`) to enable it locally ahead of the rollout.
+The theme is rolling out gradually. Until the rollout reaches your account it is hidden from `/theme` and `/settings`, its names do not parse, and a configured `theme = "terminal"` falls back to the default theme. Set `CGROK_TERMINAL_THEME=1` (or `[features] terminal_theme = true` in `config.toml`) to enable it locally ahead of the rollout.
 
 ### Minimal Mode Has No Theming
 
@@ -58,7 +58,7 @@ Submitting `/theme` on its own -- without choosing from the picker -- cycles to 
 
 ### Via Config File
 
-Set the theme in `~/.grok/config.toml`:
+Set the theme in `~/.cgrok/config.toml`:
 
 ```toml
 [ui]
@@ -94,11 +94,11 @@ auto_light_theme = "grokday"
 | **macOS** | Reads `AppleInterfaceStyle` system preference |
 | **Linux** | Queries XDG Desktop Portal (`org.freedesktop.appearance.color-scheme`) |
 | **Windows** | Reads the system personalization registry |
-| **SSH / tmux / headless** | `GROK_APPEARANCE` or `LC_GROK_APPEARANCE` (`dark`/`light`), then `COLORFGBG`, then a startup OSC 11 background query. `grok wrap ssh …` stamps `LC_GROK_APPEARANCE` from the local OS theme so it survives SSH into the login shell. New tmux sessions inherit it only if the tmux server/session was created with that env (or `update-environment` includes it). OSC 11 is DCS-wrapped for tmux ≥ 3.3 when tmux is the immediate terminal (not an editor `:terminal`); reaching the outer emulator also needs `allow-passthrough`, and replies are best-effort. |
+| **SSH / tmux / headless** | `CGROK_APPEARANCE` or `LC_GROK_APPEARANCE` (`dark`/`light`), then `COLORFGBG`, then a startup OSC 11 background query. `cgrok wrap ssh …` stamps `LC_GROK_APPEARANCE` from the local OS theme so it survives SSH into the login shell. New tmux sessions inherit it only if the tmux server/session was created with that env (or `update-environment` includes it). OSC 11 is DCS-wrapped for tmux ≥ 3.3 when tmux is the immediate terminal (not an editor `:terminal`); reaching the outer emulator also needs `allow-passthrough`, and replies are best-effort. |
 
 Once running, Grok polls desktop APIs and env hints every 5 seconds. Toggling your OS between light and dark mode on a local desktop takes effect within seconds without restarting. Over SSH the wrap-stamped env is fixed for that hop.
 
-You can also set `GROK_THEME` (or `LC_GROK_THEME`) to force a theme or `auto` without editing `config.toml`.
+You can also set `CGROK_THEME` (or `LC_GROK_THEME`) to force a theme or `auto` without editing `config.toml`.
 
 ### Via the Settings Pane
 
@@ -155,7 +155,7 @@ Toggle compact mode with the `/compact-mode` slash command. Compact mode:
 - Reduces horizontal padding to the minimum (1 column).
 - Reduces top padding in the prompt area and info blocks.
 
-The setting is persisted in `~/.grok/config.toml` under `[ui].compact_mode` and survives restarts.
+The setting is persisted in `~/.cgrok/config.toml` under `[ui].compact_mode` and survives restarts.
 
 Use compact mode on small screens to maximize content area.
 
@@ -175,7 +175,7 @@ Grok selects the matching file automatically when you switch themes. The `.tmThe
 
 ## Deep Customization with pager.toml
 
-For fine-grained control over the TUI appearance, create `~/.grok/pager.toml`. This file controls scrollback layout, block styling, animations, and more. All settings have defaults; specify only the values you override. (Dev builds generate this file as a template with every default commented out — uncomment a line to override it; commented values keep tracking future defaults.)
+For fine-grained control over the TUI appearance, create `~/.cgrok/pager.toml`. This file controls scrollback layout, block styling, animations, and more. All settings have defaults; specify only the values you override. (Dev builds generate this file as a template with every default commented out — uncomment a line to override it; commented values keep tracking future defaults.)
 
 ### Layout
 

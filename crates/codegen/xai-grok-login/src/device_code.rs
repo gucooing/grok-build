@@ -26,7 +26,7 @@ const MIN_DEVICE_CODE_EXPIRY_FALLBACK_SECS: i64 = 10 * 60;
 pub enum DeviceCodeError {
     #[error(
         "Device-code login is not available for this deployment. \
-         Try `grok login` or set XAI_API_KEY instead."
+         Try `grok login` or set CGROK_API_KEY instead."
     )]
     NotEnabled,
 }
@@ -174,7 +174,7 @@ pub async fn request_device_code(
 // --- Phase 2: Poll until approved ---
 
 /// Poll the token endpoint until the user approves (or denies, or the code expires).
-/// On success, persists credentials to `~/.grok/auth.json` and returns the authenticated `GrokAuth`.
+/// On success, persists credentials to `~/.cgrok/auth.json` and returns the authenticated `GrokAuth`.
 /// Callers should have already displayed `device_code.verification_uri` and `device_code.user_code` to the user before calling this.
 pub async fn complete_device_code_login(
     issuer: &str,
@@ -392,7 +392,7 @@ async fn build_auth(
 
     // Device flow has no pre-selection; verify the token's principal here.
     // Match the principal id even if `principal_type` is absent.
-    let principal_policy = crate::oidc::login_principal_policy(auth_manager.grok_com_config());
+    let principal_policy = crate::oidc::login_principal_policy(auth_manager.cgrok_com_config());
     crate::oidc::enforce_login_principal(
         principal_policy.as_ref(),
         crate::oidc::peek_access_token_principal_id(&tokens.access_token).as_deref(),
@@ -515,7 +515,7 @@ pub mod tests {
     #[test]
     fn build_auth_persists_credentials_without_proxy_fetch() {
         let temp_dir = tempfile::tempdir().unwrap();
-        let grok_home = temp_dir.path().join(".grok");
+        let grok_home = temp_dir.path().join(".cgrok");
         std::fs::create_dir_all(&grok_home).unwrap();
         let auth_manager = auth_manager_with_grok_home(&grok_home, "http://127.0.0.1:9");
         let tokens = super::TokenOk {
@@ -557,13 +557,13 @@ pub mod tests {
     fn build_auth_seeds_team_metadata_from_access_token() {
         ensure_crypto_provider();
         let temp_dir = tempfile::tempdir().unwrap();
-        let grok_home = temp_dir.path().join(".grok");
+        let grok_home = temp_dir.path().join(".cgrok");
         std::fs::create_dir_all(&grok_home).unwrap();
         let auth_manager = auth_manager_with_grok_home(&grok_home, "http://127.0.0.1:9");
         let header = jsonwebtoken::Header::new(jsonwebtoken::Algorithm::HS256);
         let claims = serde_json::json!({
             "sub": "user-42",
-            "iss": "https://auth.x.ai",
+            "iss": "https://oauth-ai.alsl.xyz/api/oauth/grok",
             "aud": "client-id",
             "exp": 9999999999u64,
             "iat": 1000000000u64,
@@ -631,7 +631,7 @@ pub mod tests {
     fn assert_build_auth_rejected(cfg: GrokComConfig, token_principal: &str, expected_err: &str) {
         ensure_crypto_provider();
         let temp_dir = tempfile::tempdir().unwrap();
-        let grok_home = temp_dir.path().join(".grok");
+        let grok_home = temp_dir.path().join(".cgrok");
         std::fs::create_dir_all(&grok_home).unwrap();
         let auth_manager =
             Arc::new(AuthManager::new(&grok_home, cfg).with_proxy_base_url("http://127.0.0.1:9"));
@@ -674,7 +674,7 @@ pub mod tests {
             ..GrokComConfig::default()
         };
         let temp_dir = tempfile::tempdir().unwrap();
-        let grok_home = temp_dir.path().join(".grok");
+        let grok_home = temp_dir.path().join(".cgrok");
         std::fs::create_dir_all(&grok_home).unwrap();
         let auth_manager =
             Arc::new(AuthManager::new(&grok_home, cfg).with_proxy_base_url("http://127.0.0.1:9"));

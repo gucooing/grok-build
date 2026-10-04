@@ -13,7 +13,7 @@ const HARD_CAP: usize = 8;
 /// Reserve for non-gix threads; nproc tests use `used + OUTER_RESERVE - 2`.
 pub(crate) const OUTER_RESERVE: usize = 8;
 
-const ENV_THREADS: &str = "GROK_GIX_STATUS_THREADS";
+const ENV_THREADS: &str = "CGROK_GIX_STATUS_THREADS";
 
 /// Pure produce-worker budget. Always `n >= 1`. Caps at 8; shrinks under tight
 /// soft nproc headroom (`headroom < 2` → 1).
@@ -37,7 +37,7 @@ pub fn compute_gix_status_thread_limit_from(
     limit.max(1)
 }
 
-/// Production budget (`n >= 1`). Honours `GROK_GIX_STATUS_THREADS=N` for `N >= 1`
+/// Production budget (`n >= 1`). Honours `CGROK_GIX_STATUS_THREADS=N` for `N >= 1`
 /// (forced dial; bypasses nproc). Else cores + soft nproc + thread usage.
 pub fn compute_gix_status_thread_limit() -> usize {
     if let Ok(raw) = std::env::var(ENV_THREADS)
@@ -279,8 +279,8 @@ mod nproc_tests {
     use std::sync::Arc;
     use std::sync::atomic::{AtomicBool, Ordering};
 
-    const CHILD_ENV: &str = "XAI_GIX_STATUS_NPROC_CHILD";
-    const REPO_ENV: &str = "XAI_GIX_STATUS_NPROC_REPO";
+    const CHILD_ENV: &str = "CGROK_TEST_GIX_STATUS_NPROC_CHILD";
+    const REPO_ENV: &str = "CGROK_TEST_GIX_STATUS_NPROC_REPO";
 
     /// Child exit protocol; 0 means the scan survived and saw the dirty file.
     const EXIT_SKIP: i32 = 2;

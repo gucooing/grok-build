@@ -166,14 +166,14 @@ fn discover_servers(cwd: &Path) -> (Vec<ConfigSourceStatus>, Vec<DiscoveredServe
 
     if user_config.is_file() {
         sources.push(ConfigSourceStatus {
-            path: "~/.grok/config.toml".to_string(),
+            path: "~/.cgrok/config.toml".to_string(),
             status: ConfigSourceState::Found {
                 server_count: toml_counts.get(&user_config).copied().unwrap_or(0),
             },
         });
     } else {
         sources.push(ConfigSourceStatus {
-            path: "~/.grok/config.toml".to_string(),
+            path: "~/.cgrok/config.toml".to_string(),
             status: ConfigSourceState::NotFound,
         });
     }
@@ -625,9 +625,9 @@ pub fn policy_enable_refusal(cwd: &Path, name: &str) -> Option<String> {
 /// Which config file a new MCP definition is written to.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum McpWriteScope {
-    /// `~/.grok/config.toml`.
+    /// `~/.cgrok/config.toml`.
     User,
-    /// `./.grok/config.toml`.
+    /// `./.cgrok/config.toml`.
     Project,
 }
 
@@ -908,8 +908,8 @@ mod tests {
             "[mcp_servers.projsrv]\ncommand = 'c'\n[mcp_servers.home2]\ncommand = 'override'\n",
         )
         .unwrap();
-        let user_path = Path::new("/home/u/.grok/config.toml");
-        let proj_path = std::path::PathBuf::from("/repo/.grok/config.toml");
+        let user_path = Path::new("/home/u/.cgrok/config.toml");
+        let proj_path = std::path::PathBuf::from("/repo/.cgrok/config.toml");
 
         let declaring = toml_declaring_paths(user_path, Some(&user), &[(proj_path.clone(), proj)]);
         assert_eq!(declaring.get("home1").map(|p| p.as_path()), Some(user_path));
@@ -971,9 +971,9 @@ mod tests {
         crate::claude_import::refresh_marker_cache(false);
         let repo = tempfile::tempdir().unwrap();
         git2::Repository::init(repo.path()).unwrap();
-        std::fs::create_dir_all(repo.path().join(".grok")).unwrap();
+        std::fs::create_dir_all(repo.path().join(".cgrok")).unwrap();
         std::fs::write(
-            repo.path().join(".grok/config.toml"),
+            repo.path().join(".cgrok/config.toml"),
             "[mcp_servers.corp]\nurl = \"https://corp.example/mcp\"\n",
         )
         .unwrap();

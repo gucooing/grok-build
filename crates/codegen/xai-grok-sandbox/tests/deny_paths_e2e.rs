@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 const SCENARIO_ENV: &str = "SANDBOX_E2E_SCENARIO";
 const WORKSPACE_ENV: &str = "SANDBOX_E2E_WORKSPACE";
-const GROK_HOME_ENV: &str = "SANDBOX_E2E_GROK_HOME";
+const CGROK_HOME_ENV: &str = "SANDBOX_E2E_GROK_HOME";
 const HOME_ENV: &str = "SANDBOX_E2E_HOME";
 const PROFILE_ENV: &str = "SANDBOX_E2E_PROFILE";
 const TARGETS_ENV: &str = "SANDBOX_E2E_TARGETS";
@@ -21,9 +21,9 @@ const REQUIRE_ENV: &str = "SANDBOX_E2E_REQUIRE_ENFORCEMENT";
 fn apply_fixture_env(cmd: &mut Command, home: &Path, grok_home: &Path, workspace: &Path) {
     cmd.env(WORKSPACE_ENV, workspace.as_os_str())
         .env(HOME_ENV, home.as_os_str())
-        .env(GROK_HOME_ENV, grok_home.as_os_str())
+        .env(CGROK_HOME_ENV, grok_home.as_os_str())
         .env("HOME", home.as_os_str())
-        .env("GROK_HOME", grok_home.as_os_str());
+        .env("CGROK_HOME", grok_home.as_os_str());
 }
 /// Re-invoke this test binary as a subprocess driving `profile` over `targets` (denied) and `controls` (must stay readable).
 /// `postlaunch` paths are created AFTER apply to exercise the macOS runtime-regex (post-launch) coverage.
@@ -227,10 +227,10 @@ fn subprocess_entry() {
     let workspace = dunce::canonicalize(&workspace).expect("canonicalize workspace");
     let workspace = workspace.as_path();
     let home = PathBuf::from(std::env::var(HOME_ENV).expect(HOME_ENV));
-    let grok_home = PathBuf::from(std::env::var(GROK_HOME_ENV).expect(GROK_HOME_ENV));
+    let grok_home = PathBuf::from(std::env::var(CGROK_HOME_ENV).expect(CGROK_HOME_ENV));
     unsafe {
         std::env::set_var("HOME", &home);
-        std::env::set_var("GROK_HOME", &grok_home);
+        std::env::set_var("CGROK_HOME", &grok_home);
     }
     match scenario.as_str() {
         "block_deny" => subprocess_block_deny(workspace),
@@ -635,7 +635,7 @@ fn subprocess_devbox_genuine(workspace: &Path) {
 }
 /// Workspace-profile Grok-owned hook write-deny probes (existing sources and first-run).
 fn subprocess_hook_write_deny(workspace: &Path, first_run: bool) {
-    let home = PathBuf::from(std::env::var(GROK_HOME_ENV).expect(GROK_HOME_ENV));
+    let home = PathBuf::from(std::env::var(CGROK_HOME_ENV).expect(CGROK_HOME_ENV));
     let profile = xai_grok_sandbox::ProfileName::Workspace;
     subprocess_profile_and_bwrap_reexec(&profile, workspace);
     let mut sandbox = xai_grok_sandbox::SandboxManager::new(profile, workspace);
@@ -821,7 +821,7 @@ fn subprocess_hook_write_deny(workspace: &Path, first_run: bool) {
     eprintln!("OK: hook write-deny e2e passed");
     std::process::exit(0);
 }
-/// Create isolated HOME and GROK_HOME fixture dirs for a scenario.
+/// Create isolated HOME and CGROK_HOME fixture dirs for a scenario.
 fn fixture_homes(
     tag: &str,
 ) -> (
@@ -866,9 +866,9 @@ fn run_deny_case(
         .map(|p| format!("\"{p}\""))
         .collect::<Vec<_>>()
         .join(", ");
-    fs::create_dir_all(tmp.join(".grok")).expect("mkdir .grok");
+    fs::create_dir_all(tmp.join(".cgrok")).expect("mkdir .cgrok");
     fs::write(
-        tmp.join(".grok")
+        tmp.join(".cgrok")
             .join(xai_grok_config::SANDBOX_CONFIG_FILENAME),
         format!("[profiles.{profile}]\nextends = \"workspace\"\ndeny = [{deny_list}]\n"),
     )
@@ -982,9 +982,9 @@ fn deny_globs_block_read_write_rename() {
 #[cfg(target_os = "linux")]
 fn read_deny_marker_spoof_refused() {
     let (home, grok, workspace, _ch, _cg, _cw) = fixture_homes("read-deny-spoof");
-    fs::create_dir_all(workspace.join(".grok")).expect("mkdir .grok");
+    fs::create_dir_all(workspace.join(".cgrok")).expect("mkdir .cgrok");
     fs::write(
-            workspace.join(".grok").join(xai_grok_config::SANDBOX_CONFIG_FILENAME),
+            workspace.join(".cgrok").join(xai_grok_config::SANDBOX_CONFIG_FILENAME),
             "[profiles.netspoof]\nextends = \"devbox\"\nrestrict_network = true\ndeny = [\"secret.pem\"]\n",
         )
         .expect("write sandbox.toml");
@@ -1016,10 +1016,10 @@ fn read_deny_forged_mounts_are_refused() {
     }
     use std::os::unix::fs::PermissionsExt;
     let (home, grok, workspace, _ch, _cg, _cw) = fixture_homes("read-deny-forged");
-    fs::create_dir_all(workspace.join(".grok")).expect("mkdir .grok");
+    fs::create_dir_all(workspace.join(".cgrok")).expect("mkdir .cgrok");
     fs::write(
         workspace
-            .join(".grok")
+            .join(".cgrok")
             .join(xai_grok_config::SANDBOX_CONFIG_FILENAME),
         "[profiles.forged]\nextends = \"devbox\"\ndeny = [\"secret.pem\"]\n",
     )
@@ -1062,10 +1062,10 @@ fn read_deny_empty_set_verifies_inside_bwrap() {
         return;
     }
     let (home, grok, workspace, _ch, _cg, _cw) = fixture_homes("read-deny-empty");
-    fs::create_dir_all(workspace.join(".grok")).expect("mkdir .grok");
+    fs::create_dir_all(workspace.join(".cgrok")).expect("mkdir .cgrok");
     fs::write(
         workspace
-            .join(".grok")
+            .join(".cgrok")
             .join(xai_grok_config::SANDBOX_CONFIG_FILENAME),
         "[profiles.netempty]\nextends = \"devbox\"\nrestrict_network = true\n",
     )

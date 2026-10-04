@@ -885,9 +885,9 @@ pub struct WorkspaceConfig {
     pub event_buffer_capacity: usize,
     /// Pluggable [`SessionContext`] / [`ToolRegistryBuilder`] producer.
     pub session_factory: Arc<dyn SessionContextFactory>,
-    /// Global hook sources (e.g. `~/.claude/settings.json`, `~/.grok/hooks/`).
+    /// Global hook sources (e.g. `~/.claude/settings.json`, `~/.cgrok/hooks/`).
     pub hook_global_sources: Vec<HookSourceConfig>,
-    /// Project-scoped hook sources (e.g. `<project>/.grok/hooks/`).
+    /// Project-scoped hook sources (e.g. `<project>/.cgrok/hooks/`).
     pub hook_project_sources: Vec<HookSourceConfig>,
     /// Extra skill paths and a path-prefix ignore list. Stored on `WorkspaceShared` for `discover_skills` calls.
     pub skills_config: crate::discovery::SkillsConfig,
@@ -904,7 +904,7 @@ pub struct WorkspaceConfig {
     pub server_metadata: Option<serde_json::Value>,
     /// Runtime-tunable timing/threshold config for the tool server.
     pub status_config: crate::status_config::StatusConfig,
-    /// Folder-trust verdict for repo-local (project-scoped) LSP servers from `<cwd>/.grok/lsp.json`.
+    /// Folder-trust verdict for repo-local (project-scoped) LSP servers from `<cwd>/.cgrok/lsp.json`.
     /// `false` drops them at load, `true` keeps them.
     /// The shell caller resolves the verdict and threads it in; callers without a folder-trust decision pass `true`.
     pub project_lsp_trusted: bool,

@@ -22,11 +22,11 @@ fn apply_wrap_child_env(
     cmd: &mut portable_pty::CommandBuilder,
     appearance: Option<SystemAppearance>,
 ) {
-    cmd.env("GROK_OSC52_SINK", "1");
+    cmd.env("CGROK_OSC52_SINK", "1");
     cmd.env("LC_GROK_OSC52_SINK", "1");
     if let Some(appearance) = appearance {
         let value = appearance.as_env_value();
-        cmd.env("GROK_APPEARANCE", value);
+        cmd.env("CGROK_APPEARANCE", value);
         cmd.env("LC_GROK_APPEARANCE", value);
     }
 }
@@ -365,22 +365,22 @@ mod tests {
     #[test]
     fn apply_wrap_child_env_dark_overrides_parent_light_on_both_names() {
         let mut cmd = portable_pty::CommandBuilder::new("true");
-        cmd.env("GROK_APPEARANCE", "light");
+        cmd.env("CGROK_APPEARANCE", "light");
         cmd.env("LC_GROK_APPEARANCE", "light");
         apply_wrap_child_env(&mut cmd, Some(SystemAppearance::Dark));
-        assert_eq!(env_str(&cmd, "GROK_APPEARANCE").as_deref(), Some("dark"));
+        assert_eq!(env_str(&cmd, "CGROK_APPEARANCE").as_deref(), Some("dark"));
         assert_eq!(env_str(&cmd, "LC_GROK_APPEARANCE").as_deref(), Some("dark"));
-        assert_eq!(env_str(&cmd, "GROK_OSC52_SINK").as_deref(), Some("1"));
+        assert_eq!(env_str(&cmd, "CGROK_OSC52_SINK").as_deref(), Some("1"));
         assert_eq!(env_str(&cmd, "LC_GROK_OSC52_SINK").as_deref(), Some("1"));
     }
 
     #[test]
     fn apply_wrap_child_env_light_overrides_parent_dark_on_both_names() {
         let mut cmd = portable_pty::CommandBuilder::new("true");
-        cmd.env("GROK_APPEARANCE", "dark");
+        cmd.env("CGROK_APPEARANCE", "dark");
         cmd.env("LC_GROK_APPEARANCE", "dark");
         apply_wrap_child_env(&mut cmd, Some(SystemAppearance::Light));
-        assert_eq!(env_str(&cmd, "GROK_APPEARANCE").as_deref(), Some("light"));
+        assert_eq!(env_str(&cmd, "CGROK_APPEARANCE").as_deref(), Some("light"));
         assert_eq!(
             env_str(&cmd, "LC_GROK_APPEARANCE").as_deref(),
             Some("light")
@@ -390,11 +390,11 @@ mod tests {
     #[test]
     fn apply_wrap_child_env_none_does_not_stamp_from_parent_snapshot() {
         let mut cmd = portable_pty::CommandBuilder::new("true");
-        cmd.env("GROK_APPEARANCE", "dark");
+        cmd.env("CGROK_APPEARANCE", "dark");
         cmd.env_remove("LC_GROK_APPEARANCE");
         apply_wrap_child_env(&mut cmd, None);
-        assert_eq!(env_str(&cmd, "GROK_APPEARANCE").as_deref(), Some("dark"));
+        assert_eq!(env_str(&cmd, "CGROK_APPEARANCE").as_deref(), Some("dark"));
         assert_eq!(env_str(&cmd, "LC_GROK_APPEARANCE"), None);
-        assert_eq!(env_str(&cmd, "GROK_OSC52_SINK").as_deref(), Some("1"));
+        assert_eq!(env_str(&cmd, "CGROK_OSC52_SINK").as_deref(), Some("1"));
     }
 }

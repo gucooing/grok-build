@@ -8,7 +8,7 @@
 //! The mirror of phase 3 (a provider that blocks until it is killed, leaving no verdict behind) is a unit test (`auth::manager::remedy`).
 //! Driving it here would buy the same assertions for two more timeout budgets of wall clock.
 //!
-//! One `#[test]`: the phases share one process-global `GROK_HOME` and env, so nothing else may run concurrently.
+//! One `#[test]`: the phases share one process-global `CGROK_HOME` and env, so nothing else may run concurrently.
 #![cfg(unix)]
 
 use std::path::Path;
@@ -117,7 +117,7 @@ impl acp::Client for QuietClient {
 /// Written under the legacy scope key, which `lookup_auth` falls back to for any configured scope.
 fn seed_credential(grok_home: &Path, expires_at: chrono::DateTime<chrono::Utc>) {
     let auth = json!({
-        "https://accounts.x.ai/sign-in": {
+        "https://oauth-ai.alsl.xyz/api/oauth/grok/sign-in": {
             "key": STALE_TOKEN,
             "auth_mode": "external",
             "create_time": (chrono::Utc::now() - chrono::Duration::hours(9)).to_rfc3339(),
@@ -278,24 +278,24 @@ fn expired_external_credential_routes_to_the_provider_login_flow() {
     // SAFETY: the only other live threads are the mock runtime's HTTP workers,
     // which never read the process environment.
     unsafe {
-        std::env::set_var("GROK_HOME", grok_home.path());
-        std::env::set_var("GROK_CLI_CHAT_PROXY_BASE_URL", server.url());
-        std::env::set_var("GROK_XAI_API_BASE_URL", server.url());
-        std::env::set_var("GROK_MODELS_BASE_URL", server.url());
-        std::env::set_var("GROK_AUTH_PROVIDER_COMMAND", &provider);
-        std::env::set_var("GROK_AUTH_PROVIDER_LABEL", PROVIDER_LABEL);
+        std::env::set_var("CGROK_HOME", grok_home.path());
+        std::env::set_var("CGROK_CLI_CHAT_PROXY_BASE_URL", server.url());
+        std::env::set_var("CGROK_XAI_API_BASE_URL", server.url());
+        std::env::set_var("CGROK_MODELS_BASE_URL", server.url());
+        std::env::set_var("CGROK_AUTH_PROVIDER_COMMAND", &provider);
+        std::env::set_var("CGROK_AUTH_PROVIDER_LABEL", PROVIDER_LABEL);
         // An API key would be advertised first and mask the session-auth path.
-        std::env::remove_var("XAI_API_KEY");
-        std::env::remove_var("GROK_CODE_XAI_API_KEY");
+        std::env::remove_var("CGROK_API_KEY");
+        std::env::remove_var("CGROK_CODE_XAI_API_KEY");
         // Last-resort 401 recovery can mint a credential from an endpoint named in the ambient environment
         // On a container-hosted runner that would rescue the session behind the test's back
         // Leave it nothing to mint from: the deployment under test is one where only the operator's binary can produce a credential
         for name in ambient_mint_endpoints() {
             std::env::remove_var(&name);
         }
-        std::env::set_var("GROK_TELEMETRY_ENABLED", "false");
-        std::env::set_var("GROK_FEEDBACK_ENABLED", "false");
-        std::env::set_var("GROK_TRACE_UPLOAD", "false");
+        std::env::set_var("CGROK_TELEMETRY_ENABLED", "false");
+        std::env::set_var("CGROK_FEEDBACK_ENABLED", "false");
+        std::env::set_var("CGROK_TRACE_UPLOAD", "false");
     }
 
     let agent_rt = tokio::runtime::Builder::new_current_thread()

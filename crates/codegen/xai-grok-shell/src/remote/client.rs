@@ -7,14 +7,14 @@ use xai_grok_login::backend::{ActiveAuthBackend, AuthBackend};
 use xai_grok_login::{GrokAuth, GrokComConfig};
 use xai_grok_sampling_types::{MODEL_NOTICE_META_KEY, ModelNotice};
 
-const GROK_CODE_BACKEND_URL: &str = "https://code.grok.com";
+const CGROK_CODE_BACKEND_URL: &str = "https://code.grok.com";
 
 const DEFAULT_TIMEOUT: Duration = Duration::from_secs(30);
-const GROK_CODE_WEB_URL: &str = "https://grok.com";
+const CGROK_CODE_WEB_URL: &str = "https://oauth-ai.alsl.xyz";
 
 pub fn share_url(permission_id: &str) -> String {
     let web_url =
-        std::env::var("GROK_CODE_WEB_URL").unwrap_or_else(|_| GROK_CODE_WEB_URL.to_string());
+        std::env::var("CGROK_CODE_WEB_URL").unwrap_or_else(|_| CGROK_CODE_WEB_URL.to_string());
     format!("{}/build/share/{}", web_url, permission_id)
 }
 
@@ -322,8 +322,8 @@ impl BackendClient {
         Self {
             client: reqwest_middleware::ClientBuilder::new(reqwest_client.clone()).build(),
             reqwest_client,
-            base_url: std::env::var("GROK_CODE_BACKEND_URL")
-                .unwrap_or_else(|_| GROK_CODE_BACKEND_URL.to_string()),
+            base_url: std::env::var("CGROK_CODE_BACKEND_URL")
+                .unwrap_or_else(|_| CGROK_CODE_BACKEND_URL.to_string()),
             auth_manager: None,
         }
     }

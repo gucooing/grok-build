@@ -12,8 +12,8 @@ mod grok;
 /// The inputs of one login attempt.
 pub struct LoginRequest<'a> {
     pub auth_manager: &'a Arc<AuthManager>,
-    pub grok_com_config: &'a GrokComConfig,
-    /// `[grok_com_config] login_device_flow` config tier, resolved by the caller (no longer a `GrokComConfig` field).
+    pub cgrok_com_config: &'a GrokComConfig,
+    /// `[cgrok_com_config] login_device_flow` config tier, resolved by the caller (no longer a `GrokComConfig` field).
     pub config_device_flow: Option<bool>,
     pub reauth: bool,
     pub force_interactive: bool,

@@ -296,7 +296,7 @@ impl AgentRebuildSpec {
         }
         let session_env = {
             let mut env = session_env.as_ref().clone();
-            env.insert("GROK_SESSION_ID".to_string(), session_id_str.clone());
+            env.insert("CGROK_SESSION_ID".to_string(), session_id_str.clone());
             Arc::new(env)
         };
         let presentation = latch_task_model_presentation(models_manager, task_model_policy).await;
@@ -575,7 +575,7 @@ mod legacy_tests {
             .expect("GrokBuild Task description should be present")
     }
     /// The `[toolset.web_search]` policy is authoritative on the backend-hosted path.
-    /// Agent frontmatter is model-writable (`.grok/agents/*.md`), so a configured blocklist must survive a frontmatter allowlist.
+    /// Agent frontmatter is model-writable (`.cgrok/agents/*.md`), so a configured blocklist must survive a frontmatter allowlist.
     #[tokio::test(flavor = "current_thread")]
     async fn config_web_search_domains_beat_agent_frontmatter() {
         use xai_grok_sampling_types::{HostedTool, ToolOverrides, WebSearchOptions};
@@ -603,7 +603,7 @@ mod legacy_tests {
             spec_mut.backend_search = true;
             spec_mut.web_search_config = WebSearchConfig::Enabled {
                 api_key: "test-key".to_string(),
-                base_url: "https://api.x.ai/v1".to_string(),
+                base_url: "https://oauth-ai.alsl.xyz/api/oauth/grok/v1".to_string(),
                 model: "grok-4".to_string(),
                 extra_headers: Default::default(),
                 alpha_test_key: None,

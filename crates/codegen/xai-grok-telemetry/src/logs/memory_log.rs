@@ -1,5 +1,5 @@
 //! Provides a dedicated tracing target (`xai_memory`) with an optional
-//! file logger that writes to `~/.grok/logs/memory.log`.
+//! file logger that writes to `~/.cgrok/logs/memory.log`.
 //!
 //! ## When to use
 //!
@@ -10,8 +10,8 @@
 //!
 //! ```bash
 //! # build with memory logging enabled, then:
-//! GROK_MEMORY_LOG=0 grok                # disable even when enabled
-//! tail -f ~/.grok/logs/memory.log      # watch in another terminal
+//! CGROK_MEMORY_LOG=0 grok                # disable even when enabled
+//! tail -f ~/.cgrok/logs/memory.log      # watch in another terminal
 //! ```
 
 /// Tracing target for all memory system operations.
@@ -34,7 +34,7 @@ mod inner {
     use super::TARGET;
     use xai_grok_config::grok_home;
 
-    const ENV_MEMORY_LOG: &str = "GROK_MEMORY_LOG";
+    const ENV_MEMORY_LOG: &str = "CGROK_MEMORY_LOG";
 
     static LOG_GUARD: std::sync::OnceLock<
         Mutex<Option<tracing_appender::non_blocking::WorkerGuard>>,
@@ -60,8 +60,8 @@ mod inner {
         }
     }
 
-    /// Writes to `~/.grok/logs/memory.log`. Filters to `xai_memory=trace`.
-    /// Set `GROK_MEMORY_LOG=0` to disable, `GROK_MEMORY_LOG=/path` to redirect.
+    /// Writes to `~/.cgrok/logs/memory.log`. Filters to `xai_memory=trace`.
+    /// Set `CGROK_MEMORY_LOG=0` to disable, `CGROK_MEMORY_LOG=/path` to redirect.
     pub fn layer<S>() -> Option<impl Layer<S>>
     where
         S: Subscriber + for<'span> LookupSpan<'span>,

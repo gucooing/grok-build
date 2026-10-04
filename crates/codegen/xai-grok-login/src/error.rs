@@ -78,7 +78,7 @@ pub enum RefreshTokenFailedReason {
     RefreshTokenRejected,
     /// `invalid_client`: the client/app credential was rejected.
     ClientRejected,
-    /// The operator's `auth_provider_command` could not produce a credential in a headless run (`GROK_AUTH_EXPIRED=1`).
+    /// The operator's `auth_provider_command` could not produce a credential in a headless run (`CGROK_AUTH_EXPIRED=1`).
     ProviderInteractiveRequired,
     /// Escalation from repeated transient failures (OIDC).
     /// Never a raw IdP code: an unrecognized terminal code is classified transient, not `Other` (see `classify_terminal`).

@@ -66,7 +66,7 @@ async fn log_offloaded(lvl: LogLevel, msg: String, ctx: serde_json::Value) {
 }
 async fn fetch_user_info(manager: &AuthManager, key: &str, log_label: &str) -> Option<UserInfo> {
     let user_url = format!("{}/user", manager.proxy_base_url);
-    let token_header = &manager.grok_com_config.token_header;
+    let token_header = &manager.cgrok_com_config.token_header;
     let started = std::time::Instant::now();
     let http_client = xai_grok_http::shared_client();
     let response = http_client

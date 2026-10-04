@@ -7,7 +7,7 @@ use serde::Deserialize;
 
 use xai_grok_login::AuthManager;
 
-const GROK_WEB_URL: &str = "https://grok.com";
+const CGROK_WEB_URL: &str = "https://oauth-ai.alsl.xyz";
 
 #[derive(Debug, Clone, Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -80,20 +80,20 @@ pub struct ChatModelsClient {
 
 impl ChatModelsClient {
     pub fn new(auth: Arc<AuthManager>) -> Self {
-        let base_url = std::env::var("GROK_MODES_BASE_URL")
+        let base_url = std::env::var("CGROK_MODES_BASE_URL")
             .ok()
             .filter(|s| !s.is_empty())
             .or_else(|| {
-                std::env::var("GROK_CONVERSATIONS_BASE_URL")
+                std::env::var("CGROK_CONVERSATIONS_BASE_URL")
                     .ok()
                     .filter(|s| !s.is_empty())
             })
             .or_else(|| {
-                std::env::var("GROK_CODE_WEB_URL")
+                std::env::var("CGROK_CODE_WEB_URL")
                     .ok()
                     .filter(|s| !s.is_empty())
             })
-            .unwrap_or_else(|| GROK_WEB_URL.to_string());
+            .unwrap_or_else(|| CGROK_WEB_URL.to_string());
         Self {
             http: crate::http::shared_client(),
             base_url,
@@ -122,7 +122,7 @@ impl ChatModelsClient {
             .header("Authorization", format!("Bearer {}", auth.key))
             .header(
                 "X-XAI-Token-Auth",
-                self.auth.grok_com_config().token_header.clone(),
+                self.auth.cgrok_com_config().token_header.clone(),
             )
             .header("x-userid", &auth.user_id)
             .header("x-grok-client-version", xai_grok_version::VERSION)

@@ -16,7 +16,7 @@ impl ManagedConfigSource {
         matches!(self, Self::TeamOauth)
     }
 
-    /// The 401/403 error tailored to the credential (don't tell a team user to check `GROK_DEPLOYMENT_KEY`).
+    /// The 401/403 error tailored to the credential (don't tell a team user to check `CGROK_DEPLOYMENT_KEY`).
     pub(super) fn auth_rejected_error(self) -> ManagedConfigError {
         if self.is_team() {
             ManagedConfigError::TeamAuthRejected
@@ -43,7 +43,7 @@ pub enum ManagedConfigError {
     )]
     ConnectionInterrupted(String),
     #[error(
-        "The deployment key was rejected. Confirm that GROK_DEPLOYMENT_KEY is set correctly and hasn't expired."
+        "The deployment key was rejected. Confirm that CGROK_DEPLOYMENT_KEY is set correctly and hasn't expired."
     )]
     DeploymentKeyRejected,
     #[error(

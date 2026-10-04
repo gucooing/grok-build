@@ -15,13 +15,13 @@ pub fn ignore_broken_pipe(result: std::io::Result<()>) -> std::io::Result<()> {
     }
 }
 
-/// Path to `$GROK_HOME/pager.toml`.
+/// Path to `$CGROK_HOME/pager.toml`.
 pub fn pager_toml_path() -> PathBuf {
     grok_home().join("pager.toml")
 }
 
-/// `~/.grok` or `$GROK_HOME`, decided by the resolved home rather than by
-/// whether `GROK_HOME` is set in the environment.
+/// `~/.cgrok` or `$CGROK_HOME`, decided by the resolved home rather than by
+/// whether `CGROK_HOME` is set in the environment.
 pub fn display_grok_home_prefix() -> String {
     display_grok_home_prefix_for(&grok_home())
 }
@@ -29,13 +29,13 @@ pub fn display_grok_home_prefix() -> String {
 pub fn display_grok_home_prefix_for(home: &Path) -> String {
     let default = xai_grok_config::default_grok_home();
     if home == default || home == dunce::canonicalize(&default).unwrap_or(default) {
-        "~/.grok".to_string()
+        "~/.cgrok".to_string()
     } else {
-        "$GROK_HOME".to_string()
+        "$CGROK_HOME".to_string()
     }
 }
 
-/// User-facing path under [`grok_home()`], e.g. ``~/.grok/config.toml``.
+/// User-facing path under [`grok_home()`], e.g. ``~/.cgrok/config.toml``.
 pub fn display_user_grok_path(relative: impl AsRef<Path>) -> String {
     display_user_grok_path_for(&grok_home(), relative)
 }
@@ -81,7 +81,7 @@ pub fn display_location_path(path: impl AsRef<Path>) -> String {
     crate::location_path::shorten_location_path(&abbreviate_path(&lossy)).into_owned()
 }
 
-/// True when `path` is under user [`grok_home()`] (not project `{cwd}/.grok`).
+/// True when `path` is under user [`grok_home()`] (not project `{cwd}/.cgrok`).
 pub fn is_under_user_grok_home(path: &Path) -> bool {
     path.starts_with(grok_home())
 }
@@ -397,17 +397,17 @@ mod tests {
 
     #[test]
     fn display_grok_home_prefix_default_install() {
-        if std::env::var("GROK_HOME").is_ok() {
+        if std::env::var("CGROK_HOME").is_ok() {
             return;
         }
-        assert_eq!(display_grok_home_prefix(), "~/.grok");
+        assert_eq!(display_grok_home_prefix(), "~/.cgrok");
     }
 
     #[test]
     fn display_user_grok_path_joins_relative() {
         let path = display_user_grok_path(xai_grok_config::USER_CONFIG_FILENAME);
         assert!(path.ends_with("/config.toml") || path.ends_with("\\config.toml"));
-        assert!(path.contains(".grok") || path.contains("$GROK_HOME"));
+        assert!(path.contains(".cgrok") || path.contains("$CGROK_HOME"));
     }
 
     #[test]
@@ -415,11 +415,11 @@ mod tests {
         let custom = std::env::temp_dir().join("grok-home-display-regression");
         assert_eq!(
             display_user_grok_path_for(&custom, xai_grok_config::USER_CONFIG_FILENAME),
-            "$GROK_HOME/config.toml"
+            "$CGROK_HOME/config.toml"
         );
         assert_eq!(
             display_user_grok_path_for(&custom, xai_grok_config::SANDBOX_CONFIG_FILENAME),
-            format!("$GROK_HOME/{}", xai_grok_config::SANDBOX_CONFIG_FILENAME)
+            format!("$CGROK_HOME/{}", xai_grok_config::SANDBOX_CONFIG_FILENAME)
         );
     }
 
@@ -432,7 +432,7 @@ mod tests {
         if home.is_empty() {
             return;
         }
-        let full = format!("{home}/.grok/memory/MEMORY.md");
+        let full = format!("{home}/.cgrok/memory/MEMORY.md");
         let abbreviated = abbreviate_path(&full);
         assert!(
             abbreviated.contains("memory/MEMORY.md"),

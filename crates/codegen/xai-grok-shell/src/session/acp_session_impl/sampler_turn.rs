@@ -951,7 +951,7 @@ impl SessionActor {
     }
 
     /// Resolve a standalone aux-model `SamplerConfig` for `slug` via the shared catalog routing, gathering the session-local auth context once.
-    /// The routing is Tier-1 catalog creds / Tier-2 xAI-proxy via session token / `XAI_API_KEY` / deployment key.
+    /// The routing is Tier-1 catalog creds / Tier-2 xAI-proxy via session token / `CGROK_API_KEY` / deployment key.
     /// Shared by image-describe and the classifier so the gather can't drift.
     pub(super) async fn resolve_aux_sampler_config(
         &self,
@@ -967,7 +967,7 @@ impl SessionActor {
         let disable_api_key_auth = self
             .auth_manager
             .as_ref()
-            .map(|am| am.grok_com_config().api_key_auth_disabled())
+            .map(|am| am.cgrok_com_config().api_key_auth_disabled())
             .unwrap_or(false);
         crate::agent::config::resolve_aux_model_sampling_config(
             slug,

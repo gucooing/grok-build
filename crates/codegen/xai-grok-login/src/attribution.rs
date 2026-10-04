@@ -9,7 +9,7 @@
 //! visible, since most 401s arrive exactly then). The two sinks are:
 //!
 //! 1. [`xai_grok_telemetry::unified_log::warn`] for the local
-//!    `~/.grok/logs/unified.jsonl` file (best-effort; ships to GCS
+//!    `~/.cgrok/logs/unified.jsonl` file (best-effort; ships to GCS
 //!    only on OIDC refresh failure via `auth/refresh.rs`).
 //! 2. A discrete `tracing::warn_span!("auth_401_attribution", ...)` captured by the OTel layer in `util/otel_layer.rs` and shipped
 //!    via OTLP export to the configured telemetry backend (queryable by span name `auth_401_attribution`).
@@ -240,7 +240,7 @@ pub fn record_auth_401(
 ) {
     let payload = compute_attribution_payload(auth_manager, consumer, sent_bearer);
 
-    // Sink 1 -- local file (~/.grok/logs/unified.jsonl) + scrubbed tracing event
+    // Sink 1 -- local file (~/.cgrok/logs/unified.jsonl) + scrubbed tracing event
     // The local file is reliable but only ships to GCS on OIDC refresh failure (auth/refresh.rs::spawn_diagnostic_upload)
     // By itself it does not show the steady-state 401 population; Sink 2 below provides that
     xai_grok_telemetry::unified_log::warn(
@@ -319,7 +319,7 @@ fn compute_attribution_payload(
 
     // Mint-age and expiry come from the same `current_auth` we already read; sentinels `-1 / 0` when the manager holds nothing
     // For a hard-expired token these report true age and (negative) time-past-expiry: how long the bearer was dead at the 401
-    // TODO: mirror the full External-with-ttl branch from `AuthManager::is_token_expired` (uses `grok_com_config.auth_token_ttl` when `expires_at` is `None` and `auth_mode == External`) The current 2-branch fallback (`expires_at` if Some else `create_time + TOKEN_TTL`) is good enough for diagnostic metadata The External-ttl branch is worth wiring once a real consumer needs it
+    // TODO: mirror the full External-with-ttl branch from `AuthManager::is_token_expired` (uses `cgrok.auth_token_ttl` when `expires_at` is `None` and `auth_mode == External`) The current 2-branch fallback (`expires_at` if Some else `create_time + TOKEN_TTL`) is good enough for diagnostic metadata The External-ttl branch is worth wiring once a real consumer needs it
     let (mint_age_seconds, expires_at_seconds_from_now) = match current_auth {
         Some(auth) => {
             let mint_age = now.signed_duration_since(auth.create_time).num_seconds();
@@ -350,7 +350,7 @@ mod tests {
     use super::*;
 
     /// Test helper: build a fresh `AuthManager` rooted at a tempdir so
-    /// nothing from a developer's actual `~/.grok/auth.json` leaks in.
+    /// nothing from a developer's actual `~/.cgrok/auth.json` leaks in.
     fn empty_auth_manager() -> (tempfile::TempDir, AuthManager) {
         let dir = tempfile::tempdir().expect("tempdir");
         let cfg = GrokComConfig::default();

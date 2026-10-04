@@ -4644,7 +4644,7 @@ async fn context_window_downgrade_triggers_auto_compact() {
 
     // Initial config: 500k context, Responses backend (matches grok-4.5)
     let config = SamplingConfig {
-        base_url: "https://api.x.ai/v1".to_string(),
+        base_url: "https://oauth-ai.alsl.xyz/api/oauth/grok/v1".to_string(),
         model: "grok-4.5".to_string(),
         temperature: Some(0.7),
         top_p: Some(0.95),

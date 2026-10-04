@@ -13,12 +13,12 @@ use xai_grok_telemetry::events::{LoginFailed, LoginFailureKind};
 pub type StderrCallback = Box<dyn Fn(&str)>;
 /// Reject a cached credential that lacks `oidc_issuer`, has a mismatched issuer, or whose team principal violates the `force_login_team_uuid` pin.
 /// Interactive login then starts fresh instead of reusing a stale or wrong-team session.
-fn is_cached_credential_compatible(auth: &GrokAuth, grok_com_config: &GrokComConfig) -> bool {
-    let expected_issuer = grok_com_config
+fn is_cached_credential_compatible(auth: &GrokAuth, cgrok_com_config: &GrokComConfig) -> bool {
+    let expected_issuer = cgrok_com_config
         .oidc
         .as_ref()
         .map(|c| c.issuer.as_str())
-        .or_else(|| grok_com_config.oauth2.as_ref().map(|c| c.issuer.as_str()));
+        .or_else(|| cgrok_com_config.oauth2.as_ref().map(|c| c.issuer.as_str()));
     let issuer_compatible = match (auth.oidc_issuer.as_deref(), expected_issuer) {
         (Some(actual), Some(expected)) => actual == expected,
         (None, Some(_)) => false,
@@ -27,7 +27,7 @@ fn is_cached_credential_compatible(auth: &GrokAuth, grok_com_config: &GrokComCon
     if !issuer_compatible {
         return false;
     }
-    if let Some(policy) = crate::oidc::login_principal_policy(grok_com_config) {
+    if let Some(policy) = crate::oidc::login_principal_policy(cgrok_com_config) {
         let actual = crate::oidc::peek_access_token_principal_id(&auth.key);
         if crate::oidc::enforce_login_principal(Some(&policy), actual.as_deref()).is_err() {
             return false;
@@ -80,7 +80,7 @@ fn resolve_device_flow(
     config: Option<bool>,
     remote: Option<bool>,
 ) -> xai_grok_config_types::Resolved<bool> {
-    xai_grok_config_types::BoolFlag::env("GROK_LOGIN_DEVICE_FLOW")
+    xai_grok_config_types::BoolFlag::env("CGROK_LOGIN_DEVICE_FLOW")
         .cli(login_override.as_cli_bool())
         .config(config)
         .feature_flag(remote)
@@ -112,7 +112,7 @@ async fn should_use_device_flow(
     let resolved = if login_override.as_cli_bool().is_some() {
         resolve_device_flow(login_override, None, None)
     } else {
-        let env = xai_grok_config::env_bool("GROK_LOGIN_DEVICE_FLOW");
+        let env = xai_grok_config::env_bool("CGROK_LOGIN_DEVICE_FLOW");
         let remote = if env.is_none() && config_device_flow.is_none() {
             tokio::time::timeout(
                 std::time::Duration::from_secs(2),
@@ -167,7 +167,7 @@ pub struct AuthChannels {
     pub url_tx: Option<oneshot::Sender<AuthUrlInfo>>,
     pub code_rx: mpsc::Receiver<String>,
 }
-/// Sets no `GROK_AUTH_EXPIRED`: operator binaries, which live outside this repo, read that variable as "headless, don't prompt" and decline the run.
+/// Sets no `CGROK_AUTH_EXPIRED`: operator binaries, which live outside this repo, read that variable as "headless, don't prompt" and decline the run.
 pub async fn run_external_auth_provider(
     command: &str,
     auth_manager: &Arc<AuthManager>,
@@ -232,7 +232,7 @@ pub async fn run_external_auth_provider(
     }
     let mut auth = parse_output(&output)
         .map_err(|e| anyhow::anyhow!("external auth provider `{command}`: {e}"))?;
-    let principal_policy = crate::oidc::login_principal_policy(auth_manager.grok_com_config());
+    let principal_policy = crate::oidc::login_principal_policy(auth_manager.cgrok_com_config());
     crate::oidc::enforce_login_principal(
         principal_policy.as_ref(),
         crate::oidc::peek_access_token_principal_id(&auth.key).as_deref(),
@@ -255,7 +255,7 @@ pub async fn run_external_auth_provider(
 /// GUI auth: bridges external provider stderr to `url_tx`, pipes code submission via `code_rx`.
 pub async fn run_auth_flow_with_stderr_bridge(
     auth_manager: &Arc<AuthManager>,
-    grok_com_config: &GrokComConfig,
+    cgrok_com_config: &GrokComConfig,
     config_device_flow: Option<bool>,
     channels: AuthChannels,
     reauth: bool,
@@ -300,7 +300,7 @@ pub async fn run_auth_flow_with_stderr_bridge(
     if force_interactive {
         let auth = run_auth_flow_interactive(
             auth_manager,
-            grok_com_config,
+            cgrok_com_config,
             config_device_flow,
             Some(on_stderr),
             Some(url_tx),
@@ -317,7 +317,7 @@ pub async fn run_auth_flow_with_stderr_bridge(
     } else {
         let auth = run_auth_flow(
             auth_manager,
-            grok_com_config,
+            cgrok_com_config,
             config_device_flow,
             reauth,
             Some(on_stderr),
@@ -338,7 +338,7 @@ pub async fn run_auth_flow_with_stderr_bridge(
 /// When `url_tx` and `code_rx` are `None`, falls back to stderr/stdin (CLI mode).
 pub async fn run_auth_flow(
     auth_manager: &Arc<AuthManager>,
-    grok_com_config: &GrokComConfig,
+    cgrok_com_config: &GrokComConfig,
     config_device_flow: Option<bool>,
     reauth: bool,
     on_stderr: Option<StderrCallback>,
@@ -348,7 +348,7 @@ pub async fn run_auth_flow(
 ) -> anyhow::Result<(GrokAuth, bool)> {
     run_auth_flow_inner(
         auth_manager,
-        grok_com_config,
+        cgrok_com_config,
         config_device_flow,
         reauth,
         false,
@@ -363,7 +363,7 @@ pub async fn run_auth_flow(
 /// Used by `/login` for mid-session re-auth where abandoning the flow must not disrupt the session.
 pub async fn run_auth_flow_interactive(
     auth_manager: &Arc<AuthManager>,
-    grok_com_config: &GrokComConfig,
+    cgrok_com_config: &GrokComConfig,
     config_device_flow: Option<bool>,
     on_stderr: Option<StderrCallback>,
     url_tx: Option<Rc<RefCell<Option<oneshot::Sender<AuthUrlInfo>>>>>,
@@ -372,7 +372,7 @@ pub async fn run_auth_flow_interactive(
 ) -> anyhow::Result<(GrokAuth, bool)> {
     run_auth_flow_inner(
         auth_manager,
-        grok_com_config,
+        cgrok_com_config,
         config_device_flow,
         false,
         true,
@@ -388,7 +388,7 @@ pub async fn run_auth_flow_interactive(
 /// The reporting never changes the result.
 async fn run_auth_flow_inner(
     auth_manager: &Arc<AuthManager>,
-    grok_com_config: &GrokComConfig,
+    cgrok_com_config: &GrokComConfig,
     config_device_flow: Option<bool>,
     reauth: bool,
     force_interactive: bool,
@@ -401,7 +401,7 @@ async fn run_auth_flow_inner(
     let result = ActiveAuthBackend::default()
         .login(LoginRequest {
             auth_manager,
-            grok_com_config,
+            cgrok_com_config,
             config_device_flow,
             reauth,
             force_interactive,
@@ -447,7 +447,7 @@ fn failure_kind(transport: TransportFailureKind, is_decode: bool) -> LoginFailur
 }
 pub(super) async fn run_auth_flow_steps(
     auth_manager: &Arc<AuthManager>,
-    grok_com_config: &GrokComConfig,
+    cgrok_com_config: &GrokComConfig,
     config_device_flow: Option<bool>,
     reauth: bool,
     force_interactive: bool,
@@ -457,9 +457,9 @@ pub(super) async fn run_auth_flow_steps(
     login_override: LoginTransportOverride,
 ) -> anyhow::Result<(GrokAuth, bool)> {
     tracing::info!(
-        has_oidc = grok_com_config.oidc.is_some(),
-        has_oauth2 = grok_com_config.oauth2.is_some(),
-        has_external_auth = grok_com_config.auth_provider_command.is_some(),
+        has_oidc = cgrok_com_config.oidc.is_some(),
+        has_oauth2 = cgrok_com_config.oauth2.is_some(),
+        has_external_auth = cgrok_com_config.auth_provider_command.is_some(),
         reauth,
         "auth: starting auth flow"
     );
@@ -468,7 +468,7 @@ pub(super) async fn run_auth_flow_steps(
         let _ = auth_manager.remove_scope(LEGACY_AUTH_SCOPE);
     }
     if !force_interactive && let Some(auth) = auth_manager.current() {
-        if is_cached_credential_compatible(&auth, grok_com_config) {
+        if is_cached_credential_compatible(&auth, cgrok_com_config) {
             tracing::info!(auth_mode = ?auth.auth_mode, "auth: using cached credentials");
             xai_grok_telemetry::unified_log::info(
                 "auth: using cached credentials",
@@ -507,7 +507,7 @@ pub(super) async fn run_auth_flow_steps(
             })),
         );
         if disk_auth.as_ref().is_some_and(|d| {
-            !crate::is_expired(d) && is_cached_credential_compatible(d, grok_com_config)
+            !crate::is_expired(d) && is_cached_credential_compatible(d, cgrok_com_config)
         }) {
             xai_grok_telemetry::unified_log::info(
                 "auth run_auth_flow using valid disk token",
@@ -552,7 +552,7 @@ pub(super) async fn run_auth_flow_steps(
             }
         }
     }
-    if let Some(ref cmd) = grok_com_config.auth_provider_command {
+    if let Some(ref cmd) = cgrok_com_config.auth_provider_command {
         let over_stale_credential = reauth || auth_manager.is_expired();
         match run_external_auth_provider(cmd, auth_manager, over_stale_credential, on_stderr).await
         {
@@ -568,10 +568,10 @@ pub(super) async fn run_auth_flow_steps(
     }
     let url_tx = url_tx.and_then(|rc| rc.borrow_mut().take());
     let mut channels = code_rx.map(|code_rx| AuthChannels { url_tx, code_rx });
-    if crate::oidc::is_configured(grok_com_config) {
-        return crate::oidc::run_login_flow(grok_com_config, auth_manager, channels).await;
+    if crate::oidc::is_configured(cgrok_com_config) {
+        return crate::oidc::run_login_flow(cgrok_com_config, auth_manager, channels).await;
     }
-    if let Some(ref oauth2_cfg) = grok_com_config.oauth2 {
+    if let Some(ref oauth2_cfg) = cgrok_com_config.oauth2 {
         if should_use_device_flow(
             login_override,
             config_device_flow,
@@ -619,22 +619,26 @@ pub(super) async fn run_auth_flow_steps(
 /// Tries cached non-expired credentials, then OIDC silent refresh (needs a refresh_token), then the external auth provider command (if configured).
 /// Returns `None` when no valid credentials can be obtained non-interactively.
 pub async fn try_ensure_fresh_auth(
-    grok_com_config: &GrokComConfig,
+    cgrok_com_config: &GrokComConfig,
     proxy_base_url: String,
 ) -> Option<GrokAuth> {
-    try_ensure_fresh_auth_with(&build_startup_auth_manager(grok_com_config, proxy_base_url)).await
+    try_ensure_fresh_auth_with(&build_startup_auth_manager(
+        cgrok_com_config,
+        proxy_base_url,
+    ))
+    .await
 }
 /// Builds and configures the startup `AuthManager`; the policy helpers below take it injected so tests can substitute their own.
 fn build_startup_auth_manager(
-    grok_com_config: &GrokComConfig,
+    cgrok_com_config: &GrokComConfig,
     proxy_base_url: String,
 ) -> Arc<AuthManager> {
     let auth_manager = Arc::new(AuthManager::new_with_proxy_base_url(
         &grok_home::grok_home(),
-        grok_com_config.clone(),
+        cgrok_com_config.clone(),
         proxy_base_url,
     ));
-    auth_manager.configure_refresher(grok_com_config.auth_provider_command.clone(), None);
+    auth_manager.configure_refresher(cgrok_com_config.auth_provider_command.clone(), None);
     auth_manager
 }
 /// Uses cached valid credentials, else a silent refresh; never interactive login.
@@ -649,11 +653,11 @@ async fn try_ensure_fresh_auth_with(auth_manager: &Arc<AuthManager>) -> Option<G
 }
 /// Readiness-path auth: a bounded refresh plus the expired-but-refreshable cached session, but no cold mint (which can run a provider command up to `STARTUP_AUTH_TIMEOUT`). Minting is deferred to the post-readiness background task, so readiness waits at most `STARTUP_AUTH_REFRESH_TIMEOUT`.
 pub async fn try_noninteractive_auth_no_mint(
-    grok_com_config: &GrokComConfig,
+    cgrok_com_config: &GrokComConfig,
     proxy_base_url: String,
 ) -> Option<GrokAuth> {
     try_noninteractive_auth_no_mint_with(&build_startup_auth_manager(
-        grok_com_config,
+        cgrok_com_config,
         proxy_base_url,
     ))
     .await
@@ -688,17 +692,17 @@ fn expired_refreshable_session(auth_manager: &AuthManager) -> Option<GrokAuth> {
 /// Cold-start mint via non-interactive providers (external command, devbox); `None` when none is available. Persists the result into `auth_manager` (disk and in-memory) so per-request `auth()` self-heals.
 /// Carries no timeout of its own: the readiness-path caller imposes `STARTUP_AUTH_TIMEOUT`. The leader's background re-mint runs uncapped (only the provider's ~300s ceiling).
 pub async fn mint_session_noninteractive(auth_manager: &Arc<AuthManager>) -> Option<GrokAuth> {
-    let grok_com_config = auth_manager.grok_com_config();
+    let cgrok_com_config = auth_manager.cgrok_com_config();
     if !ActiveAuthBackend::default().is_xai_authority() {
         return None;
     }
-    if grok_com_config.blocks_automatic_oidc() {
+    if cgrok_com_config.blocks_automatic_oidc() {
         tracing::debug!(
             "mint_session_noninteractive: skipped (preferred_method=api_key blocks automatic OIDC)"
         );
         return None;
     }
-    if let Some(cmd) = grok_com_config.auth_provider_command.as_deref() {
+    if let Some(cmd) = cgrok_com_config.auth_provider_command.as_deref() {
         match run_external_auth_provider(cmd, auth_manager, false, None).await {
             Ok((auth, _)) => return Some(auth),
             Err(e) => {
@@ -732,14 +736,14 @@ pub fn report_signed_in(auth: &GrokAuth) {
 }
 /// CLI auth entrypoint. For GUI, use `run_auth_flow_with_stderr_bridge`.
 pub async fn ensure_authenticated(
-    grok_com_config: &GrokComConfig,
+    cgrok_com_config: &GrokComConfig,
     config_device_flow: Option<bool>,
     proxy_base_url: String,
     reauth: bool,
     message_prefix: Option<&str>,
 ) -> anyhow::Result<GrokAuth> {
     ensure_authenticated_with_override(
-        grok_com_config,
+        cgrok_com_config,
         config_device_flow,
         proxy_base_url,
         reauth,
@@ -751,7 +755,7 @@ pub async fn ensure_authenticated(
 /// Like [`ensure_authenticated`] but with an explicit login-transport override (from `--oauth` / `--device-auth`).
 /// Used by `run_cli_login`.
 pub async fn ensure_authenticated_with_override(
-    grok_com_config: &GrokComConfig,
+    cgrok_com_config: &GrokComConfig,
     config_device_flow: Option<bool>,
     proxy_base_url: String,
     reauth: bool,
@@ -761,7 +765,7 @@ pub async fn ensure_authenticated_with_override(
     let grok_home = grok_home::grok_home();
     let auth_manager = Arc::new(AuthManager::new_with_proxy_base_url(
         &grok_home,
-        grok_com_config.clone(),
+        cgrok_com_config.clone(),
         proxy_base_url,
     ));
     if !reauth && let Some(auth) = auth_manager.current() {
@@ -777,7 +781,7 @@ pub async fn ensure_authenticated_with_override(
     }
     let (auth, did_auth) = run_auth_flow(
         &auth_manager,
-        grok_com_config,
+        cgrok_com_config,
         config_device_flow,
         reauth,
         None,
@@ -794,17 +798,17 @@ pub async fn ensure_authenticated_with_override(
 /// Decides *whether to prompt* for an interactive login (the wire credential is chosen separately by `ShellAuthCredentialProvider`).
 /// With `has_noninteractive_auth`, only refresh a cached token best-effort (no browser, no cold mint); otherwise require an interactive login.
 pub async fn ensure_authenticated_or_noninteractive(
-    grok_com_config: &GrokComConfig,
+    cgrok_com_config: &GrokComConfig,
     config_device_flow: Option<bool>,
     proxy_base_url: String,
     has_noninteractive_auth: bool,
     message_prefix: Option<&str>,
 ) -> anyhow::Result<Option<GrokAuth>> {
     if has_noninteractive_auth {
-        Ok(try_ensure_fresh_auth(grok_com_config, proxy_base_url).await)
+        Ok(try_ensure_fresh_auth(cgrok_com_config, proxy_base_url).await)
     } else {
         ensure_authenticated(
-            grok_com_config,
+            cgrok_com_config,
             config_device_flow,
             proxy_base_url,
             false,
@@ -815,10 +819,10 @@ pub async fn ensure_authenticated_or_noninteractive(
     }
 }
 /// Unified `grok login` handler for CLI entry points (tui, pager). Precedence: `--oauth` forces loopback, `--device-auth` forces device.
-/// Otherwise `GROK_LOGIN_DEVICE_FLOW` env, then `[auth] login_device_flow` config, then the loopback default.
+/// Otherwise `CGROK_LOGIN_DEVICE_FLOW` env, then `[auth] login_device_flow` config, then the loopback default.
 /// Both transports run through `run_auth_flow_inner` so the external auth provider and devbox auto-migration are tried first.
 pub async fn run_cli_login(
-    grok_com_config: GrokComConfig,
+    cgrok_com_config: GrokComConfig,
     config_device_flow: Option<bool>,
     proxy_base_url: String,
     oauth: bool,
@@ -830,12 +834,12 @@ pub async fn run_cli_login(
     let _ = devbox;
     let auth_manager = Arc::new(AuthManager::new_with_proxy_base_url(
         &grok_home::grok_home(),
-        grok_com_config.clone(),
+        cgrok_com_config.clone(),
         proxy_base_url,
     ));
     configure_telemetry(&auth_manager);
     let result = run_cli_login_steps(
-        &grok_com_config,
+        &cgrok_com_config,
         config_device_flow,
         &auth_manager,
         oauth,
@@ -847,7 +851,7 @@ pub async fn run_cli_login(
     result
 }
 async fn run_cli_login_steps(
-    grok_com_config: &GrokComConfig,
+    cgrok_com_config: &GrokComConfig,
     config_device_flow: Option<bool>,
     auth_manager: &Arc<AuthManager>,
     oauth: bool,
@@ -855,19 +859,21 @@ async fn run_cli_login_steps(
 ) -> anyhow::Result<GrokAuth> {
     let login_override = LoginTransportOverride::from_flags(oauth, device_auth);
     let authenticated = if cli_should_use_device(
-        grok_com_config,
+        cgrok_com_config,
         config_device_flow,
         login_override,
         auth_manager.proxy_base_url(),
     )
     .await
     {
-        if grok_com_config.oauth2.is_none() {
-            anyhow::bail!("Sign-in is not available for this deployment. Set XAI_API_KEY instead.");
+        if cgrok_com_config.oauth2.is_none() {
+            anyhow::bail!(
+                "Sign-in is not available for this deployment. Set CGROK_API_KEY instead."
+            );
         }
         let (auth, did_auth) = run_auth_flow_interactive(
             auth_manager,
-            grok_com_config,
+            cgrok_com_config,
             config_device_flow,
             None,
             None,
@@ -880,14 +886,14 @@ async fn run_cli_login_steps(
         }
         auth
     } else {
-        if device_auth && crate::oidc::is_configured(grok_com_config) {
+        if device_auth && crate::oidc::is_configured(cgrok_com_config) {
             eprintln!(
                 "Device-code login isn't available for your SSO provider; using browser sign-in."
             );
         }
         let (auth, did_auth) = run_auth_flow(
             auth_manager,
-            grok_com_config,
+            cgrok_com_config,
             config_device_flow,
             true,
             None,
@@ -910,7 +916,7 @@ pub struct LogoutResult {
     pub was_logged_in: bool,
     /// Email of the session that was cleared (if available).
     pub email: Option<String>,
-    /// `true` if `XAI_API_KEY` / `GROK_CODE_XAI_API_KEY` env var is set.
+    /// `true` if `CGROK_API_KEY` / `CGROK_CODE_XAI_API_KEY` env var is set.
     pub api_key_still_set: bool,
 }
 /// Every interactive login and logout starts here, so a build without account logins opens no
@@ -1064,13 +1070,13 @@ mod tests {
         let nested = abandoned.context("Login failed. Please try again.");
         assert!(login_failure_event(&nested).is_none());
     }
-    /// Run `f` with `GROK_LOGIN_DEVICE_FLOW` set to `value` (unset for `None`).
+    /// Run `f` with `CGROK_LOGIN_DEVICE_FLOW` set to `value` (unset for `None`).
     /// `EnvVarGuard` serializes the process env and restores it on drop, so `resolve_device_flow` reads the env tier from a known state.
     fn with_device_flow_env<T>(value: Option<bool>, f: impl FnOnce() -> T) -> T {
         let _guard = match value {
-            Some(true) => EnvVarGuard::set("GROK_LOGIN_DEVICE_FLOW", "true"),
-            Some(false) => EnvVarGuard::set("GROK_LOGIN_DEVICE_FLOW", "false"),
-            None => EnvVarGuard::remove("GROK_LOGIN_DEVICE_FLOW"),
+            Some(true) => EnvVarGuard::set("CGROK_LOGIN_DEVICE_FLOW", "true"),
+            Some(false) => EnvVarGuard::set("CGROK_LOGIN_DEVICE_FLOW", "false"),
+            None => EnvVarGuard::remove("CGROK_LOGIN_DEVICE_FLOW"),
         };
         f()
     }
@@ -1163,7 +1169,7 @@ mod tests {
     }
     #[tokio::test]
     async fn interactive_login_carries_no_expired_flag_even_over_a_stale_credential() {
-        let echo_env = "printf '%s' \"e=${GROK_AUTH_EXPIRED:-unset}\"";
+        let echo_env = "printf '%s' \"e=${CGROK_AUTH_EXPIRED:-unset}\"";
         let dir = tempfile::tempdir().unwrap();
         let mgr = Arc::new(
             AuthManager::new(dir.path(), GrokComConfig::default())
@@ -1185,7 +1191,7 @@ mod tests {
     #[tokio::test]
     async fn a_provider_written_to_the_published_contract_can_sign_in_after_an_expiry() {
         let conforming =
-            r#"if [ "$GROK_AUTH_EXPIRED" = "1" ]; then exit 1; else printf '%s' sso-token; fi"#;
+            r#"if [ "$CGROK_AUTH_EXPIRED" = "1" ]; then exit 1; else printf '%s' sso-token; fi"#;
         let dir = tempfile::tempdir().unwrap();
         let mgr = Arc::new(
             AuthManager::new(dir.path(), GrokComConfig::default())
@@ -1347,14 +1353,14 @@ mod tests {
     #[tokio::test]
     async fn preresolved_bypasses_resolver_and_is_never_cli() {
         {
-            let _guard = EnvVarGuard::set("GROK_LOGIN_DEVICE_FLOW", "false");
+            let _guard = EnvVarGuard::set("CGROK_LOGIN_DEVICE_FLOW", "false");
             assert!(
                 should_use_device_flow(LoginTransportOverride::Preresolved(true), None, "").await,
                 "Preresolved(true) honors device without re-resolving"
             );
         }
         {
-            let _guard = EnvVarGuard::set("GROK_LOGIN_DEVICE_FLOW", "true");
+            let _guard = EnvVarGuard::set("CGROK_LOGIN_DEVICE_FLOW", "true");
             assert!(
                 !should_use_device_flow(LoginTransportOverride::Preresolved(false), None, "").await,
                 "Preresolved(false) honors loopback without re-resolving"

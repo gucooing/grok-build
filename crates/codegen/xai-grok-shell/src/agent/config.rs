@@ -158,7 +158,7 @@ pub trait TraceUploadEndpoints {
         &self,
         auth_token: Option<String>,
     ) -> Option<crate::session::repo_changes::UploadMethod>;
-    /// Returns the trace bucket URL from `GROK_TELEMETRY_GCS_BUCKET`, else config, else the compiled-in default.
+    /// Returns the trace bucket URL from `CGROK_TELEMETRY_GCS_BUCKET`, else config, else the compiled-in default.
     /// `None` disables direct GCS trace uploads.
     fn resolve_trace_bucket_url(&self) -> Option<Resolved<String>>;
     /// Whether `auth`'s privacy flags block trace uploads.
@@ -227,7 +227,7 @@ impl TraceUploadEndpoints for EndpointsConfig {
     fn resolve_trace_bucket_url(&self) -> Option<Resolved<String>> {
         resolve_string_flag(
             None,
-            "GROK_TELEMETRY_GCS_BUCKET",
+            "CGROK_TELEMETRY_GCS_BUCKET",
             self.trace_upload_bucket.as_deref(),
             None,
         )
@@ -458,18 +458,18 @@ pub struct CliConfig {
     pub worktree_type: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub session_registry: Option<bool>,
-    /// Env `GROK_MINIMUM_VERSION`.
+    /// Env `CGROK_MINIMUM_VERSION`.
     /// See [`crate::util::config::VersionPolicy`] for the version-policy knobs.
     /// (Unrelated to `version_overrides[].maximum_version`, which gates config patches.)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub minimum_version: Option<String>,
-    /// Env `GROK_MAXIMUM_VERSION`. See [`crate::util::config::VersionPolicy`].
+    /// Env `CGROK_MAXIMUM_VERSION`. See [`crate::util::config::VersionPolicy`].
     #[serde(skip_serializing_if = "Option::is_none")]
     pub maximum_version: Option<String>,
-    /// Env `GROK_REQUIRED_MINIMUM_VERSION`. See [`crate::util::config::VersionPolicy`].
+    /// Env `CGROK_REQUIRED_MINIMUM_VERSION`. See [`crate::util::config::VersionPolicy`].
     #[serde(skip_serializing_if = "Option::is_none")]
     pub required_minimum_version: Option<String>,
-    /// Env `GROK_REQUIRED_MAXIMUM_VERSION`. See [`crate::util::config::VersionPolicy`].
+    /// Env `CGROK_REQUIRED_MAXIMUM_VERSION`. See [`crate::util::config::VersionPolicy`].
     #[serde(skip_serializing_if = "Option::is_none")]
     pub required_maximum_version: Option<String>,
     /// Group sessions by repo in the picker and CLI listings.
@@ -638,12 +638,12 @@ impl SandboxSettingsConfig {
         if let Some(val) = requirement {
             return Resolved::new(val.to_owned(), ConfigSource::Requirement);
         }
-        resolve_string_flag(cli_arg, "GROK_SANDBOX", self.profile.as_deref(), None)
+        resolve_string_flag(cli_arg, "CGROK_SANDBOX", self.profile.as_deref(), None)
             .unwrap_or_else(|| Resolved::new("off".to_owned(), ConfigSource::Default))
     }
     /// Resolve auto_allow_bash: requirement > env > config > default (false).
     pub(crate) fn resolve_auto_allow_bash(&self, requirement: Option<bool>) -> Resolved<bool> {
-        BoolFlag::env("GROK_SANDBOX_AUTO_ALLOW_BASH")
+        BoolFlag::env("CGROK_SANDBOX_AUTO_ALLOW_BASH")
             .requirement(requirement)
             .config(self.auto_allow_bash)
             .resolve()
@@ -747,8 +747,8 @@ pub struct Config {
     pub config_models: IndexMap<String, ConfigModelOverride>,
     #[serde(skip)]
     pub config_warnings: Vec<super::config_model_override_parse::ConfigWarning>,
-    pub grok_com_config: GrokComConfig,
-    /// `[grok_com_config] login_device_flow` (or its `[auth]` alias), read from the raw merged toml.
+    pub cgrok_com_config: GrokComConfig,
+    /// `[cgrok_com_config] login_device_flow` (or its `[auth]` alias), read from the raw merged toml.
     /// Not a `GrokComConfig` field (that struct is public and exhaustive); passed into the login flow by callers.
     #[serde(skip)]
     pub login_device_flow: Option<bool>,
@@ -851,7 +851,7 @@ pub struct Config {
     #[serde(default, skip_serializing)]
     pub diagnostics: DiagnosticsConfig,
     /// When running in relay/headless mode, this should be set to Writeback.
-    /// Defaults to reading from GROK_STORAGE_MODE env var.
+    /// Defaults to reading from CGROK_STORAGE_MODE env var.
     #[serde(skip)]
     pub storage_mode: StorageMode,
     /// CLI override for the default model ID.
@@ -901,7 +901,7 @@ pub struct Config {
     #[serde(skip)]
     pub cli_agent_overrides: CliAgentOverrides,
     /// Whether subagent (task tool) support is enabled.
-    /// Enabled by default; disabled only via `GROK_SUBAGENTS=0` or `[subagents] enabled = false`.
+    /// Enabled by default; disabled only via `CGROK_SUBAGENTS=0` or `[subagents] enabled = false`.
     /// Not remotely gated.
     #[serde(skip)]
     pub subagents_enabled: bool,
@@ -1058,7 +1058,7 @@ pub use xai_grok_agent::config::Effort;
 pub use xai_grok_agent::config::PermissionMode;
 pub use xai_grok_shared::ui_config::{ContextualHints, UiConfig};
 /// Set in `config.toml` under `[agent]`: Priority (highest to lowest): ACP session-level `_meta.agentProfile`
-/// CLI `--agent-profile` flag `[agent]` config.toml section (this config) `GROK_AGENT` env var
+/// CLI `--agent-profile` flag `[agent]` config.toml section (this config) `CGROK_AGENT` env var
 /// Default `grok-build` agent
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(default)]
@@ -1069,7 +1069,7 @@ pub struct AgentSelectionConfig {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     /// Path to an agent definition file (.md with YAML frontmatter).
-    /// Supports environment variable expansion (e.g., `$HOME/.grok/agents/my-agent.md`).
+    /// Supports environment variable expansion (e.g., `$HOME/.cgrok/agents/my-agent.md`).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub definition: Option<PathBuf>,
     /// Global system-prompt identity label. Per-model override wins.
@@ -1134,7 +1134,7 @@ impl Default for Config {
             feature_values: BTreeMap::new(),
             config_models: IndexMap::new(),
             config_warnings: Vec::new(),
-            grok_com_config: GrokComConfig::default(),
+            cgrok_com_config: GrokComConfig::default(),
             login_device_flow: None,
             auth_providers: IndexMap::new(),
             model_providers: IndexMap::new(),
@@ -1262,7 +1262,7 @@ fn non_boolean_feature_error(path: &str, value: &toml::Value) -> String {
 /// Config paths read by raw-layer resolvers, not [`Config`] serde fields, so `serde_ignored` must not report them as unrecognized keys.
 const NON_SERDE_CONFIG_PATHS: &[&str] = &[
     crate::util::config::SLASH_COMMAND_TAGS_CONFIG_PATH,
-    "grok_com_config.login_device_flow",
+    "cgrok_com_config.login_device_flow",
     "cli.grove",
     "cli.grove_worktree",
     "cli.nfs_worktree",
@@ -1364,7 +1364,7 @@ impl Config {
     pub fn create_auth_manager(&self) -> AuthManager {
         AuthManager::new_with_proxy_base_url(
             &crate::util::grok_home::grok_home(),
-            self.grok_com_config.clone(),
+            self.cgrok_com_config.clone(),
             self.endpoints.proxy_url(),
         )
     }
@@ -1589,10 +1589,10 @@ impl Config {
             );
         }
         super::config_model_override_parse::log_config_warnings(&config.config_warnings);
-        config.grok_com_config =
+        config.cgrok_com_config =
             GrokComConfig::from_effective_config(raw_config).map_err(|error| error.to_string())?;
         config.login_device_flow = match raw_config
-            .get("grok_com_config")
+            .get("cgrok_com_config")
             .and_then(toml::Value::as_table)
             .and_then(|t| t.get("login_device_flow"))
         {
@@ -1601,7 +1601,7 @@ impl Config {
             Some(other) => {
                 config.config_warnings.push(
                     super::config_model_override_parse::ConfigWarning::config_key(
-                        "grok_com_config.login_device_flow".to_string(),
+                        "cgrok_com_config.login_device_flow".to_string(),
                         super::config_model_override_parse::ConfigWarningKind::InvalidValue,
                         format!("expected a boolean, got {}", other.type_str()),
                     ),
@@ -1822,10 +1822,10 @@ impl Config {
     }
     fn apply_env_overrides(&mut self) {
         self.telemetry.apply_env_overrides();
-        if let Some(mode) = env_telemetry_mode("GROK_TELEMETRY_ENABLED") {
+        if let Some(mode) = env_telemetry_mode("CGROK_TELEMETRY_ENABLED") {
             self.features.telemetry = Some(mode);
         }
-        self.grok_com_config.pin_login_team();
+        self.cgrok_com_config.pin_login_team();
     }
     /// Whether product analytics may run. Every product analytics check calls this.
     pub fn product_analytics_enabled(&self, auth: Option<&xai_grok_login::GrokAuth>) -> bool {
@@ -1862,7 +1862,7 @@ impl Config {
         if env_bool("DISABLE_TELEMETRY") == Some(true) {
             return Resolved::new(TelemetryMode::Disabled, ConfigSource::Env);
         }
-        if let Some(mode) = env_telemetry_mode("GROK_TELEMETRY_ENABLED") {
+        if let Some(mode) = env_telemetry_mode("CGROK_TELEMETRY_ENABLED") {
             return Resolved::new(mode, ConfigSource::Env);
         }
         if let Some(mode) = self.features.telemetry {
@@ -1895,7 +1895,7 @@ impl Config {
                 .as_ref()
                 .and_then(|s| s.trace_upload_enabled)
         };
-        BoolFlag::env("GROK_TELEMETRY_TRACE_UPLOAD")
+        BoolFlag::env("CGROK_TELEMETRY_TRACE_UPLOAD")
             .requirement(self.requirements.trace_upload.pinned())
             .config(self.telemetry.trace_upload)
             .feature_flag(ff)
@@ -1945,8 +1945,8 @@ impl Config {
             "telemetry_source": telemetry.source.to_string(),
             "in_requirement_pin": req.pinned(),
             "in_requirement_src": req.source().map(|s| s.to_string()),
-            "in_env_trace_upload": std::env::var("GROK_TELEMETRY_TRACE_UPLOAD").ok(),
-            "in_env_telemetry_enabled": std::env::var("GROK_TELEMETRY_ENABLED").ok(),
+            "in_env_trace_upload": std::env::var("CGROK_TELEMETRY_TRACE_UPLOAD").ok(),
+            "in_env_telemetry_enabled": std::env::var("CGROK_TELEMETRY_ENABLED").ok(),
             "in_env_disable_telemetry": std::env::var("DISABLE_TELEMETRY").ok(),
             "in_cfg_telemetry_trace_upload": self.telemetry.trace_upload,
             "in_cfg_features_telemetry": self.features.telemetry.map(|m| m.to_string()),
@@ -1959,7 +1959,7 @@ impl Config {
     }
     /// Server-side doom-loop check policy. It covers the `x-grok-doom-loop-check` header, trigger parsing, and confident-signal resampling, all applied by the sampler.
     /// Merged PER-FIELD across the `[doom_loop_recovery]` TOML table and the remote settings `doom_loop_recovery` object. A partial remote object only overrides the fields it sets.
-    /// Gate precedence: env `GROK_DOOM_LOOP_RECOVERY` > TOML `enabled` > remote `enabled` > default ON. Each layer's `false` is an independent kill switch, and `None` IS the off state, so disabled has exactly one spelling. Tunables have no env layer (TOML > remote > default) and are clamped to their documented ranges.
+    /// Gate precedence: env `CGROK_DOOM_LOOP_RECOVERY` > TOML `enabled` > remote `enabled` > default ON. Each layer's `false` is an independent kill switch, and `None` IS the off state, so disabled has exactly one spelling. Tunables have no env layer (TOML > remote > default) and are clamped to their documented ranges.
     pub(crate) fn resolve_doom_loop_recovery(
         &self,
     ) -> Option<xai_grok_sampling_types::DoomLoopRecoveryPolicy> {
@@ -1968,7 +1968,7 @@ impl Config {
             .remote_settings
             .as_ref()
             .and_then(|s| s.doom_loop_recovery.as_ref());
-        let enabled = BoolFlag::env("GROK_DOOM_LOOP_RECOVERY")
+        let enabled = BoolFlag::env("CGROK_DOOM_LOOP_RECOVERY")
             .config(self.doom_loop_recovery.enabled)
             .feature_flag(remote.and_then(|s| s.enabled))
             .default(true)
@@ -2016,14 +2016,14 @@ impl Config {
                 .and_then(|s| s.worktree_auto_gc.as_ref()),
         )
     }
-    /// Gate first-run auto-registration of the official xAI marketplace source. Precedence: env `GROK_OFFICIAL_MARKETPLACE_AUTO_REGISTER` > remote settings > default off.
+    /// Gate first-run auto-registration of the official xAI marketplace source. Precedence: env `CGROK_OFFICIAL_MARKETPLACE_AUTO_REGISTER` > remote settings > default off.
     /// The off default means only remote settings-targeted teams get it pre-public. No managed `.requirement` pin: `marketplace_allowlist` already gates sources.
     pub(crate) fn resolve_official_marketplace_auto_register(&self) -> Resolved<bool> {
         let ff = self
             .remote_settings
             .as_ref()
             .and_then(|s| s.official_marketplace_auto_register);
-        BoolFlag::env("GROK_OFFICIAL_MARKETPLACE_AUTO_REGISTER")
+        BoolFlag::env("CGROK_OFFICIAL_MARKETPLACE_AUTO_REGISTER")
             .feature_flag(ff)
             .default(false)
             .resolve()
@@ -2055,7 +2055,7 @@ impl Config {
     /// Unset it follows `turn_summary`; set it to decouple them.
     pub(crate) fn resolve_title_refresh(&self) -> Resolved<bool> {
         let ff = self.remote_settings.as_ref().and_then(|s| s.title_refresh);
-        BoolFlag::env("GROK_TITLE_REFRESH")
+        BoolFlag::env("CGROK_TITLE_REFRESH")
             .requirement(self.requirements.title_refresh.pinned())
             .config(self.features.title_refresh)
             .feature_flag(ff)
@@ -2077,7 +2077,7 @@ impl Config {
         {
             return Resolved::new(false, ConfigSource::Remote);
         }
-        BoolFlag::env("GROK_IMAGE_GEN")
+        BoolFlag::env("CGROK_IMAGE_GEN")
             .config(self.features.image_gen)
             .feature_flag(
                 self.remote_settings
@@ -2101,7 +2101,7 @@ impl Config {
         {
             return Resolved::new(false, ConfigSource::Remote);
         }
-        BoolFlag::env("GROK_IMAGE_EDIT").default(true).resolve()
+        BoolFlag::env("CGROK_IMAGE_EDIT").default(true).resolve()
     }
     /// `image_to_video` / `reference_to_video` (and `/imagine-video`). Default on.
     /// Registered as a pair; denylisting either tool name (or `video_gen`) disables both.
@@ -2120,7 +2120,7 @@ impl Config {
         }) {
             return Resolved::new(false, ConfigSource::Remote);
         }
-        BoolFlag::env("GROK_VIDEO_GEN")
+        BoolFlag::env("CGROK_VIDEO_GEN")
             .config(self.features.video_gen)
             .feature_flag(
                 self.remote_settings
@@ -2130,12 +2130,12 @@ impl Config {
             .default(true)
             .resolve()
     }
-    /// Precedence: env `GROK_IMAGE_GEN_MODEL_OVERRIDE` > `[features] image_gen_model_override` config > remote settings `image_gen_model_override`.
+    /// Precedence: env `CGROK_IMAGE_GEN_MODEL_OVERRIDE` > `[features] image_gen_model_override` config > remote settings `image_gen_model_override`.
     /// `None` falls back to the default model (`grok-imagine-image-quality`).
     pub(crate) fn resolve_image_gen_model_override(&self) -> Option<String> {
         resolve_string_flag(
             None,
-            "GROK_IMAGE_GEN_MODEL_OVERRIDE",
+            "CGROK_IMAGE_GEN_MODEL_OVERRIDE",
             self.features.image_gen_model_override.as_deref(),
             self.remote_settings
                 .as_ref()
@@ -2146,7 +2146,7 @@ impl Config {
     pub(crate) fn resolve_image_edit_model_override(&self) -> Option<String> {
         resolve_string_flag(
             None,
-            "GROK_IMAGE_EDIT_MODEL_OVERRIDE",
+            "CGROK_IMAGE_EDIT_MODEL_OVERRIDE",
             self.features.image_edit_model_override.as_deref(),
             self.remote_settings
                 .as_ref()
@@ -2162,13 +2162,13 @@ impl Config {
         if ff == Some(false) {
             return Resolved::new(false, ConfigSource::Remote);
         }
-        BoolFlag::env("GROK_GOAL")
+        BoolFlag::env("CGROK_GOAL")
             .config(self.goal.enabled)
             .feature_flag(ff)
             .default(true)
             .resolve()
     }
-    /// Background workflows (`workflow` tool, `.grok/workflows/*.rhai`, `/deep-research`, host-owned `/goal` driver).
+    /// Background workflows (`workflow` tool, `.cgrok/workflows/*.rhai`, `/deep-research`, host-owned `/goal` driver).
     /// Default ON: deployments that never receive remote settings still get workflows; `Some(false)` remote / config / env remains a kill-switch.
     pub(crate) fn resolve_workflows(&self) -> Resolved<bool> {
         let ff = self
@@ -2178,7 +2178,7 @@ impl Config {
         if ff == Some(false) {
             return Resolved::new(false, ConfigSource::Remote);
         }
-        BoolFlag::env("GROK_WORKFLOWS")
+        BoolFlag::env("CGROK_WORKFLOWS")
             .config(self.workflows.enabled)
             .feature_flag(ff)
             .default(true)
@@ -2188,7 +2188,7 @@ impl Config {
     /// `goal_enabled` is the session's already-resolved master switch (the same value the actor stores).
     /// It is passed in so a sub-role default can never disagree with whether `/goal` is on.
     pub(crate) fn resolve_goal_classifier_enabled(&self, goal_enabled: bool) -> Resolved<bool> {
-        BoolFlag::env("GROK_GOAL_CLASSIFIER")
+        BoolFlag::env("CGROK_GOAL_CLASSIFIER")
             .config(self.goal.classifier_enabled)
             .feature_flag(
                 self.remote_settings
@@ -2199,7 +2199,7 @@ impl Config {
             .resolve()
     }
     pub(crate) fn resolve_goal_planner_enabled(&self, goal_enabled: bool) -> Resolved<bool> {
-        BoolFlag::env("GROK_GOAL_PLANNER")
+        BoolFlag::env("CGROK_GOAL_PLANNER")
             .config(self.goal.planner_enabled)
             .feature_flag(
                 self.remote_settings
@@ -2210,7 +2210,7 @@ impl Config {
             .resolve()
     }
     pub(crate) fn resolve_goal_summary_enabled(&self, goal_enabled: bool) -> Resolved<bool> {
-        BoolFlag::env("GROK_GOAL_SUMMARY")
+        BoolFlag::env("CGROK_GOAL_SUMMARY")
             .config(self.goal.summary_enabled)
             .feature_flag(
                 self.remote_settings
@@ -2248,7 +2248,7 @@ impl Config {
             GOAL_VERIFIER_SKEPTIC_COUNT, GOAL_VERIFIER_SKEPTIC_MAX, GOAL_VERIFIER_SKEPTIC_MIN,
         };
         Self::resolve_goal_u32(
-            "GROK_GOAL_VERIFIER_N",
+            "CGROK_GOAL_VERIFIER_N",
             self.goal.verifier_count,
             self.remote_settings
                 .as_ref()
@@ -2263,7 +2263,7 @@ impl Config {
             GOAL_CLASSIFIER_MAX_RUNS_DEFAULT, GOAL_CLASSIFIER_MAX_RUNS_MIN,
         };
         Self::resolve_goal_u32(
-            "GROK_GOAL_CLASSIFIER_MAX",
+            "CGROK_GOAL_CLASSIFIER_MAX",
             self.goal.classifier_max_runs,
             self.remote_settings
                 .as_ref()
@@ -2276,7 +2276,7 @@ impl Config {
     /// Default tracks the resolved classifier cap (`max(1, cap / 2)`); floored at 1 so it can never silently disable.
     pub(crate) fn resolve_goal_strategist_every(&self, classifier_max_runs: u32) -> Resolved<u32> {
         Self::resolve_goal_u32(
-            "GROK_GOAL_STRATEGIST_EVERY",
+            "CGROK_GOAL_STRATEGIST_EVERY",
             self.goal.strategist_every,
             self.remote_settings
                 .as_ref()
@@ -2288,7 +2288,7 @@ impl Config {
     /// Re-verify escalation threshold; floored at 1. No remote layer.
     pub(crate) fn resolve_goal_reverify_after(&self) -> Resolved<u32> {
         Self::resolve_goal_u32(
-            "GROK_GOAL_REVERIFY_AFTER",
+            "CGROK_GOAL_REVERIFY_AFTER",
             self.goal.reverify_after,
             None,
             crate::session::acp_session::GOAL_REVERIFY_AFTER_DEFAULT,
@@ -2297,7 +2297,7 @@ impl Config {
     }
     /// When `true`, every `/goal` role inherits the current model regardless of configured pairs.
     pub(crate) fn resolve_goal_use_current_model_only(&self) -> Resolved<bool> {
-        BoolFlag::env("GROK_GOAL_USE_CURRENT_MODEL_ONLY")
+        BoolFlag::env("CGROK_GOAL_USE_CURRENT_MODEL_ONLY")
             .config(self.goal.use_current_model_only)
             .default(false)
             .resolve()
@@ -2380,11 +2380,11 @@ impl Config {
             _ => Resolved::new(Vec::new(), ConfigSource::Default),
         }
     }
-    /// Resolve the mode: env `GROK_COMPACTION_MODE` > config > remote settings > default, with unrecognized values falling through.
+    /// Resolve the mode: env `CGROK_COMPACTION_MODE` > config > remote settings > default, with unrecognized values falling through.
     /// For `Segments`, attach the separately-resolved detail level.
     pub(crate) fn resolve_compaction_mode(&self) -> xai_chat_state::CompactionMode {
         resolve_compaction_mode_from(
-            env_string("GROK_COMPACTION_MODE").as_deref(),
+            env_string("CGROK_COMPACTION_MODE").as_deref(),
             self.features.compaction_mode.as_deref(),
             self.remote_settings
                 .as_ref()
@@ -2403,11 +2403,11 @@ impl Config {
                 .and_then(|r| r.compaction_tool_choice.as_deref()),
         )
     }
-    /// Precedence: env `GROK_COMPACTION_DETAIL` > config `features.compaction_detail` > remote `compaction_detail` > default (`verbose`).
+    /// Precedence: env `CGROK_COMPACTION_DETAIL` > config `features.compaction_detail` > remote `compaction_detail` > default (`verbose`).
     /// Drives the `segments` verbatim detail level.
     fn resolve_compaction_detail(&self) -> xai_chat_state::CompactionDetail {
         resolve_compaction_detail_from(
-            env_string("GROK_COMPACTION_DETAIL").as_deref(),
+            env_string("CGROK_COMPACTION_DETAIL").as_deref(),
             self.features.compaction_detail.as_deref(),
             self.remote_settings
                 .as_ref()
@@ -2416,15 +2416,15 @@ impl Config {
     }
     /// Resolve whether to use grok's default OAuth2 (xAI auth.x.ai).
     /// Enterprise OIDC (`oidc` in config.toml) always wins; this only gates the default xAI OAuth2 fallback when no enterprise OIDC is configured.
-    /// Priority: `--oauth` > GROK_OAUTH_ENABLED env > default (true, meaning OAuth).
+    /// Priority: `--oauth` > CGROK_OAUTH_ENABLED env > default (true, meaning OAuth).
     pub(crate) fn resolve_grok_oauth(&self, cli_oidc: Option<bool>) -> Resolved<bool> {
-        BoolFlag::env("GROK_OAUTH_ENABLED")
+        BoolFlag::env("CGROK_OAUTH_ENABLED")
             .cli(cli_oidc)
             .default(true)
             .resolve()
     }
 }
-/// Canonical resolver for `mcp.liveness_watchers`. Stacks the full 7-step `BoolFlag` precedence: `requirement > cli > env (GROK_MCP_LIVENESS_WATCHERS) > config > managed > feature_flag > default (true)`.
+/// Canonical resolver for `mcp.liveness_watchers`. Stacks the full 7-step `BoolFlag` precedence: `requirement > cli > env (CGROK_MCP_LIVENESS_WATCHERS) > config > managed > feature_flag > default (true)`.
 /// `util::config::resolve_mcp_liveness_watchers` delegates here so the precedence is single-sourced.
 /// The default is `true`, turning the watcher and dispatcher on by default; the flag exists primarily as a kill switch during the rollout.
 pub(crate) fn resolve_mcp_liveness_watchers(
@@ -2434,7 +2434,7 @@ pub(crate) fn resolve_mcp_liveness_watchers(
     managed: Option<bool>,
     feature_flag: Option<bool>,
 ) -> Resolved<bool> {
-    BoolFlag::env("GROK_MCP_LIVENESS_WATCHERS")
+    BoolFlag::env("CGROK_MCP_LIVENESS_WATCHERS")
         .requirement(requirement)
         .cli(cli)
         .config(config)
@@ -2443,9 +2443,9 @@ pub(crate) fn resolve_mcp_liveness_watchers(
         .default(true)
         .resolve()
 }
-/// Canonical resolver for `mcp.auto_restart`. Stacks the full 7-step `BoolFlag` precedence: `requirement > cli > env (GROK_MCP_AUTO_RESTART) > config > managed > feature_flag > default (true)`.
+/// Canonical resolver for `mcp.auto_restart`. Stacks the full 7-step `BoolFlag` precedence: `requirement > cli > env (CGROK_MCP_AUTO_RESTART) > config > managed > feature_flag > default (true)`.
 /// Mirrors [`resolve_mcp_liveness_watchers`]. `util::config::resolve_mcp_auto_restart` delegates here so the precedence is single-sourced.
-/// Recovery is on by default; opt out via `GROK_MCP_AUTO_RESTART=false`, `[features] mcp_auto_restart`, or `requirements.toml`.
+/// Recovery is on by default; opt out via `CGROK_MCP_AUTO_RESTART=false`, `[features] mcp_auto_restart`, or `requirements.toml`.
 pub(crate) fn resolve_mcp_auto_restart(
     requirement: Option<bool>,
     cli: Option<bool>,
@@ -2453,7 +2453,7 @@ pub(crate) fn resolve_mcp_auto_restart(
     managed: Option<bool>,
     feature_flag: Option<bool>,
 ) -> Resolved<bool> {
-    BoolFlag::env("GROK_MCP_AUTO_RESTART")
+    BoolFlag::env("CGROK_MCP_AUTO_RESTART")
         .requirement(requirement)
         .cli(cli)
         .config(config)
@@ -2463,7 +2463,7 @@ pub(crate) fn resolve_mcp_auto_restart(
         .resolve()
 }
 /// Kill switch for the transient turn-resubmit arm.
-/// Standard `BoolFlag` precedence; env `GROK_TURN_TRANSIENT_RETRY`; default on.
+/// Standard `BoolFlag` precedence; env `CGROK_TURN_TRANSIENT_RETRY`; default on.
 pub(crate) fn resolve_turn_transient_retry(
     requirement: Option<bool>,
     cli: Option<bool>,
@@ -2471,7 +2471,7 @@ pub(crate) fn resolve_turn_transient_retry(
     managed: Option<bool>,
     feature_flag: Option<bool>,
 ) -> Resolved<bool> {
-    BoolFlag::env("GROK_TURN_TRANSIENT_RETRY")
+    BoolFlag::env("CGROK_TURN_TRANSIENT_RETRY")
         .requirement(requirement)
         .cli(cli)
         .config(config)
@@ -2481,7 +2481,7 @@ pub(crate) fn resolve_turn_transient_retry(
         .resolve()
 }
 /// Canonical resolver for `mcp.push_server_status`.
-/// Stacks the same 7-step `BoolFlag` precedence as [`resolve_mcp_liveness_watchers`]: `requirement > cli > env (GROK_MCP_PUSH_SERVER_STATUS) > config > managed > feature_flag > default (true)`.
+/// Stacks the same 7-step `BoolFlag` precedence as [`resolve_mcp_liveness_watchers`]: `requirement > cli > env (CGROK_MCP_PUSH_SERVER_STATUS) > config > managed > feature_flag > default (true)`.
 /// `util::config::resolve_mcp_push_server_status` delegates here so the precedence is single-sourced. The default is `true`: the pager's subscription to `x.ai/mcp/server_status` is wired on by default. The flag exists primarily as a kill switch.
 pub fn resolve_mcp_push_server_status(
     requirement: Option<bool>,
@@ -2490,7 +2490,7 @@ pub fn resolve_mcp_push_server_status(
     managed: Option<bool>,
     feature_flag: Option<bool>,
 ) -> Resolved<bool> {
-    BoolFlag::env("GROK_MCP_PUSH_SERVER_STATUS")
+    BoolFlag::env("CGROK_MCP_PUSH_SERVER_STATUS")
         .requirement(requirement)
         .cli(cli)
         .config(config)
@@ -2500,7 +2500,7 @@ pub fn resolve_mcp_push_server_status(
         .resolve()
 }
 /// Canonical resolver for `mcp.recursive_config_watch`.
-/// Stacks the same 7-step `BoolFlag` precedence as [`resolve_mcp_liveness_watchers`]: `requirement > cli > env (GROK_MCP_RECURSIVE_CONFIG_WATCH) > config > managed > feature_flag > default (true)`.
+/// Stacks the same 7-step `BoolFlag` precedence as [`resolve_mcp_liveness_watchers`]: `requirement > cli > env (CGROK_MCP_RECURSIVE_CONFIG_WATCH) > config > managed > feature_flag > default (true)`.
 /// `util::config::resolve_mcp_recursive_config_watch` delegates here so the precedence is single-sourced. The default is `true`. It turns the two narrow non-recursive cwd watches on by default. The leader then falls back to the prior behavior: no cwd watches, and user-triggered refresh is the only project-config reload path.
 pub(crate) fn resolve_mcp_recursive_config_watch(
     requirement: Option<bool>,
@@ -2509,7 +2509,7 @@ pub(crate) fn resolve_mcp_recursive_config_watch(
     managed: Option<bool>,
     feature_flag: Option<bool>,
 ) -> Resolved<bool> {
-    BoolFlag::env("GROK_MCP_RECURSIVE_CONFIG_WATCH")
+    BoolFlag::env("CGROK_MCP_RECURSIVE_CONFIG_WATCH")
         .requirement(requirement)
         .cli(cli)
         .config(config)
@@ -2544,7 +2544,7 @@ impl SyncBoolFlag {
         self.disable_env = Some(name);
         self
     }
-    /// Either-direction env resolver (typically `GROK_*`).
+    /// Either-direction env resolver (typically `CGROK_*`).
     /// Returns `Some(enabled)` for an explicit signal, `None` to fall through.
     pub(crate) const fn enable_env(mut self, resolver: fn() -> Option<bool>) -> Self {
         self.enable_env = Some(resolver);
@@ -2616,7 +2616,7 @@ pub fn is_error_reporting_disabled_sync() -> bool {
     !Distribution::current().allows(Capability::ErrorReporting)
         || !SyncBoolFlag::new(error_reporting_enabled_from_toml)
             .disable_env("DISABLE_ERROR_REPORTING")
-            .enable_env(|| env_bool("GROK_ERROR_REPORTING"))
+            .enable_env(|| env_bool("CGROK_ERROR_REPORTING"))
             .inherit(|| !is_telemetry_disabled_sync())
             .resolve()
 }
@@ -2639,11 +2639,11 @@ fn error_reporting_enabled_from_toml(root: &toml::Value) -> Option<bool> {
         .get("error_reporting")?
         .as_bool()
 }
-/// `GROK_TELEMETRY_ENABLED` resolved through `TelemetryMode::parse` so the extended string forms (e.g. `"session_metrics"`) are accepted.
+/// `CGROK_TELEMETRY_ENABLED` resolved through `TelemetryMode::parse` so the extended string forms (e.g. `"session_metrics"`) are accepted.
 fn grok_telemetry_env_enabled() -> Option<bool> {
-    env_telemetry_mode("GROK_TELEMETRY_ENABLED").map(|m| !m.is_disabled())
+    env_telemetry_mode("CGROK_TELEMETRY_ENABLED").map(|m| !m.is_disabled())
 }
-/// Load `~/.grok/requirements.toml` standalone so the admin pin can beat
+/// Load `~/.cgrok/requirements.toml` standalone so the admin pin can beat
 /// env vars.
 /// The merged config layer can't express that: last-merge-wins loses provenance.
 pub(crate) fn read_requirements_toml() -> Option<toml::Value> {
@@ -3276,7 +3276,7 @@ pub struct ModelEntryConfig {
     /// See [`ModelInfo::model_family`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub model_family: Option<String>,
-    /// The base URL of the model. e.g. "https://api.x.ai/v1"
+    /// The base URL of the model. e.g. "https://oauth-ai.alsl.xyz/api/oauth/grok/v1"
     pub base_url: String,
     /// Human-readable display name of the model.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -3293,12 +3293,12 @@ pub struct ModelEntryConfig {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub top_p: Option<f32>,
     /// The API key for this model's provider.
-    /// If not set, falls back to env_key, then XAI_API_KEY.
+    /// If not set, falls back to env_key, then CGROK_API_KEY.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub api_key: Option<String>,
     /// Environment variable name(s) that hold the provider API key.
     /// Accepts a string or an array (first set, non-empty value wins).
-    /// If not set, falls back to XAI_API_KEY.
+    /// If not set, falls back to CGROK_API_KEY.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub env_key: Option<EnvKeys>,
     /// Values: "chat_completions" (default), "responses"
@@ -3359,7 +3359,7 @@ pub struct ModelEntryConfig {
     pub inference_idle_timeout_secs: Option<u64>,
     /// Maximum number of retries for transient API errors (429, 500, 502, etc.)
     /// during a single inference request. Default: 5.
-    /// Can also be set via the `GROK_MAX_RETRIES` environment variable.
+    /// Can also be set via the `CGROK_MAX_RETRIES` environment variable.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub max_retries: Option<u32>,
     /// Total-attempt ceiling for rate-limited requests.
@@ -3675,7 +3675,7 @@ pub struct ModelInfo {
     /// Provider family that mints this model's conversation items (e.g. "xai"); `None` means unknown.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub model_family: Option<String>,
-    /// The base URL of the model (session endpoint). e.g. "https://cli-chat-proxy.grok.com/v1"
+    /// The base URL of the model (session endpoint). e.g. "https://oauth-ai.alsl.xyz/api/oauth/grok/v1"
     pub base_url: String,
     /// Human-readable name of the model.
     /// Honored by both the picker (`/model`) and `/session-info`: when set, that's the label shown to users in either consumer.
@@ -4183,12 +4183,12 @@ pub struct Features {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub image_edit_model_override: Option<String>,
     /// `summary` | `transcript` | `segments` (default).
-    /// `None` defers to CLI / env (`GROK_COMPACTION_MODE`).
+    /// `None` defers to CLI / env (`CGROK_COMPACTION_MODE`).
     /// Parsed via `CompactionMode::parse`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub compaction_mode: Option<String>,
     /// `none` | `minimal` | `balanced` | `verbose` (default).
-    /// `None` defers to env (`GROK_COMPACTION_DETAIL`).
+    /// `None` defers to env (`CGROK_COMPACTION_DETAIL`).
     /// The `segments` verbatim detail level.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub compaction_detail: Option<String>,
@@ -4210,10 +4210,10 @@ pub struct Features {
     pub turn_transient_retry: Option<bool>,
     /// Pager-side subscription to the `x.ai/mcp/server_status` push. Not read through this struct. The pager-side gate (`acp_handler::push_server_status_enabled`) uses an **env-only** OnceLock cache.
     /// The `[features]` key itself is honoured out-of-band, re-read from raw TOML in `util::config::resolve::mcp`. This field is declared so `serde_ignored` does not report the key as unrecognized.
-    /// Practical consequence: setting `[features] mcp_push_server_status = false` in `~/.grok/config.toml` will NOT disable the pager's subscription on a freshly-launched process. To disable the pager subscription, set `GROK_MCP_PUSH_SERVER_STATUS=0` in the env before launch.
+    /// Practical consequence: setting `[features] mcp_push_server_status = false` in `~/.cgrok/config.toml` will NOT disable the pager's subscription on a freshly-launched process. To disable the pager subscription, set `CGROK_MCP_PUSH_SERVER_STATUS=0` in the env before launch.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mcp_push_server_status: Option<bool>,
-    /// Whether the leader's `ConfigFileWatcher` adds the two narrow non-recursive watches for `<cwd>/` and `<cwd>/.grok/`. The only way to pick up a project-config edit is then the user-triggered refresh button.
+    /// Whether the leader's `ConfigFileWatcher` adds the two narrow non-recursive watches for `<cwd>/` and `<cwd>/.cgrok/`. The only way to pick up a project-config edit is then the user-triggered refresh button.
     /// The watches are **always non-recursive**; the name follows the convention for the rollout-gate flag. The name is a documented misnomer: it gates the existence of the **cwd** watches, NOT their recursion mode.
     /// Not read through this struct: the live resolver re-reads the `[features]` key out-of-band from raw TOML in `util::config::resolve::mcp`. Declared so `serde_ignored` does not report it as an unrecognized key.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -4292,7 +4292,7 @@ pub(crate) fn first_own_credential(
         .map(str::to_owned)
         .or_else(|| env_key.and_then(EnvKeys::resolve_value))
 }
-/// Priority: model api_key/env_key > cached auth-provider token > session token > XAI_API_KEY.
+/// Priority: model api_key/env_key > cached auth-provider token > session token > CGROK_API_KEY.
 pub(crate) fn resolve_credentials(
     model: &ModelEntry,
     session_key: Option<&str>,
@@ -4412,7 +4412,7 @@ pub(crate) fn try_resolve_model_credentials(
     let mut credentials = resolve_credentials(entry, session_key);
     enforce_disable_api_key_auth(
         &mut credentials,
-        cfg.grok_com_config.api_key_auth_disabled(),
+        cfg.cgrok_com_config.api_key_auth_disabled(),
         session_key,
     );
     Some(credentials)

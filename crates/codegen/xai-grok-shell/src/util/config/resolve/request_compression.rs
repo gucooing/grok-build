@@ -24,10 +24,10 @@ pub(crate) fn cache_remote_accept_request_encodings(
     }
 }
 
-/// Compression the sampler may apply toward `base_url`. `GROK_REQUEST_COMPRESSION=0`
+/// Compression the sampler may apply toward `base_url`. `CGROK_REQUEST_COMPRESSION=0`
 /// is the operator kill switch, re-read whenever a sampler config is built.
 pub(crate) fn request_compression_for_url(base_url: &str) -> RequestCompression {
-    if xai_grok_config::env_bool("GROK_REQUEST_COMPRESSION") == Some(false) {
+    if xai_grok_config::env_bool("CGROK_REQUEST_COMPRESSION") == Some(false) {
         return RequestCompression::None;
     }
     let origin = ZSTD_ORIGIN.read().ok().and_then(|guard| guard.clone());
@@ -66,7 +66,11 @@ mod tests {
             ("http://localhost:11434/v1", Some(prod), plain),
             ("http://127.0.0.1:8080/v1", Some(prod), plain),
             ("https://api.openai.com/v1", Some(prod), plain),
-            ("https://api.x.ai/v1", Some(prod), plain),
+            (
+                "https://oauth-ai.alsl.xyz/api/oauth/grok/v1",
+                Some(prod),
+                plain,
+            ),
         ] {
             assert_eq!(
                 request_compression_for(base_url, zstd_origin),

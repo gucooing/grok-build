@@ -526,7 +526,7 @@ impl AgentBuilder {
         self.backend_search = enabled;
         self
     }
-    /// `Disabled` (default) does not register the tool; flagged via remote `web_fetch_enabled` and the `GROK_WEB_FETCH` env.
+    /// `Disabled` (default) does not register the tool; flagged via remote `web_fetch_enabled` and the `CGROK_WEB_FETCH` env.
     pub fn with_web_fetch_config(
         mut self,
         config: xai_grok_tools::implementations::grok_build::web_fetch::WebFetchConfig,
@@ -1763,7 +1763,7 @@ mod tests {
         use xai_grok_tools::notification::ToolNotificationHandle;
         let tmp = tempfile::tempdir().unwrap();
         let write_skill = |dir: &str, content: &str| {
-            let d = tmp.path().join(".grok/skills").join(dir);
+            let d = tmp.path().join(".cgrok/skills").join(dir);
             std::fs::create_dir_all(&d).unwrap();
             std::fs::write(d.join("SKILL.md"), content).unwrap();
         };
@@ -3016,7 +3016,7 @@ mod tests {
         .from_definition(definition)
         .with_web_search_config(WebSearchConfig::Enabled {
             api_key: "test-key".into(),
-            base_url: "https://api.x.ai/v1".into(),
+            base_url: "https://oauth-ai.alsl.xyz/api/oauth/grok/v1".into(),
             model: "test-web-search-model".into(),
             extra_headers: Default::default(),
             alpha_test_key: None,
@@ -3134,7 +3134,7 @@ mod tests {
         let web_search_config = if web_search_enabled {
             WebSearchConfig::Enabled {
                 api_key: "test-key".into(),
-                base_url: "https://api.x.ai/v1".into(),
+                base_url: "https://oauth-ai.alsl.xyz/api/oauth/grok/v1".into(),
                 model: "test-web-search-model".into(),
                 extra_headers: Default::default(),
                 alpha_test_key: None,

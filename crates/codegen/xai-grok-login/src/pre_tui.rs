@@ -34,19 +34,19 @@ pub enum PreTuiLoginOutcome {
 /// Run `auth_provider_command` on the real terminal when the interactive pager needs a sign-in. Call **before** `redirect_native_stderr` and raw mode. On provider failure this returns `Err` (no OIDC/device fallthrough).
 /// The pager should exit before taking over the TTY.
 pub async fn maybe_run_pre_tui_external_login(
-    grok_com_config: &GrokComConfig,
+    cgrok_com_config: &GrokComConfig,
     proxy_base_url: String,
     force_login: bool,
     stdin_is_tty: bool,
 ) -> anyhow::Result<PreTuiLoginOutcome> {
-    let Some(cmd) = grok_com_config.auth_provider_command.as_deref() else {
+    let Some(cmd) = cgrok_com_config.auth_provider_command.as_deref() else {
         return Ok(PreTuiLoginOutcome::Skipped);
     };
     if !should_attempt_pre_tui_external_login(true, stdin_is_tty) {
         return Ok(PreTuiLoginOutcome::Skipped);
     }
     if !force_login
-        && try_ensure_fresh_auth(grok_com_config, proxy_base_url.clone())
+        && try_ensure_fresh_auth(cgrok_com_config, proxy_base_url.clone())
             .await
             .is_some()
     {
@@ -55,7 +55,7 @@ pub async fn maybe_run_pre_tui_external_login(
 
     let auth_manager = Arc::new(AuthManager::new_with_proxy_base_url(
         &grok_home::grok_home(),
-        grok_com_config.clone(),
+        cgrok_com_config.clone(),
         proxy_base_url,
     ));
     auth_manager.configure_refresher(Some(cmd.to_owned()), None);

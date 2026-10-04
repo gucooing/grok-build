@@ -41,9 +41,9 @@ async fn run_reasoning_turn(collapse_thinking: bool) -> Turn {
     content.set_response(answer.clone());
 
     // Ingestion is gated on this toggle, and the sandbox `$HOME` has no config.
-    std::fs::create_dir_all(content.home().join(".grok")).expect("mk .grok");
+    std::fs::create_dir_all(content.home().join(".cgrok")).expect("mk .cgrok");
     std::fs::write(
-        content.home().join(".grok/config.toml"),
+        content.home().join(".cgrok/config.toml"),
         "[ui]\nshow_thinking_blocks = true\n",
     )
     .expect("write config");

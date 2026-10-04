@@ -59,7 +59,7 @@ impl Target<'_> {
     }
 }
 
-/// What `grok update` prints for a WinGet install. `channel` is the requested or configured channel, which WinGet
+/// What `cgrok update` prints for a WinGet install. `channel` is the requested or configured channel, which WinGet
 /// cannot honor unless it is stable.
 pub(crate) fn hand_off_message(target: Target<'_>, channel: &str) -> String {
     let command = target.command();
@@ -86,7 +86,7 @@ pub(crate) fn ignored_channel_note(channel: &str) -> String {
     }
 }
 
-/// Follows "A new version of Grok Build is available" in headless runs and `grok update --check`.
+/// Follows "A new version of Grok Build is available" in headless runs and `cgrok update --check`.
 pub(crate) fn update_available_note(target: Target<'_>) -> String {
     format!(
         "Installed with WinGet: quit Grok and run `{}` \

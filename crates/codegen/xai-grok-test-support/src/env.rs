@@ -8,10 +8,10 @@ use std::sync::OnceLock;
 use crate::sandbox::TestSandbox;
 
 // First setter wins and later sets are ignored, so parallel tests never race the process-wide choice.
-static GROK_BINARY_OVERRIDE: OnceLock<PathBuf> = OnceLock::new();
+static CGROK_BINARY_OVERRIDE: OnceLock<PathBuf> = OnceLock::new();
 
 pub fn set_grok_binary_override(path: PathBuf) {
-    let _ = GROK_BINARY_OVERRIDE.set(path);
+    let _ = CGROK_BINARY_OVERRIDE.set(path);
 }
 
 pub fn resolved_grok_binary_override() -> Option<PathBuf> {
@@ -73,26 +73,26 @@ impl Drop for EnvGuard {
 pub unsafe fn isolate_grok_env(home: &Path) {
     // SAFETY: forwarded to the caller.
     unsafe {
-        std::env::set_var("GROK_HOME", home);
-        std::env::set_var("GROK_TELEMETRY_ENABLED", "false");
-        std::env::set_var("GROK_TELEMETRY_MIXPANEL_ENABLED", "false");
-        std::env::set_var("GROK_TELEMETRY_MIXPANEL_TOKEN", "");
-        std::env::set_var("GROK_TELEMETRY_EVENTS_URL", "");
-        std::env::set_var("GROK_TELEMETRY_EVENTS_API_KEY", "");
-        std::env::set_var("GROK_FEEDBACK_ENABLED", "false");
-        std::env::set_var("GROK_TRACE_UPLOAD", "false");
+        std::env::set_var("CGROK_HOME", home);
+        std::env::set_var("CGROK_TELEMETRY_ENABLED", "false");
+        std::env::set_var("CGROK_TELEMETRY_MIXPANEL_ENABLED", "false");
+        std::env::set_var("CGROK_TELEMETRY_MIXPANEL_TOKEN", "");
+        std::env::set_var("CGROK_TELEMETRY_EVENTS_URL", "");
+        std::env::set_var("CGROK_TELEMETRY_EVENTS_API_KEY", "");
+        std::env::set_var("CGROK_FEEDBACK_ENABLED", "false");
+        std::env::set_var("CGROK_TRACE_UPLOAD", "false");
         for var in [
-            "GROK_AUTH",
-            "GROK_AUTH_PATH",
-            "GROK_DEPLOYMENT_KEY",
-            "GROK_MANAGED_CONFIG",
-            "GROK_CONFIG",
-            "GROK_CONFIG_PATH",
-            "GROK_CLI_CHAT_PROXY_BASE_URL",
-            "GROK_MODELS_BASE_URL",
-            "GROK_MODELS_LIST_URL",
-            "XAI_API_KEY",
-            "GROK_API_KEY",
+            "CGROK_AUTH",
+            "CGROK_AUTH_PATH",
+            "CGROK_DEPLOYMENT_KEY",
+            "CGROK_MANAGED_CONFIG",
+            "CGROK_CONFIG",
+            "CGROK_CONFIG_PATH",
+            "CGROK_CLI_CHAT_PROXY_BASE_URL",
+            "CGROK_MODELS_BASE_URL",
+            "CGROK_MODELS_LIST_URL",
+            "CGROK_API_KEY",
+            "CGROK_API_KEY",
             "HTTP_PROXY",
             "HTTPS_PROXY",
             "ALL_PROXY",
@@ -211,22 +211,22 @@ pub fn grok_binary() -> PathBuf {
     if let Some(path) = resolved_override() {
         return path;
     }
-    if let Some(path) = env_binary("GROK_BINARY") {
+    if let Some(path) = env_binary("CGROK_BINARY") {
         return path;
     }
 
-    if let Ok(path) = std::env::var("CARGO_BIN_EXE_xai-grok-pager") {
+    if let Ok(path) = std::env::var("CARGO_BIN_EXE_cgrok") {
         let p = PathBuf::from(path);
         if p.exists() {
             return p;
         }
     }
 
-    ensure_cargo_bin("xai-grok-pager-bin", "xai-grok-pager")
+    ensure_cargo_bin("xai-grok-pager-bin", "cgrok")
 }
 
 fn resolved_override() -> Option<PathBuf> {
-    GROK_BINARY_OVERRIDE.get().cloned()
+    CGROK_BINARY_OVERRIDE.get().cloned()
 }
 
 pub fn env_binary(key: &str) -> Option<PathBuf> {
@@ -338,7 +338,7 @@ mod tests {
 
     #[test]
     fn shipped_pager_binary_is_not_the_grok_binary_path() {
-        let name = format!("xai-grok-pager{}", std::env::consts::EXE_SUFFIX);
+        let name = format!("cgrok{}", std::env::consts::EXE_SUFFIX);
         let grok = target_dir().join("debug").join(&name);
         let shipped = shipped_pager_target_dir().join("debug").join(&name);
         assert_ne!(grok, shipped);
@@ -347,7 +347,7 @@ mod tests {
     #[test]
     fn feature_stamp_mismatch_rejects_the_shipped_binary() {
         let dir = std::env::temp_dir().join("shipped-pager-stamp-mismatch");
-        let binary = dir.join(format!("xai-grok-pager{}", std::env::consts::EXE_SUFFIX));
+        let binary = dir.join(format!("cgrok{}", std::env::consts::EXE_SUFFIX));
         let stamp = binary.with_extension("features");
         std::fs::create_dir_all(&dir).unwrap();
         std::fs::write(&binary, b"shipped").unwrap();
@@ -372,7 +372,7 @@ mod tests {
         let out_target = dir.join("out");
         let debug = out_target.join("debug");
         std::fs::create_dir_all(&debug).unwrap();
-        let binary = debug.join(format!("xai-grok-pager{}", std::env::consts::EXE_SUFFIX));
+        let binary = debug.join(format!("cgrok{}", std::env::consts::EXE_SUFFIX));
         std::fs::write(&binary, b"stale").unwrap();
         let features = ["jemalloc", "chat"];
         std::fs::write(binary.with_extension("features"), feature_stamp(&features)).unwrap();
@@ -388,7 +388,7 @@ mod tests {
         std::fs::set_permissions(&cargo, perms).unwrap();
         let got = build_shipped_pager(
             "xai-grok-pager-bin",
-            "xai-grok-pager",
+            "cgrok",
             &features,
             &out_target,
             &dir,

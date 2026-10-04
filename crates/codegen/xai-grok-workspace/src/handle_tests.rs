@@ -2266,7 +2266,7 @@ fn spawn_test_queue(home: &std::path::Path) -> Arc<xai_file_utils::queue::Upload
     ))
 }
 /// `WorkspaceHandle::new` (the test/default path, not `connect_local_workspace`) must use an ephemeral temp `workspace_home`.
-/// It must never use the real `$GROK_WORKSPACE_HOME` and must NOT configure an upload queue. This pins the flag-off defaults so uploads never start implicitly and `new` stays runtime-light (no queue worker spawned).
+/// It must never use the real `$CGROK_WORKSPACE_HOME` and must NOT configure an upload queue. This pins the flag-off defaults so uploads never start implicitly and `new` stays runtime-light (no queue worker spawned).
 #[tokio::test]
 async fn new_defaults_to_ephemeral_home_and_inert_legacy_upload() {
     let handle = make_handle();
@@ -2280,7 +2280,7 @@ async fn new_defaults_to_ephemeral_home_and_inert_legacy_upload() {
     assert_ne!(
         home,
         resolve_workspace_home(),
-        "default construction must NOT use the real $GROK_WORKSPACE_HOME"
+        "default construction must NOT use the real $CGROK_WORKSPACE_HOME"
     );
     assert!(
         shared.upload_queue().is_none(),
@@ -2317,7 +2317,7 @@ async fn tool_state_upload_is_noop_when_flag_off() {
     let _env = crate::session::tool_config::TOOL_STATE_ENV_LOCK
         .lock()
         .unwrap_or_else(|e| e.into_inner());
-    unsafe { std::env::remove_var("GROK_WORKSPACE_TOOL_STATE_ENABLED") };
+    unsafe { std::env::remove_var("CGROK_WORKSPACE_TOOL_STATE_ENABLED") };
     let factory = Arc::new(TestSessionContextFactory::new());
     let cwd = factory.temp.path().to_path_buf();
     let queue_home = tempfile::TempDir::new().unwrap();
@@ -2355,7 +2355,7 @@ async fn tool_state_upload_is_noop_when_data_collection_disabled() {
     let _env = crate::session::tool_config::TOOL_STATE_ENV_LOCK
         .lock()
         .unwrap_or_else(|e| e.into_inner());
-    unsafe { std::env::set_var("GROK_WORKSPACE_TOOL_STATE_ENABLED", "true") };
+    unsafe { std::env::set_var("CGROK_WORKSPACE_TOOL_STATE_ENABLED", "true") };
     let factory = Arc::new(TestSessionContextFactory::new());
     let cwd = factory.temp.path().to_path_buf();
     let queue_home = tempfile::TempDir::new().unwrap();
@@ -2375,7 +2375,7 @@ async fn tool_state_upload_is_noop_when_data_collection_disabled() {
         .enqueued
         .load(std::sync::atomic::Ordering::Relaxed);
     handle.spawn_tool_state_upload("main", 1);
-    unsafe { std::env::remove_var("GROK_WORKSPACE_TOOL_STATE_ENABLED") };
+    unsafe { std::env::remove_var("CGROK_WORKSPACE_TOOL_STATE_ENABLED") };
     drop(_env);
     tokio::task::yield_now().await;
     assert_eq!(
@@ -4093,7 +4093,7 @@ async fn bind_mcp_post(
     axum::Json(request): axum::Json<serde_json::Value>,
 ) -> axum::response::Response {
     if let Some(session_id) = headers
-        .get(xai_grok_mcp::servers::GROK_AGENT_ID_HEADER)
+        .get(xai_grok_mcp::servers::CGROK_AGENT_ID_HEADER)
         .and_then(|value| value.to_str().ok())
     {
         state.session_ids.lock().push(session_id.to_owned());
@@ -8409,7 +8409,7 @@ fn bundled_allowlist_unreadable_dir_fails_closed() {
     let got = bundled_allowlist_ignore_dirs("/nonexistent/bundled-skills", Some("pdf"));
     assert_eq!(got, vec!["/nonexistent/bundled-skills".to_string()]);
 }
-/// Unique skill names: discovery also reads the dev machine's `~/.grok`.
+/// Unique skill names: discovery also reads the dev machine's `~/.cgrok`.
 #[tokio::test]
 async fn bundled_allowlist_filters_discovery() {
     let tmp = tempfile::tempdir().expect("tempdir");
@@ -8768,11 +8768,11 @@ async fn tool_state_upload_registers_producer() {
     let _env = crate::session::tool_config::TOOL_STATE_ENV_LOCK
         .lock()
         .unwrap_or_else(|e| e.into_inner());
-    unsafe { std::env::set_var("GROK_WORKSPACE_TOOL_STATE_ENABLED", "true") };
+    unsafe { std::env::set_var("CGROK_WORKSPACE_TOOL_STATE_ENABLED", "true") };
     let (handle, _queue, _home) = make_handle_with_queue(false);
     assert_eq!(handle.shared.producer_tasks.len(), 0);
     handle.spawn_tool_state_upload("main", 1);
-    unsafe { std::env::remove_var("GROK_WORKSPACE_TOOL_STATE_ENABLED") };
+    unsafe { std::env::remove_var("CGROK_WORKSPACE_TOOL_STATE_ENABLED") };
     drop(_env);
     assert_eq!(
         handle.shared.producer_tasks.len(),
