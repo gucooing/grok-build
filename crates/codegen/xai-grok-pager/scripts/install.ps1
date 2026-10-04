@@ -259,8 +259,8 @@ function Read-GrokToken([string]$Scope) {
 
 # --- Validate version ---
 
-if ($Version -and $Version -notmatch '^\d+\.\d+\.\d+(-\S+)?$') {
-    Write-Error "Invalid version format: $Version (expected X.Y.Z or X.Y.Z-suffix)"
+if ($Version -and $Version -notmatch '^\d+\.\d+\.\d+(-[A-Za-z0-9._]+)?(\+[1-9][0-9]*)?$') {
+    Write-Error "Invalid version format: $Version (expected X.Y.Z[-suffix][+N])"
     exit 1
 }
 

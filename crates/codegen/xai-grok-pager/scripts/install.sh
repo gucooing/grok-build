@@ -19,8 +19,8 @@ CGROK_INSTALL_HOME="${CGROK_HOME:-$HOME/.cgrok}"
 
 TARGET="$1"
 
-if [[ -n "$TARGET" ]] && [[ ! "$TARGET" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9._]+)?$ ]]; then
-    echo "Invalid version format: $TARGET (expected X.Y.Z or X.Y.Z-suffix)" >&2
+if [[ -n "$TARGET" ]] && [[ ! "$TARGET" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9._]+)?(\+[1-9][0-9]*)?$ ]]; then
+    echo "Invalid version format: $TARGET (expected X.Y.Z[-suffix][+N])" >&2
     exit 1
 fi
 
@@ -239,8 +239,8 @@ else
     fi
 fi
 
-if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9._]+)?$ ]]; then
-    echo "Invalid version format: $version (expected X.Y.Z or X.Y.Z-suffix)" >&2
+if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9._]+)?(\+[1-9][0-9]*)?$ ]]; then
+    echo "Invalid version format: $version (expected X.Y.Z[-suffix][+N])" >&2
     exit 1
 fi
 

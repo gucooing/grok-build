@@ -64,15 +64,22 @@ jobs:
         shell: bash
         run: |
           export PROTOC="$(command -v protoc)"
-          export GROK_VERSION="${GITHUB_REF_NAME#v}"
+          release_version="${GITHUB_REF_NAME#v}"
+          version="${release_version%%+*}"
+          if [[ "$release_version" != "$version" && ! "$release_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+\+[1-9][0-9]*$ ]]; then
+            echo "Invalid cgrok packaging revision: $release_version" >&2
+            exit 1
+          fi
+          export CGROK_VERSION="$version"
           cargo build --locked --release -p xai-grok-pager-bin --target '${{ matrix.target }}'
       - name: Assemble artifact
         shell: bash
         run: |
-          version="${GITHUB_REF_NAME#v}"
+          release_version="${GITHUB_REF_NAME#v}"
+          version="${release_version%%+*}"
           test "$version" = "$(python -c 'import tomllib; print(tomllib.load(open("crates/codegen/xai-grok-pager-bin/Cargo.toml", "rb"))["package"]["version"])')"
           mkdir -p dist
-          cp 'target/${{ matrix.target }}/release/${{ matrix.binary }}' "dist/cgrok-${version}-${{ matrix.platform }}"
+          cp 'target/${{ matrix.target }}/release/${{ matrix.binary }}' "dist/cgrok-${release_version}-${{ matrix.platform }}"
       - uses: actions/upload-artifact@v4
         with:
           name: cgrok-${{ matrix.platform }}
@@ -105,15 +112,16 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           set -euo pipefail
-          version="${GITHUB_REF_NAME#v}"
+          release_version="${GITHUB_REF_NAME#v}"
+          version="${release_version%%+*}"
           npm_root=crates/codegen/xai-grok-pager/npm
           test "$version" = "$(node -p "require('./$npm_root/cgrok/package.json').version")"
-          export CGROK_DARWIN_ARM64="$PWD/dist/cgrok-$version-macos-aarch64"
-          export CGROK_DARWIN_X64="$PWD/dist/cgrok-$version-macos-x86_64"
-          export CGROK_LINUX_ARM64="$PWD/dist/cgrok-$version-linux-aarch64"
-          export CGROK_LINUX_X64="$PWD/dist/cgrok-$version-linux-x86_64"
-          export CGROK_WIN32_ARM64="$PWD/dist/cgrok-$version-windows-aarch64"
-          export CGROK_WIN32_X64="$PWD/dist/cgrok-$version-windows-x86_64"
+          export CGROK_DARWIN_ARM64="$PWD/dist/cgrok-$release_version-macos-aarch64"
+          export CGROK_DARWIN_X64="$PWD/dist/cgrok-$release_version-macos-x86_64"
+          export CGROK_LINUX_ARM64="$PWD/dist/cgrok-$release_version-linux-aarch64"
+          export CGROK_LINUX_X64="$PWD/dist/cgrok-$release_version-linux-x86_64"
+          export CGROK_WIN32_ARM64="$PWD/dist/cgrok-$release_version-windows-aarch64"
+          export CGROK_WIN32_X64="$PWD/dist/cgrok-$release_version-windows-x86_64"
           for binary in "$CGROK_DARWIN_ARM64" "$CGROK_DARWIN_X64" "$CGROK_LINUX_ARM64" "$CGROK_LINUX_X64" "$CGROK_WIN32_ARM64" "$CGROK_WIN32_X64"; do
             test -s "$binary"
           done

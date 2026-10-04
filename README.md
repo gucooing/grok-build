@@ -56,4 +56,6 @@ cargo test -p xai-grok-env -p xai-dirs
 
 Internal `xai-grok-*` crate names and the generated workspace structure remain unchanged. `SOURCE_REV` records the upstream source. The existing npm platform packages are under `crates/codegen/xai-grok-pager/npm/cgrok*`.
 
+Release tags normally use `vX.Y.Z`. A `vX.Y.Z+N` tag retries a failed packaging run with new assets while the binary and npm package versions remain `X.Y.Z`.
+
 First-party code is Apache-2.0; see [LICENSE](LICENSE). Preserve [THIRD-PARTY-NOTICES](THIRD-PARTY-NOTICES), [tool notices](crates/codegen/xai-grok-tools/THIRD_PARTY_NOTICES.md) and [third_party/NOTICE](third_party/NOTICE) when distributing binaries.
