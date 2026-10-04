@@ -100,7 +100,7 @@ fn is_compiled_here(compiled: &[String], file_name: &str) -> bool {
         .any(|p| is_path_suffix(p, file_name) || is_path_suffix(file_name, p))
 }
 
-fn compile_descriptor_pool(
+pub(super) fn compile_descriptor_pool(
     protoc: Option<&Path>,
     protoc_include_dir: Option<&Path>,
     includes: &[&Path],
@@ -125,13 +125,13 @@ fn compile_descriptor_pool(
     }
     let status = command
         .status()
-        .context("debug_redact: failed to run protoc")?;
-    anyhow::ensure!(status.success(), "debug_redact: protoc failed");
+        .context("failed to run protoc for descriptor set")?;
+    anyhow::ensure!(status.success(), "protoc descriptor generation failed");
 
     let bytes = std::fs::read(&fds_path)?;
     // Must decode with prost-reflect directly: a round-trip through
     // prost_types drops extension options as unknown fields.
-    DescriptorPool::decode(bytes.as_slice()).context("debug_redact: decode descriptor set")
+    DescriptorPool::decode(bytes.as_slice()).context("decode protoc descriptor set")
 }
 
 enum MarkedDebugRedact {

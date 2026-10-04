@@ -60,10 +60,19 @@ jobs:
       - name: Linux dependencies
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y libssl-dev pkg-config
+      - name: Configure protoc native path
+        shell: bash
+        run: |
+          protoc_path="$(command -v protoc)"
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            protoc_path="$(cygpath -w "$protoc_path")"
+          fi
+          printf 'PROTOC=%s\n' "$protoc_path" >> "$GITHUB_ENV"
+      - name: Test protobuf generation
+        run: cargo test --locked -p xai-proto-build
       - name: Build
         shell: bash
         run: |
-          export PROTOC="$(command -v protoc)"
           release_version="${GITHUB_REF_NAME#v}"
           version="${release_version%%+*}"
           if [[ "$release_version" != "$version" && ! "$release_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+\+[1-9][0-9]*$ ]]; then
